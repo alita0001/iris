@@ -1,0 +1,43 @@
+[project]
+name = "iris"
+version = "0.3.0"
+description = "IRIS (formerly RevAct): grounded-reversibility data pipeline for safe web agents"
+requires-python = ">=3.10"
+# Core pipeline is stdlib-only; optional extras document the env split.
+# The importable package stays `revact` so env vars (REVACT_*), data files and
+# MANIFEST provenance keep their historical names.
+dependencies = []
+
+[project.optional-dependencies]
+yaml = ["pyyaml"]
+train = ["torch", "transformers", "datasets", "peft", "trl"]  # sft/dpo/grpo (GPU env)
+distill = ["openai"]                                          # teacher distillation / LLM policy
+dev = ["pytest", "ruff", "pyyaml"]
+# live collection/probes run inside the `agentlab` conda env
+# (browsergym + playwright + webarena); see README and scripts/export_webarena_env.sh.
+
+[project.scripts]
+revact = "revact.cli:main"
+iris = "revact.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["revact*"]
+
+[tool.setuptools.package-data]
+revact = ["ui/*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

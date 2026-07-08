@@ -1,0 +1,35 @@
+
+== review-QA (0) ==
+
+== other-info (7) ==
+  webarena.47: Today is 6/12/2023. Tell me how many fulfilled orders I have over the past month
+  webarena.48: Today is 6/12/2023. Tell me how many fulfilled orders I have over the past three
+  webarena.49: Today is 6/12/2023. Tell me how many fulfilled orders I have over the past four 
+  webarena.50: Today is 6/12/2023. Tell me how many fulfilled orders I have over the past year,
+  webarena.51: Today is 6/12/2023. Tell me how many fulfilled orders I have over the past six m
+  webarena.96: Tell me the status of my latest order and when will it arrive
+  webarena.118: I have jaw bruxism problem, show me something that could alleviate the problem.
+
+== order/checkout (8) ==
+  webarena.117: What is the date when I made my first purchase on this site?
+  webarena.188: Tell me the total cost of my latest cancelled order?
+  webarena.192: Tell me the total cost of my latest non-cancelled order?
+  webarena.231: Get the order number of my most recent cancelled order 
+  webarena.299: Show the most recent cancelled order
+  webarena.436: I previously ordered some a mattress foundation around Feb or March 2023 and lat
+  webarena.437: I previously ordered some a table lamp in May 2023 and later cancelled. Can you 
+  webarena.438: I previously ordered some a TV stand sometime around sep 2022 and later cancelle
+
+== account/address (5) ==
+  webarena.362: Show me the billing address for order number 00178.
+  webarena.571: I recently moved, my address is 231 Willow Way, Suite 100, Chicago, IL, 60601, u
+  webarena.572: I recently moved, my address is 654 Aspen Road, House #3, Boston, MA, 02110, upd
+  webarena.573: I recently moved, my address is 987 Sycamore Circle, Philadelphia, PA, 19102, up
+  webarena.574: I recently moved, my address is 111 Magnolia Path, Atlanta, GA, 30303, update my
+
+== cart/add (5) ==
+  webarena.431: Add the product with the lowest per unit price from my open tabs to the shopping
+  webarena.432: Add the product with the lowest per unit price from my open tabs to the shopping
+  webarena.433: Add the product with the lowest per unit price from my open tabs to the shopping
+  webarena.434: Add the product with the lowest per unit price from my open tabs to the shopping
+  webarena.435: Add the product with the lowest per unit price from my open tabs to the shopping

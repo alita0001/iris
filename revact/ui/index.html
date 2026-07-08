@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>IRIS 数据集构建工作台</title>
+<link rel="stylesheet" href="/ui/app.css">
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>IRIS 数据集构建工作台 <span>grounded-reversibility pipeline</span></h1>
+  <span class="meta" id="health-meta">连接中…</span>
+</header>
+
+<nav id="nav">
+  <button data-t="pipeline" class="on">Pipeline</button>
+  <button data-t="config">全局配置</button>
+  <button data-t="traj">成功轨迹</button>
+  <button data-t="keystates">关键状态</button>
+  <button data-t="constraints">约束注入</button>
+  <button data-t="candidates">候选/反事实</button>
+  <button data-t="grounded">Undo 标注</button>
+  <button data-t="distill">Teacher 蒸馏</button>
+  <button data-t="quality">质量统计</button>
+  <button data-t="browser">数据集浏览器</button>
+  <button data-t="jobs">Jobs<span id="jobs-dot" class="run-dot" hidden></span></button>
+</nav>
+
+<section id="tab-pipeline" class="on"><div id="v-pipeline" class="loading">加载中…</div></section>
+<section id="tab-config"><div id="v-config" class="loading">加载中…</div></section>
+<section id="tab-traj"><div id="v-traj" class="loading">加载中…</div></section>
+<section id="tab-keystates"><div id="v-keystates" class="loading">加载中…</div></section>
+<section id="tab-constraints"><div id="v-constraints" class="loading">加载中…</div></section>
+<section id="tab-candidates"><div id="v-candidates" class="loading">加载中…</div></section>
+<section id="tab-grounded"><div id="v-grounded" class="loading">加载中…</div></section>
+<section id="tab-distill"><div id="v-distill" class="loading">加载中…</div></section>
+<section id="tab-quality"><div id="v-quality" class="loading">加载中…</div></section>
+<section id="tab-browser"><div id="v-browser" class="loading">加载中…</div></section>
+<section id="tab-jobs"><div id="v-jobs" class="loading">加载中…</div></section>
+</div>
+
+<div id="toast"></div>
+<script src="/ui/api.js"></script>
+<script src="/ui/ui.js"></script>
+<script src="/ui/views.js"></script>
+<script src="/ui/app.js"></script>
+</body>
+</html>

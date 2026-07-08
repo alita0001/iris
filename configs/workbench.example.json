@@ -1,0 +1,43 @@
+{
+  "_comment": "IRIS 工作台配置模板。复制为 workbench.local.json（已 gitignore）或在 UI 里编辑后「保存到本地」。真实 API key 绝不写进本文件：只填 api_key_env（环境变量名），key 值在 UI 中输入后仅存服务进程内存。",
+  "models": {
+    "policy": {
+      "provider": "deepseek",
+      "base_url": "https://api.deepseek.com/v1",
+      "model": "deepseek-v4-pro",
+      "api_key_env": "DEEPSEEK_API_KEY",
+      "temperature": 0.0,
+      "top_p": 1.0,
+      "max_tokens": 8192
+    },
+    "teacher": {
+      "provider": "deepseek",
+      "base_url": "https://api.deepseek.com/v1",
+      "model": "deepseek-chat",
+      "api_key_env": "DEEPSEEK_API_KEY",
+      "temperature": 0.7,
+      "top_p": 1.0,
+      "max_tokens": 400
+    },
+    "judge": {
+      "provider": "deepseek",
+      "base_url": "https://api.deepseek.com/v1",
+      "model": "deepseek-chat",
+      "api_key_env": "DEEPSEEK_API_KEY",
+      "mode": "deepseek"
+    }
+  },
+  "run": {
+    "task_file": "data/raw/pilot_task_ids.json",
+    "seeds": "0",
+    "max_steps": 25,
+    "sample_limit": 10,
+    "screenshots": true,
+    "data_root": "",
+    "output_dir": "outputs/workbench"
+  },
+  "env": {
+    "WA_SHOPPING": "",
+    "WA_SHOPPING_ADMIN": ""
+  }
+}

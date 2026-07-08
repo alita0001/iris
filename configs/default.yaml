@@ -1,0 +1,33 @@
+# RevAct/IRIS configuration. Env vars override these values (see revact/config.py).
+# API keys are NEVER stored here — they are read from environment variables only.
+
+paths:
+  # data_root: /custom/path   # default: <project>/data (or env REVACT_DATA_ROOT)
+
+webarena:
+  # shopping / shopping_admin come from env WA_SHOPPING / WA_SHOPPING_ADMIN
+  session_task: webarena.21    # any shopping task; used only to bootstrap a session
+
+obs:
+  max_axtree_chars_snapshot: 6000
+  max_axtree_chars_policy: 12000
+
+fingerprint:
+  text_jaccard: 0.05
+
+train:
+  model_path: /workspace/models/Qwen2.5-3B-Instruct
+  max_len: 4096
+  lora_r: 16
+  lora_alpha: 32
+  lora_dropout: 0.05
+  epochs: 3          # was 6; templated data memorizes fast — keep low
+  lr: 1.0e-4         # was 2e-4
+  batch_size: 2
+  grad_accum: 4
+
+distill:
+  model: deepseek-chat
+  base_url: https://api.deepseek.com/v1
+  api_key_env: DEEPSEEK_API_KEY   # NAME of the env var, never the key itself
+  max_retries: 3
