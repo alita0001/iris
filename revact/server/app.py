@@ -12,6 +12,9 @@ Routes (JSON unless noted):
   GET  /api/config                        settings (secrets masked)
   POST /api/config                        update settings; secrets -> memory only
   POST /api/config/save                   persist settings (secrets stripped)
+  GET  /api/prompts                       prompt registry (defaults + overrides)
+  POST /api/prompts                       {id, value} save prompt override
+  POST /api/prompts/reset                 {id} drop override, back to default
   GET  /api/trajectories                  index; /api/trajectories/<id> detail
   GET  /api/keystates | /api/states | /api/grounded | /api/probes
   GET  /api/sft[?distilled=1] | /api/dpo | /api/templates | /api/quality
@@ -37,7 +40,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
-from .. import config
+from .. import config, prompts
 from . import annotations
 from .adapters import RUNTIME, live_ready, pipeline_overview, run_action
 from .datasets import DataStore
@@ -175,6 +178,10 @@ class Handler(BaseHTTPRequestHandler):
                 return self._json({"ok": True, "settings": _masked_settings(),
                                    "local_config": str(LOCAL_CONFIG_PATH),
                                    "local_config_exists": LOCAL_CONFIG_PATH.exists()})
+            if path == "/api/prompts":
+                return self._json({"ok": True, "items": prompts.registry_view(),
+                                   "fingerprint": prompts.fingerprint(),
+                                   "overrides_file": str(prompts.overrides_path())})
             if path == "/api/trajectories":
                 return self._json({"ok": True, "items": store.trajectory_index()})
             if path.startswith("/api/trajectories/"):
@@ -300,6 +307,22 @@ class Handler(BaseHTTPRequestHandler):
                 with _lock:
                     _apply_config(body) if body else None
                     return self._json(save_config())
+            if path == "/api/prompts":
+                with _lock:
+                    try:
+                        prompts.set_override(str(body.get("id", "")),
+                                             body.get("value"))
+                    except ValueError as e:
+                        return self._err(400, str(e))
+                return self._json({"ok": True,
+                                   "fingerprint": prompts.fingerprint(),
+                                   "note": "已保存覆盖；改动 agent_system/模板池后"
+                                           "需重跑 assemble（+multiturn+split）重物化样本"})
+            if path == "/api/prompts/reset":
+                with _lock:
+                    prompts.clear_override(str(body.get("id", "")))
+                return self._json({"ok": True,
+                                   "fingerprint": prompts.fingerprint()})
             if path == "/api/annotations":
                 kind = str(body.get("kind", ""))
                 row = annotations.add(kind, str(body.get("target_id", "")),

@@ -30,11 +30,10 @@ import json
 from pathlib import Path
 
 from .. import config, prompts
-from ..envs.obs_utils import find_bid_by_text
+from ..envs.obs_utils import find_bid_by_text, history_entry
 from .assemble import (
     ACTION_KW,
     ACTION_META,
-    SYSTEM,
     _dpo_pairs_for,
     build_fields,
     build_goal,
@@ -57,8 +56,10 @@ def _load_steps(path: Path) -> list[dict]:
     return steps
 
 
-def _one_line(step: dict) -> str:
-    return (step.get("url_after") or "")[:120]
+def _step_view(step: dict) -> dict:
+    """Obs view reconstructed from a logged step (for delta computation)."""
+    return {"url": step.get("url_after", ""),
+            "axtree_txt": step.get("obs_after_axtree", "")}
 
 
 def _risky_action_at(obs_txt: str, action_type: str) -> dict | None:
@@ -81,9 +82,13 @@ def build_conversation(steps: list[dict], k: int, goal: str) -> list[dict] | Non
     if not steps or steps[0].get("step_id") != 0:
         return None
     live_from = max(0, k - MAX_LIVE_TURNS)
-    older = [{"action": s.get("action", ""), "obs": _one_line(s)}
-             for s in steps[1:live_from + 1] if s.get("action")]
-    msgs = [{"role": "system", "content": SYSTEM},
+    # Folded older steps become P2 history lines (action + observed delta +
+    # flag), computed from the logged consecutive observations.
+    older = [history_entry(s.get("action", ""), _step_view(steps[i - 1]),
+                           _step_view(s))
+             for i, s in enumerate(steps[1:live_from + 1], start=1)
+             if s.get("action")]
+    msgs = [{"role": "system", "content": prompts.get("agent_system")},
             {"role": "user", "content": prompts.render_user(
                 goal, _clip(steps[live_from].get("obs_after_axtree", "")), older)}]
     for s in steps[live_from + 1:k + 1]:
@@ -134,6 +139,8 @@ def assemble_multiturn(traj_dir: Path, key_states_path: Path, rev: dict,
             k = ks["step_id"]
             state = {"name": f"{tid}_s{k}", "risky_action": risky,
                      "safe_answer": "go_back()", "url": ks.get("url", "")}
+            info = rev[at] if isinstance(rev[at], dict) else {"label": rev[at]}
+            prompts_fp = prompts.fingerprint()
             for vname, violates, requested in [("constraint", True, False),
                                                ("request", False, True)]:
                 g = build_goal(at, vname, state["name"])
@@ -141,14 +148,15 @@ def assemble_multiturn(traj_dir: Path, key_states_path: Path, rev: dict,
                 if msgs is None:
                     skipped.append(f"{tid}/s{k}/{at}: no step-0 record")
                     break
-                f = build_fields(state, at, rev[at], g["goal"], violates, requested)
+                f = build_fields(state, at, info, g["goal"], violates, requested)
                 chosen = render_assistant(f)
                 sample_id = f"mt__{tid}__s{k}__{at}__{vname}"
                 sft.append({
                     "sample_id": sample_id,
                     "messages": msgs + [{"role": "assistant", "content": chosen}],
                     "meta": {"kind": "multiturn", "action_type": at,
-                             "site": site_of(at), "reversibility": rev[at],
+                             "site": site_of(at), "reversibility": info["label"],
+                             "undo_steps": info.get("undo_steps"),
                              "decision": f["decision"], "variant": vname,
                              "constraint_style": g["style"],
                              "goal_template": g["template_id"],
@@ -156,18 +164,20 @@ def assemble_multiturn(traj_dir: Path, key_states_path: Path, rev: dict,
                              "history_source": "trajectory",
                              "risky_raw_action": risky["raw_action"],
                              "trajectory_id": tid, "decision_step": k,
-                             "n_turns": (len(msgs) + 1) // 2},
+                             "n_turns": (len(msgs) + 1) // 2,
+                             "format": "iris.v2", "prompts_fp": prompts_fp},
                 })
                 for pair_type, rejected in _dpo_pairs_for(f, state, violates, requested):
                     dpo.append({
                         "pair_id": f"{sample_id}__{pair_type}",
                         "prompt": msgs, "chosen": chosen, "rejected": rejected,
                         "meta": {"kind": "multiturn", "action_type": at,
-                                 "site": site_of(at), "reversibility": rev[at],
+                                 "site": site_of(at), "reversibility": info["label"],
                                  "variant": vname, "pair_type": pair_type,
                                  "constraint_style": g["style"],
                                  "history_source": "trajectory",
-                                 "risky_raw_action": risky["raw_action"]},
+                                 "risky_raw_action": risky["raw_action"],
+                                 "format": "iris.v2", "prompts_fp": prompts_fp},
                     })
 
     sft_path = out_dir / "train" / "sft" / "revact_sft_multiturn.jsonl"
@@ -183,10 +193,10 @@ def assemble_multiturn(traj_dir: Path, key_states_path: Path, rev: dict,
 
 
 def run(out_dir: Path | None = None) -> dict:
-    from ..grounding.base import load_reversibility
+    from ..grounding.base import load_reversibility_details
 
     root = Path(out_dir) if out_dir else config.DATA_ROOT
-    rev = load_reversibility(root / "grounded" / "reversibility.jsonl")
+    rev = load_reversibility_details(root / "grounded" / "reversibility.jsonl")
     return assemble_multiturn(
         root / "raw" / "trajectories",
         root / "raw" / "state_bank" / f"{config.SITE}_key_states.jsonl",

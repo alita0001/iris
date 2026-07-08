@@ -59,6 +59,7 @@ configs/workbench.example.json   配置模板；本地保存为 workbench.local.
 |---|---|---|
 | Pipeline 总览 | adapters + jobs | ✅ 状态由产物文件+最近 job 推导；单步/从阶段继续/全流程链（mock 链离线可跑，live 链需环境+key） |
 | 全局配置 | /api/config | ✅ policy/teacher/judge 三角色 provider/base_url/model/key/温度等，经 env（REVACT_LLM_*、REVACT_DISTILL_*、REVACT_WA_JUDGE_BASE_URL）透传给现有 CLI |
+| **Prompt 管理** | /api/prompts（`revact/prompts.py` registry） | ✅ 全部 LLM prompt 可编辑：agent 系统提示词（训练+部署同一条）、采集策略模型提示词、teacher 蒸馏模板、显式/隐式约束与请求目标模板池。覆盖存 `configs/prompts.local.json`（gitignore），**调用时读取**（子进程 job 即时生效）；占位符校验；对比默认/恢复默认；样本 meta.prompts_fp + 导出 prompts.json 快照做溯源。改 agent_system/模板池后需重跑 assemble(+multiturn+split) |
 | 成功轨迹 | data/raw/trajectories | ✅ step trace + axtree + 截图；成功/失败/异常筛选；「选入下一阶段」为 trajectory overlay |
 | 关键状态 | shopping_key_states.jsonl | ✅ 浏览+确认/驳回/类型标签/置信度（overlay）。"为什么关键"=S2 关键词规则，如实展示 |
 | 约束注入 | assemble.build_goal | ✅ 预览即真实注入逻辑（确定性模板抽取）；人工改写为 overlay，物化仍需 assemble；六类约束类型是标注维度 |

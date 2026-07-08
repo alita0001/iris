@@ -12,8 +12,8 @@ from pathlib import Path
 
 from .. import config
 
-_TAGS = ("<observation>", "<reasoning>", "<prediction>", "<reversibility>",
-         "<decision>", "<answer>")
+_TAGS = ("<observation>", "<reasoning>", "<prediction>", "<rev_check>",
+         "<reversibility>", "<undo>", "<decision>", "<answer>")
 _DECISIONS = ("EXECUTE", "VERIFY", "CONFIRM", "AVOID")
 
 

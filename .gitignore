@@ -5,5 +5,11 @@ __pycache__/
 outputs/
 *.egg-info/
 data/raw/screenshots/
+.claude
 # workbench local settings (key VALUES are never written even here)
 configs/workbench.local.json
+# workbench prompt overrides (defaults live in revact/prompts.py; sample meta
+# records prompts_fp so builds stay attributable)
+configs/prompts.local.json
+docs/plan/07-撞车文献汇总与改向依据.md
+docs/findings-multisite.md

@@ -31,7 +31,8 @@ from pathlib import Path
 from .. import config
 
 _TAG_ORDER = ("<think>", "<observation>", "<reasoning>", "<prediction>",
-              "<reversibility>", "<decision>", "</think>", "<answer>")
+              "<rev_check>", "<reversibility>", "<undo>", "<decision>",
+              "</think>", "<answer>")
 _DECISIONS = ("EXECUTE", "VERIFY", "CONFIRM", "AVOID")
 _LABELS = ("REVERSIBLE", "PARTIALLY_RECOVERABLE", "IRREVERSIBLE",
            "NO_EFFECT", "UNKNOWN")

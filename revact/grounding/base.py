@@ -185,6 +185,17 @@ def _append_manifest(grounded_dir: Path, results: list[ReversibilityResult]) -> 
 
 def load_reversibility(path: Path) -> dict:
     """action_type -> grounded label, dry-run-safe (latest non-UNKNOWN wins)."""
+    return {at: r["label"] for at, r in load_reversibility_details(path).items()}
+
+
+def load_reversibility_details(path: Path) -> dict:
+    """action_type -> latest-non-UNKNOWN grounded record with the undo
+    evidence (undo_steps / undo_actions / residual_diff) that the P2 sample
+    format consumes when constructing <rev_check>/<undo>.
+
+    Returns {action_type: {label, grounding, undo_steps, undo_actions,
+                           residual_diff, probe_id}}.
+    """
     import json
 
     rows_by_type: dict[str, list] = {}
@@ -196,5 +207,13 @@ def load_reversibility(path: Path) -> dict:
     for at, rows in rows_by_type.items():
         grounded = [r for r in rows if r.get("label") != "UNKNOWN"]
         pick = grounded[-1] if grounded else rows[-1]
-        out[at] = pick["label"]
+        ev = pick.get("evidence") or {}
+        out[at] = {
+            "label": pick["label"],
+            "grounding": pick.get("grounding", ""),
+            "undo_steps": ev.get("undo_steps"),
+            "undo_actions": ev.get("undo_actions") or [],
+            "residual_diff": ev.get("residual_diff"),
+            "probe_id": pick.get("probe_id", ""),
+        }
     return out

@@ -1,12 +1,15 @@
 """S7 teacher conditional distillation: prose from a teacher, conclusions pinned.
 
 The teacher (DeepSeek via an OpenAI-compatible endpoint) receives the GROUNDED
-facts (real next-state effect, undo-measured reversibility, oracle decision)
-as immutable ground truth and only writes natural <observation>/<reasoning>/
-<prediction> phrasing consistent with them. A QC pass rejects any output that
-contradicts the pinned labels (e.g. claims something is undoable when the
-grounded label is IRREVERSIBLE) and retries; persistent failures are dropped,
-never patched by hand.
+facts (real next-state effect, undo-measured reversibility + measured undo
+path, oracle decision) as immutable ground truth and only writes natural
+<observation>/<reasoning>/<prediction>/<rev_check> phrasing consistent with
+them. A QC pass rejects any output that contradicts the pinned labels (e.g.
+claims something is undoable when the grounded label is IRREVERSIBLE) and
+retries; persistent failures are dropped, never patched by hand.
+
+The prompt template lives in the prompt registry (prompts.get("teacher_
+distill")) so the workbench can tune it without code changes.
 
 SECURITY: the API key is read lazily from the env var named by
 config.DISTILL_KEY_ENV; it is never a parameter, never logged, never written.
@@ -24,20 +27,6 @@ from typing import Callable, Optional
 
 from .. import config, prompts
 
-_PROMPT = """You are writing the internal reasoning of a safe web agent. The facts below are GROUND TRUTH, established by executing the action in the environment and attempting to undo it. Do NOT contradict them; your only job is to phrase concise reasoning consistent with them.
-
-GOAL: {goal}
-ACTION UNDER CONSIDERATION: {risky_text}
-REAL EFFECT OF THE ACTION (ground truth): {effect}
-REVERSIBILITY (ground truth, from an execute-then-undo test): {reversibility}
-DECISION (ground truth, from grounded oracle rules): {decision}
-
-Write exactly three lines, no extra text:
-<observation> one sentence on the current page and goal
-<reasoning> why the decision follows from the goal and the reversibility fact
-<prediction> what executing the action would change, consistent with the real effect
-Keep each line under 40 words. Do not use the literal label words "{reversibility}" or "{decision}"; explain naturally."""
-
 # QC: phrases that contradict a pinned label (checked case-insensitively).
 _CONTRADICTIONS = {
     "IRREVERSIBLE": [r"\bcan be (undone|reversed|cancell?ed)\b", r"\breversible\b",
@@ -48,7 +37,7 @@ _CONTRADICTIONS = {
                               r"\bcompletely (undone|reversible)\b"],
     "UNKNOWN": [],
 }
-_REQUIRED_TAGS = ("<observation>", "<reasoning>", "<prediction>")
+_REQUIRED_TAGS = ("<observation>", "<reasoning>", "<prediction>", "<rev_check>")
 
 
 def qc_check(text: str, reversibility: str, decision: str) -> Optional[str]:
@@ -116,10 +105,12 @@ def distill_sample(row: dict, complete: Callable[[str], str],
     goal = prompts.parse_user(row["messages"][1]["content"])["goal"]
     risky = re.search(r"offers a '([^']+)' control", asst)
     effect = re.search(r"<prediction>\s*([^\n]+)", asst)
-    prompt = _PROMPT.format(
+    undo = re.search(r"<undo>\s*([^\n]+)", asst)
+    prompt = prompts.get("teacher_distill").format(
         goal=goal,
         risky_text=risky.group(1) if risky else meta["action_type"],
         effect=(effect.group(1).strip() if effect else meta["action_type"]),
+        undo=(undo.group(1).strip() if undo else "unverified"),
         reversibility=meta["reversibility"], decision=meta["decision"])
 
     for attempt in range(1, max_retries + 1):
@@ -134,10 +125,10 @@ def distill_sample(row: dict, complete: Callable[[str], str],
 
 
 def _splice(asst: str, teacher_text: str) -> str:
-    """Replace the three prose fields; keep <reversibility>/<decision>/<answer>
-    (the pinned conclusions) byte-identical."""
+    """Replace the four prose fields; keep <reversibility>/<undo>/<decision>/
+    <answer> (the pinned conclusions) byte-identical."""
     fields = {}
-    for tag in ("observation", "reasoning", "prediction"):
+    for tag in ("observation", "reasoning", "prediction", "rev_check"):
         m = re.search(rf"<{tag}>\s*([^\n]+)", teacher_text)
         if m:
             fields[tag] = m.group(1).strip()

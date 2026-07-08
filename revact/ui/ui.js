@@ -22,7 +22,7 @@ function toast(msg, kind) {
 /* Render the tagged assistant sequence with label badges (from dataset_viz). */
 function seq(text) {
   return '<div class="seq">' + esc(text).split('\n').map(ln => {
-    const m = ln.match(/^&lt;(observation|reasoning|prediction|reversibility|undo|decision|answer)&gt;(.*)$/);
+    const m = ln.match(/^&lt;(observation|reasoning|prediction|rev_check|reversibility|undo|decision|answer)&gt;(.*)$/);
     if (!m) return `<div class="t">${ln}</div>`;
     let body = m[2];
     if (m[1] === 'reversibility' || m[1] === 'decision') {

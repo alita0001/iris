@@ -122,3 +122,81 @@ def one_line_summary(obs_view: dict, max_len: int = 120) -> str:
 def compact_history(history: list[dict], k: int = 5) -> list[dict]:
     """Keep the last k (action, summary) pairs for prompt assembly."""
     return history[-k:]
+
+
+# --------------------------------------------------------------------------- #
+# P2: observed-delta history entries (action + key delta + change flag)
+# --------------------------------------------------------------------------- #
+_ROOT_RE = re.compile(r"RootWebArea '([^']+)'")
+
+
+def _page_label(view: dict) -> str:
+    title = (view.get("title") or "").strip()
+    if title:
+        return title
+    m = _ROOT_RE.search(view.get("axtree_txt", "") or "")
+    return m.group(1) if m else ""
+
+
+def _short_url(url: str, max_len: int = 60) -> str:
+    from urllib.parse import urlparse
+
+    p = urlparse(url or "")
+    tail = (p.path or "/") + (f"?{p.query}" if p.query else "")
+    return tail if len(tail) <= max_len else "…" + tail[-max_len:]
+
+
+def _entity_signals(d: dict) -> list[str]:
+    """Human-readable backend-signal deltas from a state_distance dict."""
+    added = {e.split(":", 1)[0]: e.split(":", 1)[1] for e in d["entities_added"]}
+    removed = {e.split(":", 1)[0]: e.split(":", 1)[1] for e in d["entities_removed"]}
+    out: list[str] = []
+    for key, label in (("cart_size", "cart items"), ("n_addresses", "addresses")):
+        if key in added or key in removed:
+            out.append(f"{label} {removed.get(key, '?')} -> {added.get(key, '?')}")
+    new_orders = sorted(e.split(":", 1)[1] for e in d["entities_added"]
+                        if e.startswith("order:"))
+    if new_orders:
+        out.append("new order #" + ", #".join(new_orders))
+    gone_orders = sorted(e.split(":", 1)[1] for e in d["entities_removed"]
+                         if e.startswith("order:"))
+    if gone_orders:
+        out.append("order gone #" + ", #".join(gone_orders))
+    return out
+
+
+def obs_delta(prev_view: dict, view: dict) -> dict:
+    """{'flag', 'delta'} describing what the last action observably changed.
+
+    Flags (all computable at deployment time — no grounded labels involved):
+      state-change  a backend-ish signal moved (cart rows, order ids,
+                    addresses, form values, mock backend_state);
+      nav           URL changed, no state signal moved;
+      update        same URL, page content changed (menu opened, tab switched);
+      no-effect     nothing observable changed — the caller's cue to try a
+                    DIFFERENT action instead of repeating this one.
+    """
+    from .fingerprint import fingerprint, state_distance
+
+    d = state_distance(fingerprint(prev_view or {}), fingerprint(view or {}))
+    signals = _entity_signals(d)
+    label = _page_label(view)
+    if signals or d["backend_changed"] or d["form_changed"]:
+        if not signals:
+            signals = ["site state changed"]
+        delta = "; ".join(signals)
+        if d["url_changed"] and label:
+            delta += f" (now on: {label})"
+        return {"flag": "state-change", "delta": delta}
+    if d["url_changed"]:
+        where = label or "new page"
+        return {"flag": "nav", "delta": f"{where} ({_short_url(view.get('url', ''))})"}
+    if d["axtree_changed"] or d["title_changed"]:
+        return {"flag": "update",
+                "delta": "page content changed (same URL)"}
+    return {"flag": "no-effect", "delta": "no visible change"}
+
+
+def history_entry(action: str, prev_view: dict, view: dict) -> dict:
+    """One P2 history entry: {'action', 'delta', 'flag'} (see prompts.py)."""
+    return {"action": action, **obs_delta(prev_view, view)}

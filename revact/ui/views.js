@@ -260,6 +260,62 @@ const ConfigView = {
   },
 };
 
+/* ------------------------------------------------------------- prompts -- */
+const PromptsView = {
+  async render(el) {
+    const r = await API.get('/api/prompts');
+    if (!r.ok) { el.innerHTML = `<div class="empty">${esc(r.error)}</div>`; return; }
+    const card = (p, i) => {
+      const val = p.kind === 'list' ? p.value.join('\n') : p.value;
+      const rows = Math.min(18, Math.max(4, val.split('\n').length + (p.kind === 'list' ? 1 : 2)));
+      return `
+      <div class="fcard" data-pid="${esc(p.id)}">
+        <h4>${esc(p.title)} ${p.overridden ? badge('已覆盖', 'accepted') : badge('默认', 'plain')}</h4>
+        <p class="note">${esc(p.description)}</p>
+        <p class="mini-note">使用位置：${esc(p.used_by)}${p.placeholders.length
+          ? ' · 必需占位符：' + p.placeholders.map(esc).join(' ') : ''}${p.kind === 'list'
+          ? ' · 每行一条模板' : ''}</p>
+        <textarea class="p-text" rows="${rows}" spellcheck="false">${esc(val)}</textarea>
+        <div class="fl">
+          <button class="btn primary p-save">保存覆盖</button>
+          <button class="btn p-reset" ${p.overridden ? '' : 'disabled'}>恢复默认</button>
+          <button class="btn p-diff">对比默认</button>
+        </div>
+        <pre class="p-default" hidden>${esc(p.kind === 'list' ? p.default.join('\n') : p.default)}</pre>
+      </div>`;
+    };
+    el.innerHTML = `
+      <p class="warn-note">这里管理 pipeline 全部 LLM prompt 与目标模板池：采集策略模型、teacher 蒸馏、
+      训练/部署共用的 agent 系统提示词。覆盖保存在 ${esc(r.overrides_file)}（当前指纹
+      <code>${esc(r.fingerprint)}</code>，会写入之后物化样本的 meta.prompts_fp 以便溯源）。
+      改动 <b>agent_system / 模板池</b> 后必须重跑 assemble（+ assemble-multiturn + split）
+      重物化训练数据；改动采集/蒸馏 prompt 对之后的新 job 立即生效，无需重启。</p>
+      <div class="form-grid">${r.items.map(card).join('')}</div>`;
+    $$('[data-pid]', el).forEach(cardEl => {
+      const pid = cardEl.dataset.pid;
+      const item = r.items.find(p => p.id === pid);
+      $('.p-save', cardEl).addEventListener('click', async () => {
+        const raw = $('.p-text', cardEl).value;
+        const value = item.kind === 'list'
+          ? raw.split('\n').map(s => s.trim()).filter(Boolean) : raw;
+        const res = await API.post('/api/prompts', { id: pid, value });
+        toast(res.ok ? `已保存（新指纹 ${res.fingerprint}）· ${res.note || ''}` : res.error,
+          res.ok ? 'ok' : 'err');
+        if (res.ok) this.render(el);
+      });
+      $('.p-reset', cardEl).addEventListener('click', async () => {
+        const res = await API.post('/api/prompts/reset', { id: pid });
+        toast(res.ok ? '已恢复默认' : res.error, res.ok ? 'ok' : 'err');
+        if (res.ok) this.render(el);
+      });
+      $('.p-diff', cardEl).addEventListener('click', () => {
+        const pre = $('.p-default', cardEl);
+        pre.hidden = !pre.hidden;
+      });
+    });
+  },
+};
+
 /* -------------------------------------------------------- trajectories -- */
 const TrajView = {
   filter: 'all',
@@ -888,7 +944,7 @@ const JobsView = {
 };
 
 const VIEWS = {
-  pipeline: PipelineView, config: ConfigView, traj: TrajView,
+  pipeline: PipelineView, config: ConfigView, prompts: PromptsView, traj: TrajView,
   keystates: KeyStatesView, constraints: ConstraintsView,
   candidates: CandidatesView, grounded: GroundedView, distill: DistillView,
   quality: QualityView, browser: BrowserView, jobs: JobsView,

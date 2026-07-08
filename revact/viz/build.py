@@ -22,7 +22,6 @@ import base64
 import collections
 import io
 import json
-import re
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -67,11 +66,12 @@ def _clip(text: str, n: int) -> str:
 
 
 def _goal_obs(user_content: str) -> tuple[str, str]:
-    """Split the user turn '<goal>\\nG\\n\\n<observation>\\nO' into (G, O)."""
-    m = re.search(r"<goal>\s*\n(.*?)\n\s*\n<observation>\s*\n(.*)", user_content, re.DOTALL)
-    if m:
-        return m.group(1).strip(), m.group(2).strip()
-    return user_content.strip(), ""
+    """Split the user turn into (goal, observation) via the shared parser
+    (handles both the 3-section P0+ format and legacy 2-section rows)."""
+    from .. import prompts
+
+    p = prompts.parse_user(user_content)
+    return p["goal"], p["obs"]
 
 
 # --------------------------------------------------------------------------- #
@@ -342,7 +342,7 @@ $$('nav button').forEach(b=>b.addEventListener('click',()=>{
 /* ---- assistant sequence renderer ---- */
 function seq(text){
   return '<div class="seq">'+esc(text).split('\n').map(ln=>{
-    const m=ln.match(/^&lt;(observation|reasoning|prediction|reversibility|decision|answer)&gt;(.*)$/);
+    const m=ln.match(/^&lt;(observation|reasoning|prediction|rev_check|reversibility|undo|decision|answer)&gt;(.*)$/);
     if(!m) return `<div class="t">${ln}</div>`;
     let body=m[2];
     if(m[1]==='reversibility'||m[1]==='decision'){

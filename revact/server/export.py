@@ -139,6 +139,13 @@ def export_dataset(store: DataStore | None = None, params: dict | None = None) -
     quality = compute_quality(store)
     (out_dir / "stats.json").write_text(
         json.dumps(quality, ensure_ascii=False, indent=1), encoding="utf-8")
+    # Provenance: snapshot the EFFECTIVE prompt set (registry + overrides) so
+    # the release is attributable to the exact prompts that produced it.
+    from .. import prompts as _prompts
+    (out_dir / "prompts.json").write_text(
+        json.dumps({"fingerprint": _prompts.fingerprint(),
+                    "prompts": _prompts.effective()},
+                   ensure_ascii=False, indent=1), encoding="utf-8")
     (out_dir / "dataset_card.md").write_text(
         _dataset_card(name, stamp, train, val, test, dpo, excluded, quality, store),
         encoding="utf-8")
@@ -166,7 +173,7 @@ def _dataset_card(name: str, stamp: str, train: list, val: list, test: list,
         "Invertibility-aware safe-web-agent training data. Reversibility labels are",
         "**behaviorally measured** (execute-then-undo probes against live WebArena",
         "Magento), never LLM/human opinion; teacher prose is conditionally distilled",
-        "with conclusions pinned (see `RevAct重定位方案/06-IRIS项目计划书.md`).",
+        "with conclusions pinned (see `docs/plan/IRIS项目计划书.md`).",
         "",
         "## Splits",
         "",

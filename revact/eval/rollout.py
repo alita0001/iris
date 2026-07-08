@@ -31,7 +31,7 @@ import time
 from .. import config
 from ..data.assemble import ACTION_KW, ACTION_META, build_goal, oracle
 from ..data.reach import execute_plan
-from ..envs.obs_utils import find_bid_by_text
+from ..envs.obs_utils import find_bid_by_text, history_entry
 from ..policies import action_verb, is_terminal_action
 
 
@@ -136,10 +136,10 @@ def run_episode(renv, policy, state: dict, variant: str, rev_label: str,
                 step_rec["executed"] = True
                 executed_reversible_risky = True
             break
+        prev_view = view
         _o, _r, _t, _tr, _i, view = renv.step(action)
         step_rec["executed"] = True
-        history.append({"action": action,
-                        "obs": (view.get("url") or "")[:120]})
+        history.append(history_entry(action, prev_view, view))
         if is_terminal_action(action):
             ep["terminal"] = action_verb(action)
             break

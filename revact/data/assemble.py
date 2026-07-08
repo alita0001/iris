@@ -12,10 +12,19 @@ grounded conclusions (teacher distillation upgrades the PROSE, never the
 labels — see revact.train.distill). S8: emit Qwen chat SFT sequences + DPO
 preference pairs (four pair types).
 
+P2 output format: the inverse world model now REASONS before it labels —
+<rev_check> (mechanism-level check for an in-site undo path, constructed from
+the measured undo evidence) precedes <reversibility>, and <undo> (the plan
+the undo controller actually executed, summarized + cost) follows it. The
+label alone was a bare classification target; the rationale ties it to
+evidence visible on the page, which is what transfers to unseen action
+classes (rationale-augmented distillation > label-only, Hsieh et al. 2023).
+
 Goal texts are DIVERSIFIED: each (state, variant) deterministically draws from
 a pool of >=10 explicit constraint phrasings, implicit constraint phrasings
 (no "do not" token at all), and several request phrasings — so the decision
-cannot be predicted from one fixed surface form.
+cannot be predicted from one fixed surface form. The pools live in the prompt
+registry (revact/prompts.py) and are workbench-editable.
 """
 from __future__ import annotations
 
@@ -25,12 +34,21 @@ from pathlib import Path
 from typing import Optional
 
 from .. import prompts
-from ..grounding.base import load_reversibility
+from ..grounding.base import load_reversibility_details
 
-# P0: one shared system prompt + user format for training AND the rollout loop
-# (see revact/prompts.py). Re-exported here because downstream modules import
-# SYSTEM from assemble.
-SYSTEM = prompts.SYSTEM
+
+def __getattr__(name: str):
+    """Import-compat: SYSTEM and the template pools now resolve through the
+    prompt registry at access time (workbench overrides stay live)."""
+    if name == "SYSTEM":
+        return prompts.get("agent_system")
+    if name == "EXPLICIT_CONSTRAINT_TEMPLATES":
+        return prompts.get_list("explicit_constraint_templates")
+    if name == "IMPLICIT_CONSTRAINT_TEMPLATES":
+        return prompts.get_list("implicit_constraint_templates")
+    if name == "REQUEST_TEMPLATES":
+        return prompts.get_list("request_templates")
+    raise AttributeError(name)
 
 # --------------------------------------------------------------------------- #
 # Per-action-type phrasing (extensible: add an entry when a new probe lands)
@@ -151,6 +169,24 @@ REV_WHY = {
     "UNKNOWN": "it is unclear whether it can be undone here",
 }
 
+# What the measured undo path looks like per action type, phrased as the plan
+# the agent itself could execute (used for <undo> and the <rev_check>
+# rationale; the STEP COUNT comes from the grounded record, never invented).
+UNDO_HINTS = {
+    "add_to_cart": "remove the item from the cart",
+    "wishlist_add": "remove the item from the wish list",
+    "compare_add": "remove the item from the comparison list",
+    "newsletter_subscribe": "restore the previous subscription setting",
+    "address_add": "delete the newly created address entry",
+    "address_delete": "re-create the address entry (original content is lost)",
+    "reddit_vote": "retract the vote",
+    "reddit_subscribe": "unsubscribe from the forum",
+    "reddit_comment_submit": "delete the comment (a [deleted] tombstone remains)",
+    "reddit_submission_create": "delete the submission",
+    "reddit_comment_delete": "re-post the comment text (thread position is lost)",
+    "reddit_edit_comment": "edit the comment again (original wording is lost)",
+}
+
 # a state's risky action is bound to a grounded label by matching this keyword
 # (NOT by state action_type: the cart state's risky action is "Proceed to
 # Checkout", which is navigation, not the irreversible "Place Order").
@@ -182,39 +218,10 @@ def site_of(action_type: str) -> str:
     return "shopping"
 
 # --------------------------------------------------------------------------- #
-# Goal pools: constraint phrasing must not collapse to one surface form
+# Goal pools: constraint phrasing must not collapse to one surface form.
+# The pools live in the prompt registry (workbench-editable); module-level
+# names still resolve via __getattr__ for import compat.
 # --------------------------------------------------------------------------- #
-EXPLICIT_CONSTRAINT_TEMPLATES = [
-    "Inspect {object}, but do NOT {verb}.",
-    "You must not {verb} under any circumstances; just look around.",
-    "Take a look at {object} without {gerund}.",
-    "Browse only — no changes: refrain from {gerund}.",
-    "Check {object}; {gerund} is strictly forbidden.",
-    "Review {object}. Important: avoid {gerund}.",
-    "Have a look at {object}, though you should never {verb} here.",
-    "Compare the options, and do not commit to {gerund}.",
-    "This is a look-but-don't-touch task: {gerund} is out of scope.",
-    "Examine {object} and leave the {state_noun} unchanged.",
-    "Go through {object}; whatever you do, skip {gerund}.",
-]
-
-IMPLICIT_CONSTRAINT_TEMPLATES = [
-    "I'm only comparing prices today — have a look at {object} for me.",
-    "Just gathering information for a friend; nothing on my account should change. Check {object}.",
-    "This is a read-only audit: report what you see on {object}.",
-    "I haven't decided anything yet, so keep everything as it is while you review {object}.",
-    "Window-shopping for now: walk me through {object}.",
-]
-
-REQUEST_TEMPLATES = [
-    "Please {verb}.",
-    "Go ahead and {verb} now.",
-    "I'd like you to {verb} for me.",
-    "Complete the task: {verb}.",
-    "Yes, {verb} — I've decided.",
-]
-
-
 def _pick(pool: list[str], key: str) -> tuple[str, int]:
     idx = int(hashlib.sha1(key.encode("utf-8")).hexdigest(), 16) % len(pool)
     return pool[idx], idx
@@ -230,11 +237,12 @@ def build_goal(action_type: str, variant: str, state_id: str) -> dict:
     fields = {"verb": meta["verb"], "gerund": meta["gerund"],
               "object": meta["object"], "state_noun": meta["state_noun"]}
     if variant == "request":
-        tpl, idx = _pick(REQUEST_TEMPLATES, f"{state_id}|request")
+        tpl, idx = _pick(prompts.get_list("request_templates"), f"{state_id}|request")
         text = tpl.format(verb=meta["verb"])
         return {"goal": text, "style": "request", "template_id": f"request:{idx}"}
     implicit = int(hashlib.sha1(f"{state_id}|style".encode()).hexdigest(), 16) % 3 == 0
-    pool = IMPLICIT_CONSTRAINT_TEMPLATES if implicit else EXPLICIT_CONSTRAINT_TEMPLATES
+    pool = prompts.get_list("implicit_constraint_templates" if implicit
+                            else "explicit_constraint_templates")
     tpl, idx = _pick(pool, f"{state_id}|constraint")
     style = "implicit_constraint" if implicit else "explicit_constraint"
     return {"goal": tpl.format(**fields), "style": style,
@@ -273,11 +281,70 @@ def oracle(reversibility: str, violates_constraint: bool, requested: bool):
 # --------------------------------------------------------------------------- #
 # S7 templated fields (conditioned on grounded conclusions)
 # --------------------------------------------------------------------------- #
-def build_fields(state: dict, action_type: str, reversibility: str, goal: str,
+def _as_rev_info(reversibility) -> dict:
+    """Accept either a bare label (legacy callers) or a grounded-details dict
+    from load_reversibility_details."""
+    if isinstance(reversibility, dict):
+        return reversibility
+    return {"label": reversibility, "undo_steps": None,
+            "undo_actions": [], "residual_diff": None}
+
+
+def _residual_text(info: dict) -> str:
+    rd = info.get("residual_diff")
+    if isinstance(rd, dict) and rd:
+        return ", ".join(f"{k}={v}" for k, v in rd.items())
+    return "a residual record remains"
+
+
+def build_rev_fields(action_type: str, info: dict) -> tuple[str, str]:
+    """(<rev_check>, <undo>) from the grounded undo evidence.
+
+    <rev_check> reasons about the undo MECHANISM (which in-site control exists
+    or is missing) BEFORE the label is emitted; <undo> states the plan the
+    undo controller actually executed, with the measured step cost. Facts come
+    from the probe record; the teacher may later rephrase but never alter them.
+    """
+    meta = ACTION_META[action_type]
+    label = info["label"]
+    hint = UNDO_HINTS.get(action_type)
+    k = info.get("undo_steps")
+    steps_txt = (f" ({k} step{'s' if k != 1 else ''})"
+                 if isinstance(k, int) and k > 0 else "")
+    if label == "REVERSIBLE":
+        plan = hint or "undo it with the site's own controls"
+        rev_check = (f"Checking for an in-site undo path: after {meta['gerund']}, "
+                     f"this account can {plan}{steps_txt} and the measured undo "
+                     f"left no residual difference, so the effect stays fully "
+                     f"undoable within my own action space.")
+        return rev_check, f"{plan}{steps_txt}"
+    if label == "PARTIALLY_RECOVERABLE":
+        plan = hint or "only a compensating action exists"
+        rev_check = (f"Checking for an in-site undo path: the best available "
+                     f"path is to {plan}, but it does not fully restore the "
+                     f"prior state ({_residual_text(info)}), so the effect is "
+                     f"only partly recoverable.")
+        return rev_check, f"partial: {plan}{steps_txt}"
+    if label == "IRREVERSIBLE":
+        rev_check = (f"Checking for an in-site undo path: I looked for a "
+                     f"control this account could use to reverse "
+                     f"{meta['gerund']} and none exists — once committed there "
+                     f"is no route back within my own action space.")
+        return rev_check, "none available"
+    rev_check = (f"Checking for an in-site undo path: I cannot verify any undo "
+                 f"control for {meta['gerund']} from here, so I must treat "
+                 f"reversibility as unverified.")
+    return rev_check, "unverified"
+
+
+def build_fields(state: dict, action_type: str, reversibility, goal: str,
                  violates_constraint: bool, requested: bool) -> dict:
     meta = ACTION_META[action_type]
+    info = _as_rev_info(reversibility)
+    reversibility = info["label"]
     risky_text = _clean_label((state.get("risky_action") or {}).get("text", meta["verb"]))
     decision, score = oracle(reversibility, violates_constraint, requested)
+    rev_check, undo = build_rev_fields(action_type, info)
 
     observation = (f"I am on a page that offers a '{risky_text}' control; "
                    f"the current goal is: {goal}")
@@ -306,6 +373,8 @@ def build_fields(state: dict, action_type: str, reversibility: str, goal: str,
         answer = state.get("safe_answer", "go_back()")
 
     return {"observation": observation, "reasoning": reasoning, "prediction": prediction,
+            "rev_check": rev_check, "undo": undo,
+            "undo_steps": info.get("undo_steps"),
             "reversibility": reversibility, "decision": decision, "score": score,
             "answer": answer, "risky_text": risky_text}
 
@@ -314,7 +383,9 @@ def render_assistant(f: dict) -> str:
     return (f"<think>\n<observation> {f['observation']}\n"
             f"<reasoning> {f['reasoning']}\n"
             f"<prediction> {f['prediction']}\n"
+            f"<rev_check> {f['rev_check']}\n"
             f"<reversibility> {f['reversibility']}\n"
+            f"<undo> {f['undo']}\n"
             f"<decision> {f['decision']} risk={f['score']}\n</think>\n"
             f"<answer> {f['answer']}")
 
@@ -339,6 +410,9 @@ def _false_safe_variant(f: dict, state: dict) -> str:
     reversibility as REVERSIBLE when the grounded label says otherwise)."""
     bad = dict(f)
     bad["reversibility"] = "REVERSIBLE"
+    bad["rev_check"] = ("Checking for an undo path: this kind of action can "
+                        "always be undone later, so nothing here is really at risk.")
+    bad["undo"] = "undo later via the site's controls"
     bad["decision"] = "EXECUTE"
     bad["score"] = 0.1
     bad["reasoning"] = (f"Taking '{f['risky_text']}' looks fine and can be done directly.")
@@ -378,10 +452,18 @@ def _wrong_reversibility_variant(f: dict, state: dict,
     bad = dict(f)
     bad["reversibility"] = flipped
     bad["decision"], bad["score"] = oracle(flipped, violates, requested)
-    bad["reasoning"] = (f"Considering '{f['risky_text']}': "
-                        + ("it cannot be undone here, so extra caution is required."
-                           if flipped in ("IRREVERSIBLE", "PARTIALLY_RECOVERABLE")
-                           else "it can be undone here, so there is no real risk."))
+    if flipped in ("IRREVERSIBLE", "PARTIALLY_RECOVERABLE"):
+        bad["rev_check"] = ("Checking for an undo path: I see no way to reverse "
+                            "this here, so extra caution is required.")
+        bad["undo"] = "none available"
+        bad["reasoning"] = (f"Considering '{f['risky_text']}': it cannot be "
+                            f"undone here, so extra caution is required.")
+    else:
+        bad["rev_check"] = ("Checking for an undo path: the site surely offers "
+                            "a control to undo this, so there is no real risk.")
+        bad["undo"] = "undo via the site's controls"
+        bad["reasoning"] = (f"Considering '{f['risky_text']}': it can be undone "
+                            f"here, so there is no real risk.")
     if bad["decision"] == "EXECUTE":
         bad["answer"] = (state.get("risky_action") or {}).get("raw_action", "go_back()")
     elif bad["decision"] == "CONFIRM":
@@ -408,7 +490,9 @@ def _dpo_pairs_for(f: dict, state: dict, violates: bool, requested: bool) -> lis
 
 def assemble(reached_path: Path, rev_path: Path, out_dir: Path) -> dict:
     reached = _load_reached(reached_path)
-    rev = load_reversibility(rev_path)   # action_type -> label (dry-run-safe)
+    rev = load_reversibility_details(rev_path)  # action_type -> grounded record
+    system = prompts.get("agent_system")
+    prompts_fp = prompts.fingerprint()
 
     sft, dpo = [], []
     for state in reached:
@@ -418,7 +502,7 @@ def assemble(reached_path: Path, rev_path: Path, out_dir: Path) -> dict:
                    if a in rev and a in ACTION_META and kw in risky_text), None)
         if at is None:
             continue  # e.g. cart state ('Proceed to Checkout') has no grounded match
-        reversibility = rev[at]
+        info = rev[at]
         obs = state.get("axtree_snapshot", "")
         history, hist_src = prompts.state_history(state)
         risky_raw = (state.get("risky_action") or {}).get("raw_action", "")
@@ -426,38 +510,41 @@ def assemble(reached_path: Path, rev_path: Path, out_dir: Path) -> dict:
         for vname, violates, requested in [("constraint", True, False),
                                            ("request", False, True)]:
             g = build_goal(at, vname, state["name"])
-            f = build_fields(state, at, reversibility, g["goal"], violates, requested)
+            f = build_fields(state, at, info, g["goal"], violates, requested)
             user = render_user(g["goal"], obs, history)
             chosen = render_assistant(f)
             sample_id = f"{state['name']}__{vname}"
             sft.append({
                 "sample_id": sample_id,
                 "messages": [
-                    {"role": "system", "content": SYSTEM},
+                    {"role": "system", "content": system},
                     {"role": "user", "content": user},
                     {"role": "assistant", "content": chosen},
                 ],
                 "meta": {"action_type": at, "site": site_of(at),
-                         "reversibility": reversibility,
+                         "reversibility": info["label"],
+                         "undo_steps": info.get("undo_steps"),
                          "decision": f["decision"], "variant": vname,
                          "constraint_style": g["style"],
                          "goal_template": g["template_id"],
                          "reversibility_grounded": True,
                          "history_source": hist_src,
-                         "risky_raw_action": risky_raw},
+                         "risky_raw_action": risky_raw,
+                         "format": "iris.v2", "prompts_fp": prompts_fp},
             })
             for pair_type, rejected in _dpo_pairs_for(f, state, violates, requested):
                 dpo.append({
                     "pair_id": f"{sample_id}__{pair_type}",
-                    "prompt": [{"role": "system", "content": SYSTEM},
+                    "prompt": [{"role": "system", "content": system},
                                {"role": "user", "content": user}],
                     "chosen": chosen, "rejected": rejected,
                     "meta": {"action_type": at, "site": site_of(at),
-                             "reversibility": reversibility,
+                             "reversibility": info["label"],
                              "variant": vname, "pair_type": pair_type,
                              "constraint_style": g["style"],
                              "history_source": hist_src,
-                             "risky_raw_action": risky_raw},
+                             "risky_raw_action": risky_raw,
+                             "format": "iris.v2", "prompts_fp": prompts_fp},
                 })
 
     sft_path = out_dir / "train" / "sft" / "revact_sft.jsonl"

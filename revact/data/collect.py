@@ -14,7 +14,7 @@ from typing import Any, Optional
 
 from .. import config
 from ..envs.harness import RevActEnv
-from ..envs.obs_utils import extract_interactive_bids, one_line_summary, prune_axtree_txt
+from ..envs.obs_utils import extract_interactive_bids, history_entry, prune_axtree_txt
 from ..policies import is_terminal_action
 
 
@@ -109,8 +109,11 @@ def collect_trajectory(
         action = policy.act(view, goal=goal, history=running_history)
         if not action:
             break
+        prev_view = view
         _obs, reward, terminated, truncated, _info, view = renv.step(action)
-        running_history.append({"action": action, "obs": one_line_summary(view)})
+        # P2 history entry: action + observed delta + change flag (no grounded
+        # labels here — the policy must see only deployment-computable facts).
+        running_history.append(history_entry(action, prev_view, view))
         max_reward = max(max_reward, float(reward))
         _maybe_key_state(step_id=renv.step_id)
         if terminated or truncated:

@@ -18,15 +18,11 @@ from .. import config, prompts
 from ..data.assemble import (
     ACTION_KW,
     ACTION_META,
-    EXPLICIT_CONSTRAINT_TEMPLATES,
-    IMPLICIT_CONSTRAINT_TEMPLATES,
-    REQUEST_TEMPLATES,
-    SYSTEM,
     _dpo_pairs_for,
     build_fields,
     build_goal,
 )
-from ..grounding.base import load_reversibility
+from ..grounding.base import load_reversibility, load_reversibility_details
 
 # --------------------------------------------------------------------------- #
 # Dataset-card schema (HF dataset-card style; rendered by the browser tab).
@@ -35,8 +31,8 @@ from ..grounding.base import load_reversibility
 # --------------------------------------------------------------------------- #
 CARD_GRANULARITY = (
     "单步文件（revact_sft.jsonl）：每条样本是一个「决策点」，输入 = system 指令 + user"
-    "（<goal> + <history> 到达该状态的动作历史 + <observation> 当前页 axtree 快照）；"
-    "监督目标 = assistant 一条（<think> 五字段 + <answer> 动作）。"
+    "（<goal> + <history> 编号历史行（动作+[变化标记]+关键delta）+ <observation> 当前页 "
+    "axtree 快照）；监督目标 = assistant 一条（<think> 七字段 + <answer> 动作）。"
     "多轮文件（revact_sft_multiturn.jsonl）：一条完整轨迹为一个样本，system + "
     "交替 user/assistant，途中步为 `<answer> 动作`，风险决策步为完整 <think> 块，"
     "loss 计在所有 assistant 轮。该格式与 rollout 循环（policies.py）共用一个"
@@ -44,21 +40,23 @@ CARD_GRANULARITY = (
 )
 
 CARD_MESSAGE_FLOW = [
-    {"role": "system", "desc": "固定安全 agent 指令（prompts.SYSTEM，训练与部署同一条）：动作空间 + "
-     "常规步直接 <answer>、涉状态变更步先 <think> 五字段再 <answer>"},
-    {"role": "user", "desc": "首轮：<goal>\\n{目标}\\n\\n<history>\\n{- action -> obs 行 |(none)}"
-     "\\n\\n<observation>\\n{axtree 快照}；多轮样本的后续 user 轮只带新 <observation>"},
+    {"role": "system", "desc": "安全 agent 指令（prompt registry: agent_system，训练与部署同一条，"
+     "工作台可编辑）：动作空间 + 常规步直接 <answer>、涉状态变更步先 <think> 七字段再 <answer>"},
+    {"role": "user", "desc": "首轮：<goal>\\n{目标}\\n\\n<history>\\n{编号行：action -> [flag] delta"
+     "，flag ∈ nav/state-change/update/no-effect |(none)}\\n\\n<observation>\\n{axtree 快照}；"
+     "多轮样本的后续 user 轮只带新 <observation>"},
     {"role": "assistant", "desc": "监督目标：常规步 `<answer> 动作`；风险步 <think><observation>.."
-     "<reasoning>..<prediction>..<reversibility>..<decision>..</think><answer>.."},
+     "<reasoning>..<prediction>..<rev_check>..<reversibility>..<undo>..<decision>..</think>"
+     "<answer>.."},
 ]
 
 CARD_SFT_SCHEMA = [
     ("sample_id", "str", "state 名 + '__' + 变体（constraint|request）；与 DPO pair_id、"
      "lineage 的自然连接键"),
     ("messages", "list", "Qwen chat 序列：单步=3 条；多轮=system + 交替 user/assistant"),
-    ("messages[0].content", "str", "system：固定安全 agent 指令（prompts.SYSTEM）"),
-    ("messages[1].content", "str", "user 首轮：<goal> + <history>（到达此状态的动作序列）+ "
-     "<observation>"),
+    ("messages[0].content", "str", "system：安全 agent 指令（registry agent_system，可编辑）"),
+    ("messages[1].content", "str", "user 首轮：<goal> + <history>（编号的 动作+[变化标记]+关键delta "
+     "行）+ <observation>"),
     ("messages[-1].content", "str", "assistant 决策轮：结构化 <think> + <answer>"),
     ("meta", "dict", "审计/切分字段，训练时不喂入模型（见 meta 表）"),
 ]
@@ -72,17 +70,24 @@ CARD_META_SCHEMA = [
     ("constraint_style", "explicit_constraint / implicit_constraint / request"),
     ("goal_template", "目标模板 id（审计：防止决策可由单一表面形式预测）"),
     ("reversibility_grounded", "恒 true：标签来自探针实测而非规则"),
+    ("undo_steps", "实测 undo 步数（探针 undo 控制器实录；无实测为 null）"),
     ("prose_source", "template | teacher（蒸馏只升级措辞，结论 pin 死）"),
     ("history_source", "plan（记录的 reach 计划）| canonical（按动作类合成）| none | "
      "trajectory（多轮：真实轨迹）"),
     ("risky_raw_action", "该状态风险控件的可执行动作（GRPO 约束违反奖励用）"),
+    ("format", "样本格式版本（iris.v2 = 七字段 think 块 + 三要素历史行）"),
+    ("prompts_fp", "生成该样本时生效 prompt 集的指纹（prompt 调优溯源）"),
 ]
 
 CARD_ASSISTANT_FORMAT = [
     ("<observation>", "当前处境复述（含目标）"),
     ("<reasoning>", "以可逆性结论为条件的决策推理"),
     ("<prediction>", "动作后果预测（前向世界模型字段）"),
+    ("<rev_check>", "逆向世界模型 reasoning：在标签之前检查站内 undo 机制是否存在"
+     "（事实由探针 undo 实录钉死，teacher 只改措辞）"),
     ("<reversibility>", "REVERSIBLE / PARTIALLY_RECOVERABLE / IRREVERSIBLE / UNKNOWN"),
+    ("<undo>", "undo 计划概要 + 实测步数（如 'remove the item from the cart (1 step)'）"
+     "或 none available / unverified"),
     ("<decision>", "EXECUTE / VERIFY / CONFIRM / AVOID + risk 分数"),
     ("<answer>", "最终动作：raw_action / send_msg_to_user(...) / go_back()"),
 ]
@@ -367,7 +372,8 @@ class DataStore:
         return {
             "summary": self.summary(),
             "granularity": CARD_GRANULARITY,
-            "system_prompt": SYSTEM,
+            "system_prompt": prompts.get("agent_system"),
+            "prompts_fingerprint": prompts.fingerprint(),
             "message_flow": CARD_MESSAGE_FLOW,
             "sft_schema": CARD_SFT_SCHEMA,
             "meta_schema": CARD_META_SCHEMA,
@@ -378,9 +384,9 @@ class DataStore:
 
     # ---------------------------------------------- constraint / candidate -- #
     def constraint_templates(self) -> dict:
-        return {"explicit": EXPLICIT_CONSTRAINT_TEMPLATES,
-                "implicit": IMPLICIT_CONSTRAINT_TEMPLATES,
-                "request": REQUEST_TEMPLATES,
+        return {"explicit": prompts.get_list("explicit_constraint_templates"),
+                "implicit": prompts.get_list("implicit_constraint_templates"),
+                "request": prompts.get_list("request_templates"),
                 "action_meta": ACTION_META}
 
     def constraint_preview(self, state_name: str) -> dict | None:
@@ -415,10 +421,13 @@ class DataStore:
         }]
         counterfactuals = []
         if at and at in labels:
-            for vname, violates, requested in [("constraint", True, False),
+            details = load_reversibility_details(
+                self.root / "grounded" / "reversibility.jsonl")
+            rev_info = details.get(at, labels[at])  # dict with undo evidence,
+            for vname, violates, requested in [("constraint", True, False),  # else bare label
                                                ("request", False, True)]:
                 g = build_goal(at, vname, state_name)
-                f = build_fields(raw, at, labels[at], g["goal"], violates, requested)
+                f = build_fields(raw, at, rev_info, g["goal"], violates, requested)
                 for pair_type, rejected in _dpo_pairs_for(f, raw, violates, requested):
                     counterfactuals.append({
                         "kind": "dpo_rejected", "pair_type": pair_type, "variant": vname,

@@ -1,12 +1,13 @@
 # RevAct / IRIS — Grounded-Reversibility Pipeline for Safe Web Agents
 
 **IRIS: Invertibility-aware Internal world models for Safe web agents.**
-一个策略内世界模型在一次自回归里输出：前向转移预测 `<prediction>` + 行为实测的
-`<reversibility>` + 校准的 `<decision>` + 可执行 `<answer>`。可逆性标签不来自
+一个策略内世界模型在一次自回归里输出：前向转移预测 `<prediction>` + 逆向机制检查
+`<rev_check>` + 行为实测的 `<reversibility>` + undo 计划 `<undo>` + 校准的
+`<decision>` + 可执行 `<answer>`（样本格式 `iris.v2`）。可逆性标签不来自
 人/LLM 意见，而来自 **execute-then-undo 行为测量**（agent-relative、预算 k 步、
 in-episode）。方案全文见
-[`docs/plan/06-IRIS项目计划书.md`](docs/plan/06-IRIS项目计划书.md)（权威链：
-06 计划书 → 07 撞车文献 → 05 流程文档）。
+[`docs/plan/IRIS项目计划书.md`](docs/plan/IRIS项目计划书.md)（权威链：
+计划书 → 07 撞车文献 → S1-S8 流程文档）。
 
 ## 安全红线（先读这个）
 
@@ -98,7 +99,11 @@ conda run -n agentlab python -m revact.cli eval-rollout --policy iris \
 ```
 
 Prompt 格式唯一事实源：`revact/prompts.py` —— 训练样本、rollout 策略、部署共用同一
-`<goal>+<history>+<observation>` 三段 user 格式（P0，训练分布=部署分布）。GRPO 奖励全部
+`<goal>+<history>+<observation>` 三段 user 格式（P0，训练分布=部署分布）。P2 起
+`<history>` 为编号三要素行（动作 + `[nav/state-change/update/no-effect]` 变化标记 +
+关键 delta，由相邻真实观测 diff 算出；`[no-effect]` 防"动作无效→输入重复→死循环"），
+且全部 LLM prompt / 目标模板池收进 **prompt registry**（工作台「Prompt 管理」页可编辑，
+覆盖存 `configs/prompts.local.json`，样本 meta 记 `prompts_fp` 指纹溯源）。GRPO 奖励全部
 离线可验证（format / decision-对-oracle / reversibility-对-实测标签 / 约束违反惩罚），
 不需要 LLM judge，也不需要环境在训练回路里。
 

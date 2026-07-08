@@ -113,6 +113,7 @@ pre{background:var(--card2);border:1px solid var(--line);border-radius:6px;paddi
 .seq .t{color:var(--mut)}
 .seq .f-observation{color:#475569}.seq .f-reasoning{color:#334155}
 .seq .f-prediction{color:var(--revc)}
+.seq .f-rev_check{color:#7c5cad}.seq .f-undo{color:#2a7f62}
 .seq .f-reversibility,.seq .f-decision{font-weight:700}
 .seq .f-answer{color:var(--acc);font-weight:600}
 .goal{background:var(--acc-bg);border:1px solid rgba(63,63,180,.15);border-radius:6px;

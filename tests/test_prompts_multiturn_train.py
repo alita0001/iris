@@ -13,14 +13,27 @@ from revact.train.sft import validate_rows as sft_validate
 
 # ------------------------------------------------------------------ prompts -- #
 def test_render_and_parse_roundtrip():
-    hist = [{"action": "goto('http://x/p')", "obs": "http://x/p"},
-            {"action": "click('12')", "obs": "clicked"}]
+    hist = [{"action": "goto('http://x/p')", "obs": "http://x/p"},   # legacy entry
+            {"action": "click('12')", "delta": "cart items 0 -> 1",  # P2 entry
+             "flag": "state-change"}]
     user = prompts.render_user("Do not buy.", "RootWebArea 'P'", hist)
-    assert user.startswith("<goal>\nDo not buy.\n\n<history>\n- goto(")
+    assert user.startswith("<goal>\nDo not buy.\n\n<history>\n1. goto(")
+    assert "2. click('12') -> [state-change] cart items 0 -> 1" in user
     p = prompts.parse_user(user)
     assert p["goal"] == "Do not buy."
     assert "click('12')" in p["history"]
     assert p["obs"] == "RootWebArea 'P'"
+
+
+def test_history_no_effect_breaks_input_identity():
+    """Two consecutive no-effect steps must yield DIFFERENT user inputs (the
+    'model loops on identical (goal, obs)' failure the P2 format fixes)."""
+    h1 = [{"action": "click('5')", "delta": "no visible change", "flag": "no-effect"}]
+    h2 = h1 + [{"action": "click('5')", "delta": "no visible change",
+                "flag": "no-effect"}]
+    u1 = prompts.render_user("G", "OBS", h1)
+    u2 = prompts.render_user("G", "OBS", h2)
+    assert u1 != u2 and "[no-effect]" in u2
 
 
 def test_parse_user_accepts_pre_p0_format():
@@ -129,7 +142,8 @@ def test_sft_validate_role_patterns():
         {"role": "user", "content": "u"},
         {"role": "assistant", "content":
          "<think>\n<observation> o\n<reasoning> r\n<prediction> p\n"
-         "<reversibility> REVERSIBLE\n<decision> EXECUTE risk=0.1\n</think>\n"
+         "<rev_check> c\n<reversibility> REVERSIBLE\n<undo> u\n"
+         "<decision> EXECUTE risk=0.1\n</think>\n"
          "<answer> click('1')"}], "meta": {}}]
     assert sft_validate(good_single)["n_problems"] == 0
     bad = [{"sample_id": "b", "messages": [
@@ -140,7 +154,8 @@ def test_sft_validate_role_patterns():
 
 def test_grpo_rewards_are_verifiable():
     good = ("<think>\n<observation> o\n<reasoning> r\n<prediction> p\n"
-            "<reversibility> IRREVERSIBLE\n<decision> AVOID risk=0.9\n</think>\n"
+            "<rev_check> c\n<reversibility> IRREVERSIBLE\n<undo> none available\n"
+            "<decision> AVOID risk=0.9\n</think>\n"
             "<answer> go_back()")
     bad = ("<answer> click('99')\n<decision> EXECUTE")      # tags out of order
     comps = [[{"role": "assistant", "content": good}],
@@ -184,10 +199,12 @@ def test_iris_policy_extracts_answer_and_fields():
     pol.last_fields = {}
     out = pol._extract_action(
         "<think>\n<observation> o\n<reasoning> maybe click('99')?\n"
-        "<prediction> p\n<reversibility> IRREVERSIBLE\n"
+        "<prediction> p\n<rev_check> no cancel control exists\n"
+        "<reversibility> IRREVERSIBLE\n<undo> none available\n"
         "<decision> AVOID risk=0.95\n</think>\n<answer> go_back()")
     assert out == "go_back()"                      # not the click() in prose
     assert pol.last_fields == {"reversibility": "IRREVERSIBLE",
+                               "undo": "none available",
                                "decision": "AVOID risk=0.95"}
     assert pol._extract_action("plain text\nclick('7')") == "click('7')"
 

@@ -129,7 +129,8 @@ class ScriptedShoppingPolicy:
 # --------------------------------------------------------------------------- #
 # P0: prompt text lives in revact/prompts.py so training samples and the
 # rollout loop share ONE user format (goal + history + observation).
-_SYSTEM_PROMPT = prompts.SYSTEM_COLLECTOR
+# P2: read through the registry at construction time so workbench prompt
+# overrides apply to freshly-built policies without a restart.
 
 
 class LLMActionPolicy:
@@ -170,7 +171,7 @@ class LLMActionPolicy:
         self.max_history = max_history
         self.timeout = timeout
         self.max_retries = max_retries
-        self.system_prompt = _SYSTEM_PROMPT
+        self.system_prompt = prompts.get("collector_system")
         self.last_raw_response: str = ""
         self.last_finish_reason: str = ""
 
@@ -261,14 +262,14 @@ class IrisPolicy(LLMActionPolicy):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.system_prompt = prompts.SYSTEM
+        self.system_prompt = prompts.get("agent_system")
         self.last_fields: dict = {}
 
     def _extract_action(self, content: str) -> Optional[str]:
         self.last_fields = {
             tag: (m.group(1).strip() if (m := re.search(
                 rf"<{tag}>\s*([^\n<]+)", content)) else "")
-            for tag in ("reversibility", "decision")
+            for tag in ("reversibility", "undo", "decision")
         }
         m = re.search(r"<answer>\s*(.+)", content, re.DOTALL)
         if m:

@@ -18,7 +18,8 @@ from revact.server.quality import compute_quality
 
 SYS = "sys"
 ASST = ("<think>\n<observation> on page\n<reasoning> fits goal\n"
-        "<prediction> adds item\n<reversibility> REVERSIBLE\n"
+        "<prediction> adds item\n<rev_check> a remove control exists\n"
+        "<reversibility> REVERSIBLE\n<undo> remove the item (1 step)\n"
         "<decision> EXECUTE risk=0.1\n</think>\n<answer> click('3')")
 
 
@@ -247,6 +248,25 @@ def test_http_roundtrip(root, monkeypatch):
                                   "payload": {"review_status": "confirmed"}})
         assert get("/api/annotations/key_state")["effective"]["t1_s0"][
             "review_status"] == "confirmed"
+        # prompt registry: list, override, fingerprint change, reset
+        monkeypatch.setenv("REVACT_PROMPTS_FILE", str(root / "prompts.json"))
+        pr = get("/api/prompts")
+        assert {i["id"] for i in pr["items"]} >= {
+            "agent_system", "collector_system", "teacher_distill"}
+        fp0 = pr["fingerprint"]
+        r = post("/api/prompts", {"id": "collector_system", "value": "New collector rules."})
+        assert r["ok"] and r["fingerprint"] != fp0
+        items = {i["id"]: i for i in get("/api/prompts")["items"]}
+        assert items["collector_system"]["overridden"]
+        assert items["collector_system"]["value"] == "New collector rules."
+        # invalid override (missing required placeholder) is rejected with 400
+        try:
+            post("/api/prompts", {"id": "teacher_distill", "value": "no placeholders"})
+            raise AssertionError("expected 400")
+        except urllib.error.HTTPError as e:
+            assert e.code == 400
+        assert post("/api/prompts/reset", {"id": "collector_system"})["ok"]
+        assert get("/api/prompts")["fingerprint"] == fp0
         # path traversal is rejected
         try:
             get("/api/screenshot?path=../../etc/passwd")

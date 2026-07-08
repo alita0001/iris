@@ -4,7 +4,7 @@
 > 过程中，通过 execute-then-undo 行为测量获得的实验发现。每条发现都标注了
 > **对论文的用途**（正/负结果均记）与**对数据构建流程的改进**。
 > 数据来源：`data/grounded/reversibility.jsonl`（live 采集，MANIFEST 溯源）。
-> 关联主线文档：[`../../RevAct重定位方案/06-IRIS项目计划书.md`](../../RevAct重定位方案/06-IRIS项目计划书.md)。
+> 关联主线文档：[`plan/IRIS项目计划书.md`](plan/IRIS项目计划书.md)。
 
 ---
 
