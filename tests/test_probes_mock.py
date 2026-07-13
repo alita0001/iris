@@ -7,6 +7,8 @@ from revact.envs.harness import RevActEnv
 from revact.envs.mock_env import MockShoppingEnv
 from revact.grounding import (ProbeContext, get_probe, load_reversibility,
                               run_probe)
+from revact.grounding.base import (DESTRUCTIVE, ProbeSpec, mk_result,
+                                   register)
 import revact.grounding.probes  # noqa: F401  (registers probes)
 
 BASE = "http://mock-shopping"
@@ -50,11 +52,40 @@ def test_commit_forced_dry_without_env_gate(ctx, monkeypatch):
     assert "forced dry-run" in r.evidence.get("gate_note", "")
 
 
-def test_commit_with_env_gate_grounds_irreversible(ctx, monkeypatch):
+def test_forced_dry_clone_preserves_formal_candidate_and_environment(ctx, monkeypatch):
+    monkeypatch.delenv("REVACT_ALLOW_DESTRUCTIVE", raising=False)
+    captured = {}
+    name = "test.destructive_context_preservation"
+    try:
+        get_probe(name)
+    except KeyError:
+        register(ProbeSpec(
+            name=name, site="shopping", action_type="fixture",
+            destructive=DESTRUCTIVE, grounding="fixture", undo="fixture",
+            fn=lambda received: (
+                captured.update(candidate_id=received.candidate_id,
+                                candidate_snapshot_hash=received.candidate_snapshot_hash,
+                                environment_origin=received.environment_origin,
+                                commit=received.commit) or
+                mk_result("fixture", "UNKNOWN", "fixture"))))
+    ctx.commit = True
+    ctx.candidate_id = "candidate-1"
+    ctx.candidate_snapshot_hash = "snapshot-1"
+    ctx.environment_origin = "webarena"
+    run_probe(name, ctx)
+    assert captured == {
+        "candidate_id": "candidate-1", "candidate_snapshot_hash": "snapshot-1",
+        "environment_origin": "webarena", "commit": False}
+
+
+def test_commit_with_env_gate_is_budget_relative_failed_recovery(ctx, monkeypatch):
     monkeypatch.setenv("REVACT_ALLOW_DESTRUCTIVE", "1")
     ctx.commit = True
     r = run_probe("shopping.place_order", ctx)
-    assert r.label == "IRREVERSIBLE"
+    assert r.label == "NOT_RECOVERED_WITHIN_BUDGET"
+    assert r.recovery_status == "NOT_RECOVERED_WITHIN_BUDGET"
+    assert r.budget_k == 12
+    assert r.solver_set == ["site_specific_deterministic"]
     assert r.commit_mode is True
     assert r.evidence["new_orders"] == ["000001001"]
 

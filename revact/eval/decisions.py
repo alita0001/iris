@@ -12,10 +12,12 @@ from __future__ import annotations
 
 import collections
 import json
+import math
 import re
 from pathlib import Path
 
 from .. import config
+from ..train.validators import formal_point_join_problems
 
 _DEC_RE = re.compile(r"<decision>\s*([A-Z_]+)")
 
@@ -25,21 +27,78 @@ def parse_decision(text: str) -> str | None:
     return m.group(1) if m else None
 
 
+def gold_completion_budget(rows: list[dict], tokenizer,
+                           margin_tokens: int = 16) -> dict:
+    """Nearest-rank p99 budget over gold assistant completions."""
+    lengths = []
+    for row in rows:
+        assistant = row["messages"][-1]
+        if assistant.get("role") != "assistant":
+            raise ValueError(f"{row.get('sample_id')}: final message is not assistant")
+        encoded = tokenizer(assistant.get("content", ""), add_special_tokens=False)
+        ids = encoded["input_ids"] if isinstance(encoded, dict) else encoded.input_ids
+        lengths.append(len(ids))
+    ordered = sorted(lengths)
+    if not ordered:
+        return {"n": 0, "p50": 0, "p95": 0, "p99": 0, "max": 0,
+                "recommended_max_new_tokens": 0}
+    def percentile(q: float) -> int:
+        return ordered[max(0, math.ceil(q * len(ordered)) - 1)]
+    return {
+        "n": len(ordered), "p50": percentile(.50), "p95": percentile(.95),
+        "p99": percentile(.99), "max": ordered[-1],
+        "recommended_max_new_tokens": percentile(.99) + margin_tokens,
+    }
+
+
 def run(test_path: Path | None = None, adapter: str = "",
-        max_new_tokens: int = 200, dry_run: bool = False) -> int:
-    test_path = test_path or (config.SPLITS_DIR / "sft_test.jsonl")
+        max_new_tokens: int = 0, dry_run: bool = False,
+        *, allow_legacy: bool = False) -> int:
+    test_path = test_path or ((config.SPLITS_DIR if allow_legacy else
+                              config.FORMAL_SPLITS_DIR) / "sft_test.jsonl")
     if not test_path.exists():
         print(f"ERROR: missing {test_path} (run `revact split` first)")
         return 1
     rows = [json.loads(ln) for ln in test_path.open()]
+    if not rows:
+        print(f"ERROR: {test_path} contains zero rows; refusing a vacuous eval.")
+        return 1
+    n_formal = sum((row.get("meta") or {}).get("formal_dataset") is True
+                   for row in rows)
+    if n_formal != len(rows):
+        if not allow_legacy:
+            print("ERROR: formal decision eval rejects legacy/mixed rows; use the "
+                  "explicit --legacy-development audit mode for frozen pilot data.")
+            return 1
+        print("[mode] LEGACY-DEVELOPMENT: results are pipeline diagnostics, not "
+              "formal point-grounded evidence.")
+    point_problems = formal_point_join_problems(rows, config.DATA_ROOT)
+    if point_problems:
+        for problem in point_problems[:20]:
+            print(f"  [invalid] {problem}")
+        print("ERROR: formal evaluation provenance failed exact point/manifest join.")
+        return 1
     cells = collections.Counter(
         (r["meta"]["action_type"], r["meta"]["variant"]) for r in rows)
     print(f"[data] {len(rows)} held-out samples; cells={dict(cells)}")
-    thin = [c for c, n in cells.items() if n < 5]
+    thin = [c for c, n in cells.items() if n < 30]
     if thin:
-        print(f"[warn] cells with n<5 (no statistical weight): {thin}")
+        print(f"[warn] cells with n<30: report counts/intervals only; no effect "
+              f"conclusion is permitted: {thin}")
+    from transformers import AutoTokenizer
+    tok = AutoTokenizer.from_pretrained(config.TRAIN.model_path)
+    budget = gold_completion_budget(rows, tok)
+    required = budget["recommended_max_new_tokens"]
+    print(f"[generation-budget] {budget}")
+    if max_new_tokens <= 0:
+        max_new_tokens = required
+    elif max_new_tokens < required:
+        print(f"ERROR: max_new_tokens={max_new_tokens} is below gold p99+margin "
+              f"requirement {required}; refusing truncation-biased eval")
+        return 1
     if dry_run:
-        print("[dry-run] test data valid; no generation started.")
+        print(f"[dry-run] test data valid; generation budget={max_new_tokens}; "
+              "no generation started.")
         return 0
     return _evaluate(rows, adapter, max_new_tokens)
 

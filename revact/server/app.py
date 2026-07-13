@@ -17,6 +17,7 @@ Routes (JSON unless noted):
   POST /api/prompts/reset                 {id} drop override, back to default
   GET  /api/trajectories                  index; /api/trajectories/<id> detail
   GET  /api/keystates | /api/states | /api/grounded | /api/probes
+  GET/POST /api/probe-specs               label-free declarative probe specs
   GET  /api/sft[?distilled=1] | /api/dpo | /api/templates | /api/quality
   GET  /api/dataset_card                  sample anatomy + schema + counts
   GET  /api/sample_raw?sample=<sample_id> full unclipped SFT/distilled/DPO rows
@@ -36,11 +37,17 @@ from __future__ import annotations
 
 import json
 import threading
+from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 from .. import config, prompts
+from .. import prompt_store
+from ..grounding.authoring import (load_authored_specs, save_authored_spec,
+                                   spec_from_workbench)
+from ..grounding.schema import (EFFECT_STATUSES, GROUNDING_SCHEMA_VERSION,
+                                RECOVERY_STATUSES)
 from . import annotations
 from .adapters import RUNTIME, live_ready, pipeline_overview, run_action
 from .datasets import DataStore
@@ -181,7 +188,21 @@ class Handler(BaseHTTPRequestHandler):
             if path == "/api/prompts":
                 return self._json({"ok": True, "items": prompts.registry_view(),
                                    "fingerprint": prompts.fingerprint(),
-                                   "overrides_file": str(prompts.overrides_path())})
+                                   "overrides_file": str(prompts.overrides_path()),
+                                   "bundle_dir": str(prompt_store.bundle_dir())})
+            if path == "/api/prompts/bundle":
+                fp = q.get("fp", [""])[0]
+                try:
+                    return self._json({"ok": True,
+                                       "bundle": prompt_store.load_bundle(fp)})
+                except (FileNotFoundError, ValueError):
+                    return self._err(404, "prompt bundle missing or invalid")
+            if path == "/api/prompts/diff":
+                left, right = q.get("left", [""])[0], q.get("right", [""])[0]
+                try:
+                    return self._json({"ok": True, **prompt_store.diff_bundles(left, right)})
+                except (FileNotFoundError, ValueError):
+                    return self._err(404, "prompt bundle missing or invalid")
             if path == "/api/trajectories":
                 return self._json({"ok": True, "items": store.trajectory_index()})
             if path.startswith("/api/trajectories/"):
@@ -195,24 +216,61 @@ class Handler(BaseHTTPRequestHandler):
                 return self._json({"ok": True, "items": store.reached_states(),
                                    "annotations": annotations.effective("state")})
             if path == "/api/grounded":
-                return self._json({"ok": True, "items": store.grounded_runs(),
+                formal = store.formal_grounding()
+                return self._json({"ok": True,
+                                   # Compatibility aliases; explicitly legacy.
+                                   "items": store.grounded_runs(),
                                    "effective_labels": store.effective_labels(),
                                    "manifest": store.manifest(),
+                                   "legacy_class_smoke": {
+                                       "items": store.grounded_runs(),
+                                       "effective_labels": store.effective_labels(),
+                                       "manifest": store.manifest(),
+                                       "formal_supervision": False,
+                                   },
+                                   "formal_point": formal,
+                                   "canonical_schema": {
+                                       "schema_version": GROUNDING_SCHEMA_VERSION,
+                                       "effect_status": list(EFFECT_STATUSES),
+                                       "recovery_status": list(RECOVERY_STATUSES),
+                                       "legacy_irreversible_is_display_only": True,
+                                   },
                                    "annotations": annotations.effective("grounded")})
             if path == "/api/probes":
                 return self._json({"ok": True, "items": store.probe_specs()})
+            if path == "/api/probe-specs":
+                spec_path = (store.root / "grounded" / "probe_specs" /
+                             "authored_specs.jsonl")
+                return self._json({
+                    "ok": True,
+                    "items": [spec.to_dict() for spec in
+                              load_authored_specs(spec_path)],
+                    "execution_enabled": False,
+                    "label_entry_supported": False,
+                    "note": "Specs define action/signal/undo/solver/budget only; labels are execution outputs.",
+                })
             if path == "/api/sft":
                 distilled = q.get("distilled", ["0"])[0] == "1"
-                return self._json({"ok": True, "items": store.sft(distilled=distilled),
+                family = q.get("family", ["single"])[0]
+                tier = q.get("tier", ["legacy"])[0]
+                return self._json({"ok": True,
+                                   "items": store.sft(distilled=distilled,
+                                                      family=family,
+                                                      tier=tier),
+                                   "asset_tier": tier,
                                    "annotations": annotations.effective(
                                        "distill" if distilled else "sample")})
             if path == "/api/dpo":
-                return self._json({"ok": True, "items": store.dpo()})
+                return self._json({"ok": True, "items": store.dpo(
+                    family=q.get("family", ["single"])[0],
+                    tier=q.get("tier", ["legacy"])[0]),
+                    "asset_tier": q.get("tier", ["legacy"])[0]})
             if path == "/api/dataset_card":
                 return self._json({"ok": True, "card": store.dataset_card()})
             if path == "/api/sample_raw":
                 sid = q.get("sample", [""])[0]
-                raw = store.sample_raw(sid) if sid else None
+                raw = store.sample_raw(
+                    sid, tier=q.get("tier", ["auto"])[0]) if sid else None
                 return self._json({"ok": bool(raw), "raw": raw})
             if path == "/api/templates":
                 return self._json({"ok": True, **store.constraint_templates(),
@@ -292,6 +350,7 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):  # noqa: N802 (http.server API)
         path = urlparse(self.path).path.rstrip("/")
         body = self._body()
+        store = DataStore()
         try:
             if path == "/api/pipeline/run":
                 with _lock:
@@ -310,8 +369,14 @@ class Handler(BaseHTTPRequestHandler):
             if path == "/api/prompts":
                 with _lock:
                     try:
+                        before = prompts.effective()
+                        before_fp = prompts.fingerprint()
+                        prompt_store.store_bundle(before, author="workbench-before-edit")
                         prompts.set_override(str(body.get("id", "")),
                                              body.get("value"))
+                        prompt_store.store_bundle(
+                            prompts.effective(), parent_fp=before_fp,
+                            author=str(body.get("author", "workbench")))
                     except ValueError as e:
                         return self._err(400, str(e))
                 return self._json({"ok": True,
@@ -320,9 +385,32 @@ class Handler(BaseHTTPRequestHandler):
                                            "需重跑 assemble（+multiturn+split）重物化样本"})
             if path == "/api/prompts/reset":
                 with _lock:
+                    before_fp = prompts.fingerprint()
+                    prompt_store.store_bundle(prompts.effective(),
+                                               author="workbench-before-reset")
                     prompts.clear_override(str(body.get("id", "")))
+                    prompt_store.store_bundle(
+                        prompts.effective(), parent_fp=before_fp,
+                        author=str(body.get("author", "workbench")))
                 return self._json({"ok": True,
                                    "fingerprint": prompts.fingerprint()})
+            if path == "/api/probe-specs":
+                with _lock:
+                    proposal = dict(body.get("proposal") or {})
+                    proposal.setdefault("author", str(body.get("author") or
+                                                       "workbench"))
+                    spec = spec_from_workbench(
+                        proposal,
+                        timestamp=datetime.now(timezone.utc).isoformat(
+                            timespec="seconds"),
+                        controller_version=config.CONTROLLER_VERSION,
+                    )
+                    artifact = (store.root / "grounded" / "probe_specs" /
+                                "authored_specs.jsonl")
+                    save_authored_spec(spec, artifact)
+                return self._json({"ok": True, "spec": spec.to_dict(),
+                                   "artifact": str(artifact),
+                                   "note": "spec pending fixture + code review; no label created"})
             if path == "/api/annotations":
                 kind = str(body.get("kind", ""))
                 row = annotations.add(kind, str(body.get("target_id", "")),

@@ -1,0 +1,50 @@
+{
+  "migration_mode": "index_only_source_files_unchanged",
+  "n_formal_eligible": 0,
+  "n_indexed": 539,
+  "n_quarantined": 539,
+  "reason_counts": {
+    "ambiguous_duplicate_trajectory_lineage": 56,
+    "collector_success_not_proven": 539,
+    "failed_collector_trajectory": 6,
+    "formal_dataset_not_true": 539,
+    "missing_action_instance_id": 539,
+    "missing_probe_point_id": 539,
+    "missing_state_id": 539,
+    "mock_environment": 12,
+    "non_deployment_negative_source": 385,
+    "non_trajectory_history": 322,
+    "prediction_not_probe_transition": 154,
+    "undo_not_probe_point": 154
+  },
+  "rollback": "delete data/train/quarantine; source JSONL files were not changed",
+  "schema_version": "iris.quarantine_report.v1",
+  "source_files": [
+    {
+      "exists": true,
+      "path": "sft/revact_sft.jsonl",
+      "sha256": "0d0f832a104453a8cddedef5ef17e0f6f6e3e9a45f8b863e0d53911d5b9735f5"
+    },
+    {
+      "exists": true,
+      "path": "sft/revact_sft_multiturn.jsonl",
+      "sha256": "94247e855e7997c93ffbcd18c9c38675b1d9cc218b1e08c703e806bc681002ab"
+    },
+    {
+      "exists": true,
+      "path": "sft/revact_sft_distilled.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "exists": true,
+      "path": "dpo/revact_dpo.jsonl",
+      "sha256": "3f0053241d1e6a92eebe58cd74aed9ddb842b861e0a9a2f92159bd242e29fd4e"
+    },
+    {
+      "exists": true,
+      "path": "dpo/revact_dpo_multiturn.jsonl",
+      "sha256": "19b878b459ffe51e27137d07179e43f7b3a79c902500f1fea11868ed90a638ed"
+    }
+  ],
+  "trajectory_meta_sha256": "c7814672df21ba0f6cefb93424d9cc6bac80fc6ddf9853892fcc7262cdbd21bd"
+}

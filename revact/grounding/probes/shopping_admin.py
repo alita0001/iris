@@ -112,4 +112,4 @@ register(ProbeSpec("shopping_admin.delete_product", "shopping_admin",
                    "admin_delete_product", DESTRUCTIVE, "product_record",
                    "none (data loss)",
                    probe_admin_delete_product,
-                   expected_spectrum="IRREVERSIBLE"))
+                   expected_spectrum="NOT_RECOVERED_WITHIN_BUDGET"))

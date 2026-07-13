@@ -21,8 +21,7 @@ import urllib.request
 from typing import Optional
 
 from . import prompts
-from .config import MAX_AXTREE_CHARS_POLICY
-from .envs.obs_utils import prune_axtree_txt
+from .config import POLICY_HISTORY_STEPS
 
 # Actions BrowserGym's high-level WebArena action set understands (common subset).
 _ACTION_VERBS = (
@@ -152,7 +151,7 @@ class LLMActionPolicy:
         api_key_env: str = "DEEPSEEK_API_KEY",
         temperature: float = 0.0,
         max_tokens: int = 8192,
-        max_history: int = 6,
+        max_history: Optional[int] = None,
         timeout: int = 120,
         max_retries: int = 3,
     ):
@@ -168,7 +167,10 @@ class LLMActionPolicy:
         # Reasoning models (e.g. deepseek-v4-pro) spend tokens on hidden
         # reasoning; 512 was too small and left `content` empty. Allow override.
         self.max_tokens = int(os.environ.get("REVACT_LLM_MAX_TOKENS", max_tokens))
-        self.max_history = max_history
+        # One config value drives collection, IrisPolicy deployment, rollout,
+        # and trajectory-conditioned dataset materialization.
+        self.max_history = (POLICY_HISTORY_STEPS if max_history is None
+                            else int(max_history))
         self.timeout = timeout
         self.max_retries = max_retries
         self.system_prompt = prompts.get("collector_system")
@@ -188,14 +190,13 @@ class LLMActionPolicy:
         self.last_raw_response = ""
 
     def _build_messages(self, obs_view: dict, goal: str, history: list) -> list:
-        obs_txt = prune_axtree_txt(obs_view.get("axtree_txt", ""),
-                                   max_chars=MAX_AXTREE_CHARS_POLICY)
-        user = prompts.render_user(goal, obs_txt,
-                                   (history or [])[-self.max_history:])
-        return [
-            {"role": "system", "content": self.system_prompt},
-            {"role": "user", "content": user},
-        ]
+        return prompts.build_policy_messages(
+            goal,
+            obs_view.get("axtree_txt", ""),
+            history or [],
+            system_prompt=self.system_prompt,
+            max_history=self.max_history,
+        )
 
     def _post(self, payload: dict) -> dict:
         data = json.dumps(payload).encode("utf-8")
@@ -279,6 +280,5 @@ class IrisPolicy(LLMActionPolicy):
             if a:
                 return a.group(0).strip()
         return parse_action(content)
-
 
 

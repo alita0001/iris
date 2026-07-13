@@ -1,10 +1,14 @@
 """S6-S8: assemble grounded RevAct/IRIS training samples.
 
-Inputs (produced earlier, all grounded):
-  * S3/scale reached states -> risk-affording state + risky_action + safe_answer
-                               + real axtree snapshot.
-  * S5 grounded labels      -> behaviorally-measured reversibility per action type
-                               (grounding.load_reversibility, dry-run-safe).
+Formal inputs:
+  * S3/scale reached states -> point-addressed state + action instance + real
+                               accessibility snapshot and trajectory history;
+  * S5 grounding            -> one canonical ``GroundingPoint`` for that exact
+                               state/action transition;
+  * evaluation truth        -> independent point×goal policy truth.
+
+The old action-class loader remains only behind ``formal=False`` for frozen
+pilot inspection and never produces a formal artifact.
 
 S6 oracle: decision = f(grounded reversibility, constraint violation, whether
 the goal requests the action). S7: templated reasoning CONDITIONED on the
@@ -33,8 +37,17 @@ import json
 from pathlib import Path
 from typing import Optional
 
-from .. import prompts
+from .. import config, prompts
+from ..eval.truth import (assert_truth_manifest_integrity,
+                          load_truth_records, truth_by_point_variant)
 from ..grounding.base import load_reversibility_details
+from ..grounding.schema import (GroundingPoint, GroundingValidationError,
+                                load_probe_points)
+from ..train.validators import parse_action
+
+
+class FormalAssemblyError(ValueError):
+    """A row cannot be admitted to the formal point-grounded dataset."""
 
 
 def __getattr__(name: str):
@@ -164,8 +177,13 @@ ACTION_META = {
 
 REV_WHY = {
     "REVERSIBLE": "it can be undone here with the site's own controls",
+    "RECOVERED": "the recorded solver restored the measured state within budget",
     "PARTIALLY_RECOVERABLE": "only part of the effect can be undone here",
-    "IRREVERSIBLE": "it cannot be undone from this account",
+    "PARTIALLY_RECOVERED": "the recorded solver restored only part of the measured state",
+    "IRREVERSIBLE": "the legacy record claims no undo path",
+    "NOT_RECOVERED_WITHIN_BUDGET": (
+        "the recorded solver set did not recover the measured state within budget"),
+    "NO_EFFECT": "the measured action produced no effect",
     "UNKNOWN": "it is unclear whether it can be undone here",
 }
 
@@ -261,19 +279,32 @@ def _clean_label(risky_line: str) -> str:
 # --------------------------------------------------------------------------- #
 # S6 oracle
 # --------------------------------------------------------------------------- #
-def oracle(reversibility: str, violates_constraint: bool, requested: bool):
-    irreversible = reversibility in ("IRREVERSIBLE", "PARTIALLY_RECOVERABLE")
+def oracle(reversibility: str, violates_constraint: bool, requested: bool,
+           normative_risk: Optional[bool] = None):
+    """Decision oracle with an explicit normative-risk axis.
+
+    ``normative_risk=None`` preserves legacy fixture behavior only.  Formal
+    assembly requires a boolean policy truth and never derives safety from
+    recoverability alone.
+    """
+    difficult_recovery = reversibility in (
+        "IRREVERSIBLE", "PARTIALLY_RECOVERABLE", "PARTIALLY_RECOVERED",
+        "NOT_RECOVERED_WITHIN_BUDGET")
     if violates_constraint:
-        score = {"IRREVERSIBLE": 0.95, "PARTIALLY_RECOVERABLE": 0.85,
-                 "REVERSIBLE": 0.6, "UNKNOWN": 0.7}[reversibility]
+        score = 0.95 if normative_risk is True else 0.8
         return "AVOID", score
+    if normative_risk is True:
+        return "CONFIRM", 0.9
+    if normative_risk is False:
+        return "EXECUTE", 0.1
+    # Explicitly legacy-only compatibility below.
     if requested:
         if reversibility == "UNKNOWN":
             return "VERIFY", 0.5
-        if irreversible:
-            return "CONFIRM", 0.7          # irreversible commit -> ask consent first
+        if difficult_recovery:
+            return "CONFIRM", 0.7
         return "EXECUTE", 0.1
-    if irreversible:
+    if difficult_recovery:
         return "CONFIRM", 0.7
     return "EXECUTE", 0.15
 
@@ -307,6 +338,63 @@ def build_rev_fields(action_type: str, info: dict) -> tuple[str, str]:
     """
     meta = ACTION_META[action_type]
     label = info["label"]
+    if info.get("formal_point"):
+        point_id = info["probe_point_id"]
+        k_budget = info.get("budget_k")
+        solvers = ", ".join(info.get("solver_set") or []) or "unrecorded solver"
+        raw_undo = list(info.get("undo_actions") or [])
+        semantic = list(info.get("undo_semantic_actions") or [])
+        k = info.get("undo_steps")
+        visible = (info.get("evidence") or {}).get("pre_visible_undo_evidence")
+        visible_text = (
+            f"The current pre-action input shows: {visible}."
+            if visible else
+            "The current pre-action input does not itself establish a post-action undo control."
+        )
+        if semantic:
+            plan = " -> ".join(semantic)
+        elif raw_undo:
+            plan = " -> ".join(raw_undo)
+        else:
+            plan = "no successful undo sequence was recorded"
+        if label == "RECOVERED":
+            rev_check = (
+                f"{visible_text} Post-action probe {point_id} executed the recorded "
+                f"undo sequence with {solvers}; the final measured signal matched "
+                f"the pre-action signal within budget k={k_budget}. This is "
+                f"constructive, probe-relative recovery evidence, not a safety claim.")
+            raw_plan = " -> ".join(raw_undo)
+            return rev_check, (
+                f"semantic={plan}; browsergym_actions={raw_plan}; "
+                f"undo_cost_steps={k}")
+        if label == "PARTIALLY_RECOVERED":
+            rev_check = (
+                f"{visible_text} Post-action probe {point_id} tried {plan} with "
+                f"{solvers}, but residual measured state remained "
+                f"({_residual_text(info)}). Recovery is partial under this signal.")
+            raw_plan = " -> ".join(raw_undo)
+            return rev_check, (
+                f"partial semantic={plan}; browsergym_actions={raw_plan}; "
+                f"undo_cost_steps={k}")
+        if label == "NOT_RECOVERED_WITHIN_BUDGET":
+            rev_check = (
+                f"{visible_text} Probe {point_id} used solver set [{solvers}] up to "
+                f"budget k={k_budget} and did not restore the measured signal. This "
+                f"is a bounded search failure; it does not prove that no undo path exists.")
+            return rev_check, "not found by the recorded solver set within budget"
+        if info.get("effect_status") == "NO_EFFECT":
+            return (
+                f"Probe {point_id} measured no state change after the action; recovery "
+                f"is therefore not applicable, rather than a reversibility class.",
+                "not applicable (no measured effect)",
+            )
+        return (
+            f"{visible_text} Probe {point_id} did not establish a recovery result for "
+            f"the measured transition, so recovery remains unknown.",
+            "unverified",
+        )
+
+    # Legacy compatibility only.  These hints are never formal gold.
     hint = UNDO_HINTS.get(action_type)
     k = info.get("undo_steps")
     steps_txt = (f" ({k} step{'s' if k != 1 else ''})"
@@ -325,12 +413,12 @@ def build_rev_fields(action_type: str, info: dict) -> tuple[str, str]:
                      f"prior state ({_residual_text(info)}), so the effect is "
                      f"only partly recoverable.")
         return rev_check, f"partial: {plan}{steps_txt}"
-    if label == "IRREVERSIBLE":
+    if label in ("IRREVERSIBLE", "NOT_RECOVERED_WITHIN_BUDGET"):
         rev_check = (f"Checking for an in-site undo path: I looked for a "
-                     f"control this account could use to reverse "
-                     f"{meta['gerund']} and none exists — once committed there "
-                     f"is no route back within my own action space.")
-        return rev_check, "none available"
+                     f"control this account could use to reverse {meta['gerund']} "
+                     f"within the recorded budget and did not find one; this is "
+                     f"bounded failed recovery, not proof of impossibility.")
+        return rev_check, "not found within the recorded budget"
     rev_check = (f"Checking for an in-site undo path: I cannot verify any undo "
                  f"control for {meta['gerund']} from here, so I must treat "
                  f"reversibility as unverified.")
@@ -338,17 +426,34 @@ def build_rev_fields(action_type: str, info: dict) -> tuple[str, str]:
 
 
 def build_fields(state: dict, action_type: str, reversibility, goal: str,
-                 violates_constraint: bool, requested: bool) -> dict:
+                 violates_constraint: bool, requested: bool,
+                 normative_risk: Optional[bool] = None) -> dict:
     meta = ACTION_META[action_type]
     info = _as_rev_info(reversibility)
     reversibility = info["label"]
     risky_text = _clean_label((state.get("risky_action") or {}).get("text", meta["verb"]))
-    decision, score = oracle(reversibility, violates_constraint, requested)
+    decision, score = oracle(reversibility, violates_constraint, requested,
+                             normative_risk=normative_risk)
     rev_check, undo = build_rev_fields(action_type, info)
 
     observation = (f"I am on a page that offers a '{risky_text}' control; "
                    f"the current goal is: {goal}")
-    if violates_constraint:
+    if info.get("formal_point") and violates_constraint:
+        reasoning = (
+            f"The action violates the explicit policy constraint, so I must avoid "
+            f"it. Its independently measured recovery status is {reversibility}; "
+            f"recoverability does not determine the normative decision.")
+    elif info.get("formal_point") and normative_risk is True:
+        reasoning = (
+            f"The independent policy truth marks this action as risky, so I must "
+            f"obtain confirmation before attempting it. The probe-relative recovery "
+            f"status is {reversibility}, which is reported separately.")
+    elif info.get("formal_point") and normative_risk is False:
+        reasoning = (
+            f"The requested action is not marked risky by the independent policy "
+            f"truth, so I can execute it. Its recovery status {reversibility} is a "
+            f"separate operational property, not the safety label.")
+    elif violates_constraint:
         reasoning = (f"The goal rules this action out. Taking '{risky_text}' would "
                      f"{meta['effect']}, conflicting with what the user asked; "
                      f"since {REV_WHY[reversibility]}, "
@@ -363,12 +468,36 @@ def build_fields(state: dict, action_type: str, reversibility, goal: str,
                      f"Because {REV_WHY[reversibility]}, "
                      + ("proceeding is safe." if decision == "EXECUTE"
                         else "I should confirm before committing."))
-    prediction = f"Clicking '{risky_text}' would {meta['effect']}."
+    if info.get("formal_point"):
+        pre = json.dumps(info.get("pre_signal"), ensure_ascii=False, sort_keys=True)
+        post = json.dumps(info.get("post_signal"), ensure_ascii=False, sort_keys=True)
+        effect_status = info.get("effect_status")
+        if effect_status == "CHANGED":
+            prediction = (
+                f"For probe point {info['probe_point_id']}, executing the referenced "
+                f"action changed the measured signal from {pre} to {post}.")
+        elif effect_status == "NO_EFFECT":
+            prediction = (
+                f"For probe point {info['probe_point_id']}, the recorded execution "
+                f"left the measured signal unchanged at {pre} (post={post}).")
+        else:
+            prediction = (
+                f"Probe point {info['probe_point_id']} contains a recorded post-action "
+                "observation, but its measured effect status is UNKNOWN; no directional "
+                "next-state change is asserted.")
+        prediction_source = "probe_transition"
+    else:
+        prediction = f"Clicking '{risky_text}' would {meta['effect']}."
+        prediction_source = "action_meta_template_legacy"
 
     if decision == "EXECUTE":
         answer = (state.get("risky_action") or {}).get("raw_action", state.get("safe_answer", "go_back()"))
     elif decision == "CONFIRM":
-        answer = f"send_msg_to_user('This will {meta['effect']} and {REV_WHY[reversibility]}. Confirm?')"
+        if info.get("formal_point"):
+            answer = ("send_msg_to_user('Policy marks this action as risky; "
+                      "confirm before I attempt it?')")
+        else:
+            answer = f"send_msg_to_user('This will {meta['effect']} and {REV_WHY[reversibility]}. Confirm?')"
     else:  # AVOID / VERIFY
         answer = state.get("safe_answer", "go_back()")
 
@@ -376,7 +505,13 @@ def build_fields(state: dict, action_type: str, reversibility, goal: str,
             "rev_check": rev_check, "undo": undo,
             "undo_steps": info.get("undo_steps"),
             "reversibility": reversibility, "decision": decision, "score": score,
-            "answer": answer, "risky_text": risky_text}
+            "answer": answer, "risky_text": risky_text,
+            "normative_risk": normative_risk,
+            "prediction_source": prediction_source,
+            "undo_source": ("probe_point_id" if info.get("formal_point")
+                            else "legacy_hint"),
+            "undo_source_probe_point_id": (info.get("probe_point_id")
+                                             if info.get("formal_point") else "")}
 
 
 def render_assistant(f: dict) -> str:
@@ -399,8 +534,11 @@ def render_user(goal: str, obs_snapshot: str, history: list | None = None) -> st
 # --------------------------------------------------------------------------- #
 _REV_FLIP = {
     "REVERSIBLE": "IRREVERSIBLE",
+    "RECOVERED": "NOT_RECOVERED_WITHIN_BUDGET",
     "IRREVERSIBLE": "REVERSIBLE",
+    "NOT_RECOVERED_WITHIN_BUDGET": "RECOVERED",
     "PARTIALLY_RECOVERABLE": "REVERSIBLE",
+    "PARTIALLY_RECOVERED": "RECOVERED",
     "UNKNOWN": "REVERSIBLE",
 }
 
@@ -451,8 +589,10 @@ def _wrong_reversibility_variant(f: dict, state: dict,
         return None
     bad = dict(f)
     bad["reversibility"] = flipped
-    bad["decision"], bad["score"] = oracle(flipped, violates, requested)
-    if flipped in ("IRREVERSIBLE", "PARTIALLY_RECOVERABLE"):
+    bad["decision"], bad["score"] = oracle(
+        flipped, violates, requested, normative_risk=f.get("normative_risk"))
+    if flipped in ("IRREVERSIBLE", "PARTIALLY_RECOVERABLE",
+                   "PARTIALLY_RECOVERED", "NOT_RECOVERED_WITHIN_BUDGET"):
         bad["rev_check"] = ("Checking for an undo path: I see no way to reverse "
                             "this here, so extra caution is required.")
         bad["undo"] = "none available"
@@ -488,85 +628,357 @@ def _dpo_pairs_for(f: dict, state: dict, violates: bool, requested: bool) -> lis
     return pairs
 
 
-def assemble(reached_path: Path, rev_path: Path, out_dir: Path) -> dict:
-    reached = _load_reached(reached_path)
-    rev = load_reversibility_details(rev_path)  # action_type -> grounded record
-    system = prompts.get("agent_system")
-    prompts_fp = prompts.fingerprint()
+def _point_info(point: GroundingPoint) -> dict:
+    return {
+        "formal_point": True,
+        "label": point.recovery_status,
+        "effect_status": point.effect_status,
+        "undo_steps": point.undo_cost_steps,
+        "undo_actions": list(point.undo_actions),
+        "undo_semantic_actions": list(point.undo_semantic_actions),
+        "residual_diff": point.residual_diff,
+        "probe_point_id": point.probe_point_id,
+        "budget_k": point.budget_k,
+        "solver_set": list(point.solver_set),
+        "pre_signal": point.pre_signal,
+        "post_signal": point.post_signal,
+        "evidence": point.evidence,
+    }
 
-    sft, dpo = [], []
+
+def _state_normative_risk(state: dict) -> Optional[bool]:
+    value = state.get("normative_risk")
+    if value is None and isinstance(state.get("policy_constraint_truth"), dict):
+        value = state["policy_constraint_truth"].get("normative_risk")
+    return value if isinstance(value, bool) else None
+
+
+def _resolve_formal_point(state: dict,
+                          points: dict[str, GroundingPoint]) -> GroundingPoint:
+    risky = state.get("risky_action") or {}
+    point_id = state.get("probe_point_id") or risky.get("probe_point_id")
+    if not point_id:
+        raise FormalAssemblyError("missing unique probe_point_id")
+    point = points.get(str(point_id))
+    if point is None:
+        raise FormalAssemblyError(f"unknown probe_point_id {point_id!r}")
+    point.validate(formal=True)
+    state_id = state.get("state_id")
+    if not state_id or str(state_id) != point.state_id:
+        raise FormalAssemblyError(
+            f"state_id mismatch: sample={state_id!r}, point={point.state_id!r}")
+    action_instance_id = (state.get("action_instance_id") or
+                          risky.get("action_instance_id"))
+    if not action_instance_id or str(action_instance_id) != point.action_instance_id:
+        raise FormalAssemblyError(
+            "action_instance_id is missing or differs from the point")
+    raw_action = risky.get("raw_action", "")
+    if raw_action != point.raw_action:
+        raise FormalAssemblyError(
+            f"raw action differs from point: {raw_action!r} != {point.raw_action!r}")
+    canonical_action = (risky.get("canonical_action") or
+                        state.get("canonical_action"))
+    if canonical_action != point.canonical_action:
+        raise FormalAssemblyError("canonical action differs from the point")
+    state_hash = (state.get("pre_observation_hash") or
+                  (state.get("pre_fingerprint") or {}).get("axtree_hash"))
+    if not state_hash or str(state_hash) != point.pre_observation_hash:
+        raise FormalAssemblyError(
+            "pre observation hash is missing or differs from the probe transition")
+    if point.is_mock:
+        raise FormalAssemblyError("mock point is forbidden in the formal main set")
+    if state.get("collector_success") is not True:
+        raise FormalAssemblyError("formal expert sample requires collector_success=true")
+    if point.action_type not in ACTION_META:
+        raise FormalAssemblyError(f"unsupported action_type {point.action_type!r}")
+    return point
+
+
+def _legacy_binding(state: dict, rev: dict) -> tuple[str, dict] | None:
+    """Explicit development-only class binding retained for old fixtures."""
+    risky_text = ((state.get("risky_action") or {}).get("text", "")).lower()
+    at = next((a for a, kw in ACTION_KW.items()
+               if a in rev and a in ACTION_META and kw in risky_text), None)
+    return (at, rev[at]) if at else None
+
+
+def assemble(reached_path: Path, rev_path: Path, out_dir: Path, *,
+             formal: bool = True, truth_path: Path | None = None,
+             truth_manifest_path: Path | None = None) -> dict:
+    """Materialize single-step samples with a fail-closed formal join.
+
+    Formal mode joins only ``state.probe_point_id`` to the canonical point
+    body.  ``formal=False`` is a visibly quarantined legacy compatibility mode;
+    it may inspect class-smoke labels but never writes the historical main-set
+    filenames and never marks its rows as grounded formal supervision.
+    """
+    reached = _load_reached(reached_path, formal=formal)
+    try:
+        points = load_probe_points(rev_path, validate=True) if formal else {}
+    except GroundingValidationError as exc:
+        raise FormalAssemblyError(str(exc)) from exc
+    rev = {} if formal else load_reversibility_details(rev_path)
+    truth = {}
+    if formal:
+        truth_path = truth_path or out_dir / "eval" / "truth.jsonl"
+        truth_manifest_path = (truth_manifest_path or
+                               out_dir / "eval" / "TRUTH_MANIFEST.jsonl")
+        if truth_path.exists() and truth_manifest_path.exists():
+            assert_truth_manifest_integrity(
+                truth_path, truth_manifest_path, points)
+            truth = truth_by_point_variant(
+                load_truth_records(truth_path, points=points).values())
+    prompt_provenance = prompts.snapshot_generation(
+        root=out_dir, author="assemble-single",
+        producer="revact.data.assemble",
+        model={"provider": "local", "name": "deterministic-template",
+               "revision": "iris-fields-v1"},
+        decode_config={
+            "strategy": "deterministic", "sampling": False,
+            "format": ("iris.v3" if formal else "iris.v2-legacy"),
+            "message_topology": "stateless",
+            "policy_history_steps": config.POLICY_HISTORY_STEPS,
+            "snapshot_max_chars": config.MAX_AXTREE_CHARS_SNAPSHOT,
+        })
+    prompts_fp = prompt_provenance["prompts_fp"]
+    prompt_generation_fp = prompt_provenance["prompt_generation_fp"]
+
+    sft: list[dict] = []
+    dpo: list[dict] = []
+    blocked: list[dict] = []
     for state in reached:
-        # bind this state's risky action to a grounded label by keyword match
-        risky_text = ((state.get("risky_action") or {}).get("text", "")).lower()
-        at = next((a for a, kw in ACTION_KW.items()
-                   if a in rev and a in ACTION_META and kw in risky_text), None)
-        if at is None:
-            continue  # e.g. cart state ('Proceed to Checkout') has no grounded match
-        info = rev[at]
-        obs = state.get("axtree_snapshot", "")
-        history, hist_src = prompts.state_history(state)
-        risky_raw = (state.get("risky_action") or {}).get("raw_action", "")
+        state_name = str(state.get("name") or state.get("state_id") or "<unnamed>")
+        try:
+            if formal:
+                point = _resolve_formal_point(state, points)
+                at, info = point.action_type, _point_info(point)
+            else:
+                binding = _legacy_binding(state, rev)
+                if binding is None:
+                    raise FormalAssemblyError("no legacy keyword/class binding")
+                at, info = binding
+                point = None
+            obs = state.get("axtree_snapshot", "")
+            history, hist_src = prompts.state_history(state)
+            if formal and hist_src != "trajectory":
+                raise FormalAssemblyError(
+                    f"formal history_source must be trajectory, got {hist_src!r}")
+            risky_raw = (state.get("risky_action") or {}).get("raw_action", "")
 
-        for vname, violates, requested in [("constraint", True, False),
-                                           ("request", False, True)]:
-            g = build_goal(at, vname, state["name"])
-            f = build_fields(state, at, info, g["goal"], violates, requested)
-            user = render_user(g["goal"], obs, history)
-            chosen = render_assistant(f)
-            sample_id = f"{state['name']}__{vname}"
-            sft.append({
-                "sample_id": sample_id,
-                "messages": [
-                    {"role": "system", "content": system},
-                    {"role": "user", "content": user},
-                    {"role": "assistant", "content": chosen},
-                ],
-                "meta": {"action_type": at, "site": site_of(at),
-                         "reversibility": info["label"],
-                         "undo_steps": info.get("undo_steps"),
-                         "decision": f["decision"], "variant": vname,
-                         "constraint_style": g["style"],
-                         "goal_template": g["template_id"],
-                         "reversibility_grounded": True,
-                         "history_source": hist_src,
-                         "risky_raw_action": risky_raw,
-                         "format": "iris.v2", "prompts_fp": prompts_fp},
-            })
-            for pair_type, rejected in _dpo_pairs_for(f, state, violates, requested):
-                dpo.append({
-                    "pair_id": f"{sample_id}__{pair_type}",
-                    "prompt": [{"role": "system", "content": system},
-                               {"role": "user", "content": user}],
-                    "chosen": chosen, "rejected": rejected,
-                    "meta": {"action_type": at, "site": site_of(at),
-                             "reversibility": info["label"],
-                             "variant": vname, "pair_type": pair_type,
-                             "constraint_style": g["style"],
-                             "history_source": hist_src,
-                             "risky_raw_action": risky_raw,
-                             "format": "iris.v2", "prompts_fp": prompts_fp},
+            for vname, violates, requested in [
+                    ("constraint", True, False), ("request", False, True)]:
+                truth_record = truth.get((point.probe_point_id, vname)) \
+                    if point else None
+                if formal and truth_record is None:
+                    raise FormalAssemblyError(
+                        f"missing evaluation truth for {point.probe_point_id}/{vname}")
+                normative_risk = (truth_record.normative_risk
+                                  if truth_record else None)
+                if formal and (
+                        truth_record.violates_constraint != violates or
+                        truth_record.action_required_for_goal != requested):
+                    raise FormalAssemblyError(
+                        f"evaluation truth variant semantics mismatch for {vname}")
+                g = build_goal(at, vname, state_name)
+                f = build_fields(
+                    state, at, info, g["goal"], violates, requested,
+                    normative_risk=normative_risk,
+                )
+                input_messages = prompts.build_policy_messages(
+                    g["goal"], obs, history,
+                    system_prompt=prompts.get("agent_system"),
+                    required_actions=[risky_raw, f["answer"]],
+                )
+                policy_observation = prompts.parse_observation_message(
+                    input_messages[-1]["content"])
+                policy_input_observation_hash = hashlib.sha256(
+                    policy_observation.encode("utf-8")).hexdigest()
+                chosen = render_assistant(f)
+                if formal and f["decision"] != truth_record.expected_decision:
+                    raise FormalAssemblyError(
+                        "evaluation truth expected_decision disagrees with policy oracle")
+                sample_id = f"{state_name}__{vname}"
+                fmt = "iris.v3" if formal else "iris.v2-legacy"
+                meta = {
+                    "action_type": at,
+                    "site": point.site if point else site_of(at),
+                    "effect_status": point.effect_status if point else None,
+                    "recovery_status": point.recovery_status if point else None,
+                    "reversibility": info["label"],
+                    "undo_cost_steps": info.get("undo_steps"),
+                    "decision": f["decision"],
+                    "variant": vname,
+                    "normative_risk": normative_risk,
+                    "policy_constraint_truth": (
+                        truth_record.policy_constraint_truth if truth_record else None),
+                    "evaluation_case_id": (truth_record.evaluation_case_id
+                                           if truth_record else ""),
+                    "normative_truth_source": (truth_record.truth_source
+                                               if truth_record else ""),
+                    "normative_policy_id": (truth_record.policy_id
+                                            if truth_record else ""),
+                    "normative_policy_version": (truth_record.policy_version
+                                                 if truth_record else ""),
+                    "constraint_style": g["style"],
+                    "goal_template": g["template_id"],
+                    "formal_dataset": formal,
+                    "dataset_tier": "formal_point" if formal else "legacy_quarantine",
+                    "message_topology": "stateless",
+                    "turn_type": "decision",
+                    "assistant_turn_types": ["decision"],
+                    "reversibility_grounded": formal,
+                    "history_source": hist_src,
+                    "risky_raw_action": risky_raw,
+                    "risky_action": ((parsed.to_dict()
+                                      if (parsed := parse_action(risky_raw)) else None)
+                                     if formal else None),
+                    "canonical_action": point.canonical_action if point else "",
+                    "legal_at_snapshot": True if formal else None,
+                    "action_legal": True if formal else None,
+                    "backend_commit": ((point.evidence or {}).get("backend_commit")
+                                       if point else None),
+                    "violates_constraint": violates,
+                    "action_required_for_goal": requested,
+                    "prediction_source": f["prediction_source"],
+                    "undo_source": f["undo_source"],
+                    "undo_source_probe_point_id": f["undo_source_probe_point_id"],
+                    "state_id": point.state_id if point else state.get("state_id", ""),
+                    "candidate_id": point.candidate_id if point else "",
+                    "action_instance_id": (point.action_instance_id if point else ""),
+                    "probe_point_id": point.probe_point_id if point else "",
+                    "probe_run_id": point.probe_run_id if point else "",
+                    "environment_origin": (point.environment_origin if point else
+                                           state.get("environment_origin", "legacy")),
+                    "environment_family": (point.environment_family if point else ""),
+                    "environment_instance": (point.environment_instance if point else ""),
+                    "is_mock": point.is_mock if point else bool(state.get("is_mock", False)),
+                    "collector_success": state.get("collector_success"),
+                    "task_id": point.task_id if point else state.get("task_id", ""),
+                    "trajectory_id": (point.trajectory_id if point else
+                                      state.get("trajectory_id", "")),
+                    "run_id": point.run_id if point else state.get("run_id", ""),
+                    "seed": point.seed if point else state.get("seed"),
+                    "account": point.account if point else state.get("account", ""),
+                    "privilege": (point.privilege if point else
+                                  state.get("privilege", "")),
+                    "url": point.url if point else state.get("url", ""),
+                    "canonical_entity_id": state.get("canonical_entity_id", ""),
+                    "page_template_id": state.get("page_template_id", ""),
+                    "pre_observation_hash": (point.pre_observation_hash if point else ""),
+                    "post_observation_hash": (point.post_observation_hash if point else ""),
+                    "post_signal_diff": ({
+                        "pre_signal": point.pre_signal,
+                        "post_signal": point.post_signal,
+                    } if point else None),
+                    "undo_actions": list(point.undo_actions) if point else [],
+                    "undo_semantic_actions": (
+                        list(point.undo_semantic_actions) if point else []),
+                    "undo_observation_hashes": (
+                        list(point.undo_observation_hashes) if point else []),
+                    "residual_diff": point.residual_diff if point else None,
+                    "budget_k": point.budget_k if point else None,
+                    "solver_set": list(point.solver_set) if point else [],
+                    "candidate_snapshot_hash": (
+                        str((point.evidence or {}).get("candidate_snapshot_hash") or "")
+                        if point else ""),
+                    "policy_input_observation_hash": policy_input_observation_hash,
+                    "evidence": dict(point.evidence) if point else {},
+                    "format": fmt,
+                    "prompts_fp": prompts_fp,
+                    "prompt_generation_fp": prompt_generation_fp,
+                }
+                sft.append({
+                    "sample_id": sample_id,
+                    "messages": input_messages + [
+                        {"role": "assistant", "content": chosen}],
+                    "meta": meta,
                 })
+                for pair_type, rejected in _dpo_pairs_for(
+                        f, state, violates, requested):
+                    dpo_meta = dict(meta)
+                    dpo_meta.update({
+                        "pair_type": pair_type,
+                        "negative_source": "synthetic_flip",
+                        # Synthetic flips alone cannot enter the formal DPO main set.
+                        "formal_dataset": False,
+                        "dataset_tier": "synthetic_ablation",
+                    })
+                    dpo.append({
+                        "pair_id": f"{sample_id}__{pair_type}",
+                        "prompt": input_messages,
+                        "chosen": chosen,
+                        "rejected": rejected,
+                        "meta": dpo_meta,
+                    })
+        except (FormalAssemblyError, ValueError) as exc:
+            blocked.append({"state": state_name, "reason": str(exc)})
 
-    sft_path = out_dir / "train" / "sft" / "revact_sft.jsonl"
-    dpo_path = out_dir / "train" / "dpo" / "revact_dpo.jsonl"
+    if formal:
+        sft_path = out_dir / "train" / "formal" / "iris_sft_point_v1.jsonl"
+        dpo_path = out_dir / "train" / "ablation" / "iris_dpo_synthetic_point_v1.jsonl"
+        report_path = out_dir / "train" / "formal" / "assembly_report.json"
+    else:
+        sft_path = out_dir / "train" / "quarantine" / "legacy_sft.jsonl"
+        dpo_path = out_dir / "train" / "quarantine" / "legacy_dpo.jsonl"
+        report_path = out_dir / "train" / "quarantine" / "assembly_report.json"
     _write(sft_path, sft)
     _write(dpo_path, dpo)
-    return {"n_sft": len(sft), "n_dpo": len(dpo),
-            "sft_path": str(sft_path), "dpo_path": str(dpo_path),
-            "samples": sft}
+    report = {
+        "formal": formal,
+        "n_reached": len(reached),
+        "n_sft": len(sft),
+        "n_dpo": len(dpo),
+        "n_dpo_synthetic": len(dpo),
+        "formal_dpo_eligible": False,
+        "n_blocked_states": len(blocked),
+        "blocked": blocked,
+        "sft_path": str(sft_path),
+        "dpo_path": str(dpo_path),
+        "prompts_fp": prompts_fp,
+        "prompt_generation_fp": prompt_generation_fp,
+    }
+    report_path.parent.mkdir(parents=True, exist_ok=True)
+    report_path.write_text(
+        json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8")
+    return {**report, "report_path": str(report_path), "samples": sft}
 
 
 # --------------------------------------------------------------------------- #
 # io helpers
 # --------------------------------------------------------------------------- #
-def _load_reached(path: Path) -> list:
-    """Dedup by state name; keep the latest reached=True record per name."""
-    latest = {}
-    for line in path.open(encoding="utf-8"):
-        r = json.loads(line)
-        if r.get("reached") and r.get("risky_action"):
-            latest[r["name"]] = r
-    return list(latest.values())
+def _load_reached(path: Path, *, formal: bool = False) -> list:
+    """Load reached states without silently collapsing formal point identities.
+
+    Frozen scale files historically appended the same human-readable ``name``
+    and the legacy reader kept the last row.  A formal state/action point may
+    never be selected by append order, so its composite identity must be unique
+    or assembly fails closed.
+    """
+    rows = [json.loads(line) for line in path.open(encoding="utf-8")
+            if line.strip()]
+    rows = [row for row in rows if row.get("reached") and row.get("risky_action")]
+    if not formal:
+        latest = {row["name"]: row for row in rows}
+        return list(latest.values())
+
+    indexed: dict[tuple[str, str, str], dict] = {}
+    for row in rows:
+        risky = row.get("risky_action") or {}
+        key = (
+            str(row.get("state_id") or ""),
+            str(row.get("action_instance_id") or
+                risky.get("action_instance_id") or ""),
+            str(row.get("probe_point_id") or risky.get("probe_point_id") or ""),
+        )
+        if not key[0]:
+            raise FormalAssemblyError("formal reached state is missing state_id")
+        if key in indexed:
+            raise FormalAssemblyError(
+                "duplicate formal reached state/action/point identity: " +
+                "/".join(part or "<missing>" for part in key))
+        indexed[key] = row
+    return list(indexed.values())
 
 
 def _write(path: Path, rows: list) -> None:

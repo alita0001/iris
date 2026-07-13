@@ -12,10 +12,13 @@ so this module stays importable under plain stdlib.
 from __future__ import annotations
 
 import re
+from collections.abc import Iterable
 
 from ..config import MAX_AXTREE_CHARS_SNAPSHOT
 
-_BID_LINE_RE = re.compile(r"\[(\d+)\]\s*(.*)")
+_BID_LINE_RE = re.compile(r"\[([^\]\s]+)\]\s*(.*)")
+_CLICK_BID_RE = re.compile(r"^\s*click\(\s*(['\"])([^'\"]+)\1\s*\)\s*$")
+_TRUNCATION_MARKER = "... (axtree truncated)"
 
 
 def _axtree_from_browsergym(obs: dict) -> str:
@@ -67,22 +70,156 @@ def to_obs_view(obs: dict) -> dict:
     }
 
 
-def prune_axtree_txt(text: str, max_chars: int = MAX_AXTREE_CHARS_SNAPSHOT) -> str:
-    """Cap length while preserving reading order (truncate the tail).
+def _indent(line: str) -> int:
+    """Indentation depth in the flattened AXTree (tabs count as four spaces)."""
+    prefix = line[:len(line) - len(line.lstrip(" \t"))]
+    return sum(4 if c == "\t" else 1 for c in prefix)
 
-    Original order matters: static text (review bodies, descriptions) is
-    interleaved with interactive elements, so reordering would break context.
+
+def _render_selected(lines: list[str], selected: set[int]) -> str:
+    """Render selected source lines in order, marking every omitted interval."""
+    if not selected:
+        return _TRUNCATION_MARKER
+    out: list[str] = []
+    previous = -1
+    for i in sorted(selected):
+        if i > previous + 1:
+            out.append(_TRUNCATION_MARKER)
+        out.append(lines[i])
+        previous = i
+    if previous < len(lines) - 1:
+        out.append(_TRUNCATION_MARKER)
+    return "\n".join(out)
+
+
+def _anchor_line_indices(lines: list[str], anchor_bids: set[str],
+                         anchor_terms: tuple[str, ...]) -> list[int]:
+    out: list[int] = []
+    for i, line in enumerate(lines):
+        m = _BID_LINE_RE.search(line)
+        bid_hit = bool(m and m.group(1) in anchor_bids)
+        term_hit = bool(anchor_terms and any(t in line.lower() for t in anchor_terms))
+        if bid_hit or term_hit:
+            out.append(i)
+    return out
+
+
+def prune_axtree_txt(
+    text: str,
+    max_chars: int = MAX_AXTREE_CHARS_SNAPSHOT,
+    *,
+    anchor_bids: Iterable[str] | None = None,
+    anchor_terms: Iterable[str] | None = None,
+) -> str:
+    """Cap an AXTree while retaining supervised controls and their ancestry.
+
+    With no anchors this preserves the historical prefix-truncation behaviour.
+    When ``anchor_bids`` (preferred) or ``anchor_terms`` are supplied, matching
+    source lines are *mandatory*: the function keeps them, their accessibility
+    ancestors, a small amount of child context, and fills the remaining budget
+    from the original prefix.  All retained lines remain in source order and
+    every gap is explicit.  This prevents dataset assembly from supervising a
+    ``click('bid')`` whose ``[bid]`` was silently removed by character clipping.
+
+    If an anchor itself is absent from ``text`` this function cannot invent it;
+    callers supervising an action must additionally call
+    :func:`require_action_bid_visible` as a hard gate.
     """
+    if max_chars <= 0:
+        return ""
     if not text or len(text) <= max_chars:
         return text or ""
+    bids = {str(x) for x in (anchor_bids or []) if str(x)}
+    terms = tuple(str(x).lower() for x in (anchor_terms or []) if str(x))
+    if bids or terms:
+        lines = text.splitlines()
+        anchors = _anchor_line_indices(lines, bids, terms)
+        if anchors:
+            selected: set[int] = set(anchors)
+
+            # Add the ancestor chain nearest-first.  Ancestors materially help
+            # disambiguate repeated buttons (e.g. which product an Add button
+            # belongs to), but never displace the actual supervised control.
+            context: list[int] = []
+            for anchor in anchors:
+                want_indent = _indent(lines[anchor])
+                for j in range(anchor - 1, -1, -1):
+                    level = _indent(lines[j])
+                    if level < want_indent:
+                        context.append(j)
+                        want_indent = level
+                        if level == 0:
+                            break
+                # Keep up to two direct/descendant lines following the control.
+                for j in range(anchor + 1, min(len(lines), anchor + 3)):
+                    if _indent(lines[j]) > _indent(lines[anchor]):
+                        context.append(j)
+                    else:
+                        break
+
+            for i in context:
+                trial = set(selected)
+                trial.add(i)
+                if len(_render_selected(lines, trial)) <= max_chars:
+                    selected = trial
+
+            # Use the remaining budget for reading-order context.  Skipping a
+            # very long optional line is preferable to dropping the anchor.
+            for i in range(len(lines)):
+                if i in selected:
+                    continue
+                trial = set(selected)
+                trial.add(i)
+                if len(_render_selected(lines, trial)) <= max_chars:
+                    selected = trial
+            rendered = _render_selected(lines, selected)
+            if len(rendered) <= max_chars:
+                return rendered
+
+            # Pathological case: a single source line exceeds the whole budget.
+            # Preserve its [bid] prefix so the action remains grounded.
+            anchor = lines[anchors[0]][:max(0, max_chars - len("\n" + _TRUNCATION_MARKER))]
+            return (anchor + "\n" + _TRUNCATION_MARKER)[:max_chars]
+
+    # No supplied anchor was found: retain backward-compatible reading-order
+    # truncation.  A supervising caller will reject the sample via the hard gate.
     kept, size = [], 0
     for ln in text.splitlines():
         if size + len(ln) + 1 > max_chars:
             break
         kept.append(ln)
         size += len(ln) + 1
-    kept.append("... (axtree truncated)")
-    return "\n".join(kept)
+    kept.append(_TRUNCATION_MARKER)
+    rendered = "\n".join(kept)
+    return rendered[:max_chars]
+
+
+def action_bid(action: str) -> str | None:
+    """Return a BrowserGym bid for an exact click action, otherwise ``None``."""
+    m = _CLICK_BID_RE.match(action or "")
+    return m.group(2) if m else None
+
+
+def bid_is_visible(axtree_txt: str, bid: str) -> bool:
+    """Exact interactive-control membership, not a prose/static ``[bid]`` hit."""
+    # Lazy import avoids making the environment helper depend on candidate
+    # generation at module import time while sharing the same AX role parser.
+    from ..data.candidates import interactive_bids
+    return str(bid) in interactive_bids(axtree_txt)
+
+
+def require_action_bid_visible(action: str, axtree_txt: str, *,
+                               sample_id: str = "") -> None:
+    """Hard dataset gate for supervised click actions.
+
+    Non-click actions have no accessibility bid and therefore pass.  A click on
+    an absent bid raises ``ValueError``; assembly must skip/quarantine the row,
+    never train the model to hallucinate an inaccessible element identifier.
+    """
+    bid = action_bid(action)
+    if bid is not None and not bid_is_visible(axtree_txt, bid):
+        where = f" for {sample_id}" if sample_id else ""
+        raise ValueError(f"supervised click bid [{bid}] is absent from observation{where}")
 
 
 def extract_interactive_bids(axtree_txt: str) -> list[dict]:

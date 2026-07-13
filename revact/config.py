@@ -22,8 +22,11 @@ CONFIG_DIR = PROJECT_ROOT / "configs"
 # p2: added reddit (Postmill) probes; reddit vote_score reads the ACTIVE-state
 #     up-control ('Retract upvote') so the score is not misread off a comment
 #     widget (see docs/findings-multisite.md). Earlier reddit_vote rows stamped
-#     p1 are pre-fix artifacts; the loader's latest-non-UNKNOWN rule supersedes.
-CONTROLLER_VERSION = "2026.07-p2"
+#     p1 are pre-fix artifacts.  A latest-non-UNKNOWN rule exists only in the
+#     frozen legacy class-smoke display loader and is forbidden for formal joins.
+# p3 separates action effect from budget-relative recovery and forbids new
+# mathematical IRREVERSIBLE claims from a bounded controller failure.
+CONTROLLER_VERSION = "2026.07-p3"
 
 
 def _load_yaml_config() -> dict:
@@ -66,9 +69,33 @@ PILOT_TASKS_PATH = RAW_DIR / "pilot_task_ids.json"
 PRODUCT_URLS_PATH = RAW_DIR / "product_urls.json"
 
 GROUNDED_DIR = DATA_ROOT / "grounded"
+# ``reversibility.jsonl`` and ``MANIFEST.jsonl`` are frozen legacy/class-level
+# smoke-probe assets.  Formal supervision is admitted only through the
+# point-level body + 1:1 manifest below.
 REVERSIBILITY_PATH = GROUNDED_DIR / "reversibility.jsonl"
+POINT_GROUNDING_PATH = GROUNDED_DIR / "probe_points.jsonl"
+POINT_MANIFEST_PATH = GROUNDED_DIR / "POINT_MANIFEST.jsonl"
+GROUNDING_QUARANTINE_DIR = GROUNDED_DIR / "quarantine"
+
+EVAL_DATA_DIR = DATA_ROOT / "eval"
+EVALUATION_TRUTH_PATH = EVAL_DATA_DIR / "truth.jsonl"
+EVALUATION_TRUTH_MANIFEST_PATH = EVAL_DATA_DIR / "TRUTH_MANIFEST.jsonl"
 
 TRAIN_DIR = DATA_ROOT / "train"
+# Frozen pilot artifacts remain at ``sft/``, ``dpo/`` and ``splits/``.  They
+# are intentionally *not* the defaults used by any trainer.  Formal trainers
+# consume only the point-grounded split namespace below.
+FORMAL_TRAIN_DIR = TRAIN_DIR / "formal"
+FORMAL_SPLITS_DIR = FORMAL_TRAIN_DIR / "splits"
+FORMAL_SFT_PATH = FORMAL_TRAIN_DIR / "iris_sft_point_v1.jsonl"
+FORMAL_MULTITURN_SFT_PATH = FORMAL_TRAIN_DIR / "iris_sft_multiturn_point_v1.jsonl"
+FORMAL_DISTILLED_SFT_PATH = FORMAL_TRAIN_DIR / "iris_sft_distilled_point_v1.jsonl"
+# Candidate/on-policy DPO main sets are intentionally distinct from the
+# synthetic-flip ablation written by the assemblers.
+FORMAL_DPO_PATH = FORMAL_TRAIN_DIR / "iris_dpo_point_v1.jsonl"
+FORMAL_MULTITURN_DPO_PATH = FORMAL_TRAIN_DIR / "iris_dpo_multiturn_point_v1.jsonl"
+FORMAL_SFT_TRAIN_PATH = FORMAL_SPLITS_DIR / "sft_train.jsonl"
+FORMAL_DPO_TRAIN_PATH = FORMAL_SPLITS_DIR / "dpo_train.jsonl"
 SFT_PATH = TRAIN_DIR / "sft" / "revact_sft.jsonl"
 DPO_PATH = TRAIN_DIR / "dpo" / "revact_dpo.jsonl"
 SPLITS_DIR = TRAIN_DIR / "splits"
@@ -169,6 +196,7 @@ ADDRESS_URL_HINTS = ["address", "/customer/address", "account"]
 # --------------------------------------------------------------------------- #
 MAX_AXTREE_CHARS_SNAPSHOT = int(_cfg("obs", "max_axtree_chars_snapshot", default=6000))
 MAX_AXTREE_CHARS_POLICY = int(_cfg("obs", "max_axtree_chars_policy", default=12000))
+POLICY_HISTORY_STEPS = int(_cfg("obs", "policy_history_steps", default=6))
 
 
 # --------------------------------------------------------------------------- #

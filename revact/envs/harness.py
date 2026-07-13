@@ -69,6 +69,10 @@ class StepRecord:
     backend_after: Any = None
     replay_prefix: list[str] = field(default_factory=list)
     screenshot: str = ""   # path relative to DATA_ROOT, "" when not captured
+    # Immutable collection-attempt identifier.  Legacy records legitimately
+    # omit it; newly collected trajectories stamp the same value into the raw
+    # steps, trajectory manifest, and key-state rows.
+    run_id: str = ""
 
 
 class StepLogger:
@@ -79,8 +83,15 @@ class StepLogger:
         self.records.append(rec)
 
     def to_jsonl(self, path: Path) -> None:
+        """Write one immutable raw trajectory artifact.
+
+        Collection used to overwrite ``<task>_seed<n>.jsonl`` while appending a
+        second metadata row.  Exclusive creation makes such lineage corruption
+        fail loudly.  Callers that intentionally regenerate an artifact must
+        choose a new run/trajectory id rather than mutating history.
+        """
         path.parent.mkdir(parents=True, exist_ok=True)
-        with path.open("w", encoding="utf-8") as f:
+        with path.open("x", encoding="utf-8") as f:
             for r in self.records:
                 f.write(json.dumps(asdict(r), ensure_ascii=False) + "\n")
 
@@ -110,6 +121,7 @@ class RevActEnv:
         self.step_id = 0
         self.goal = ""
         self.trajectory_id = ""
+        self.run_id = ""
         self._last_obs_view: dict = {}
 
     def _save_screenshot(self, obs) -> str:
@@ -134,12 +146,14 @@ class RevActEnv:
         except Exception:
             return ""
 
-    def reset(self, seed: int = 0, trajectory_id: Optional[str] = None):
+    def reset(self, seed: int = 0, trajectory_id: Optional[str] = None,
+              run_id: str = ""):
         obs, info = self.env.reset(seed=seed)
         self.history = []
         self.logger.records.clear()   # one JSONL per trajectory, not cumulative
         self.step_id = 0
         self.trajectory_id = trajectory_id or f"{self.task_id}_seed{seed}"
+        self.run_id = run_id
         view = to_obs_view(obs)
         self.goal = obs.get("goal", "") if isinstance(obs, dict) else ""
         self._last_obs_view = view
@@ -155,7 +169,7 @@ class RevActEnv:
                 terminated=False, truncated=False,
                 obs_after_axtree=prune_axtree_txt(view.get("axtree_txt", "")),
                 backend_after=view.get("backend_state"), replay_prefix=[],
-                screenshot=shot_path,
+                screenshot=shot_path, run_id=self.run_id,
             )
         )
         return obs, info, view
@@ -183,6 +197,7 @@ class RevActEnv:
                 backend_after=view.get("backend_state"),
                 replay_prefix=list(self.history),
                 screenshot=shot_path,
+                run_id=self.run_id,
             )
         )
         self._last_obs_view = view

@@ -1,0 +1,570 @@
+{
+  "blocked": [
+    "grounding_points",
+    "evaluation_truth_records",
+    "formal_sft",
+    "formal_train_split",
+    "formal_dev_split",
+    "formal_test_split",
+    "formal_dpo",
+    "formal_dpo_train_split",
+    "answer_and_risky_bid_visibility",
+    "formal_collection_lineage_integrity",
+    "formal_dpo_source_share",
+    "teacher_coverage_and_integrity"
+  ],
+  "candidates": {
+    "all_candidate_ids_unique": true,
+    "ambiguous_state_ids": [
+      "reach_add_to_cart_seed0",
+      "reach_cart_seed0",
+      "reach_delete_address_seed0",
+      "reach_place_order_seed0"
+    ],
+    "category": {
+      "constraint_trigger_action": 2,
+      "expert_action": 50,
+      "ordinary_interactive_action": 209,
+      "uncertain_verify_action": 39
+    },
+    "error": "",
+    "integrity": true,
+    "invalid_snapshot_candidates": {},
+    "missing_snapshot_candidate_ids": [],
+    "n_candidates": 300,
+    "n_legal_declared": 300,
+    "n_snapshot_matched_and_legal": 300,
+    "n_states": 50,
+    "note": "categories are proposal hypotheses; no candidate is grounded by this audit",
+    "per_state_sizes": {
+      "6": 50
+    },
+    "source": {
+      "a11y_enumeration": 250,
+      "expert": 50
+    }
+  },
+  "collection_lineage": {
+    "evaluated": false,
+    "issues": {},
+    "legacy_quarantine_excluded_from_gate": true,
+    "n_formal_rows": 0,
+    "n_problems": 0,
+    "n_unique_run_ids": 0,
+    "n_unique_state_ids": 0,
+    "n_unique_trajectory_ids": 0,
+    "ok": false,
+    "scope": "formal_samples_only"
+  },
+  "evaluation_truth": {
+    "body_exists": false,
+    "body_path": "data/eval/truth.jsonl",
+    "error": "",
+    "integrity": true,
+    "manifest_exists": false,
+    "manifest_path": "data/eval/TRUTH_MANIFEST.jsonl",
+    "n_manifest": 0,
+    "n_records": 0,
+    "unknown_probe_point_ids": []
+  },
+  "formal_dpo": {
+    "body_paths": [
+      "data/train/formal/iris_dpo_point_v1.jsonl",
+      "data/train/formal/iris_dpo_multiturn_point_v1.jsonl"
+    ],
+    "body_source_share": {
+      "legal_or_on_policy_n": 0,
+      "legal_or_on_policy_share": null,
+      "minimum_required_share": 0.5,
+      "n_pairs": 0,
+      "passed": false,
+      "source_counts": {}
+    },
+    "body_validation": {
+      "deployment_negative_ratio": null,
+      "n_problems": 0,
+      "n_rows": 0,
+      "negative_source_dist": {},
+      "problems": []
+    },
+    "dev_source_share": {
+      "legal_or_on_policy_n": 0,
+      "legal_or_on_policy_share": null,
+      "minimum_required_share": 0.5,
+      "n_pairs": 0,
+      "passed": false,
+      "source_counts": {}
+    },
+    "dev_split_paths": [
+      "data/train/formal/splits/dpo_dev.jsonl",
+      "data/train/formal/splits/dpo_dev_multiturn.jsonl"
+    ],
+    "integrity": true,
+    "issues": {},
+    "n_body_pairs": 0,
+    "n_dev_pairs": 0,
+    "n_structural_issues": 0,
+    "n_train_pairs": 0,
+    "source_share_passed": false,
+    "split_integrity": true,
+    "train_source_share": {
+      "legal_or_on_policy_n": 0,
+      "legal_or_on_policy_share": null,
+      "minimum_required_share": 0.5,
+      "n_pairs": 0,
+      "passed": false,
+      "source_counts": {}
+    },
+    "train_split_paths": [
+      "data/train/formal/splits/dpo_train.jsonl",
+      "data/train/formal/splits/dpo_train_multiturn.jsonl"
+    ]
+  },
+  "formal_split_leakage": {
+    "dev_test": {
+      "action": {
+        "n_overlap": 0,
+        "n_test": 0,
+        "n_train": 0,
+        "overlap": []
+      },
+      "canonical_entity": {
+        "n_overlap": 0,
+        "n_test": 0,
+        "n_train": 0,
+        "overlap": []
+      },
+      "entity": {
+        "n_overlap": 0,
+        "n_test": 0,
+        "n_train": 0,
+        "overlap": []
+      },
+      "environment": {
+        "n_overlap": 0,
+        "n_test": 0,
+        "n_train": 0,
+        "overlap": []
+      },
+      "goal_template": {
+        "n_overlap": 0,
+        "n_test": 0,
+        "n_train": 0,
+        "overlap": []
+      },
+      "page_template": {
+        "n_overlap": 0,
+        "n_test": 0,
+        "n_train": 0,
+        "overlap": []
+      },
+      "privilege": {
+        "n_overlap": 0,
+        "n_test": 0,
+        "n_train": 0,
+        "overlap": []
+      },
+      "site": {
+        "n_overlap": 0,
+        "n_test": 0,
+        "n_train": 0,
+        "overlap": []
+      },
+      "state_group": {
+        "n_overlap": 0,
+        "n_test": 0,
+        "n_train": 0,
+        "overlap": []
+      },
+      "template": {
+        "n_overlap": 0,
+        "n_test": 0,
+        "n_train": 0,
+        "overlap": []
+      }
+    },
+    "train_dev": {
+      "action": {
+        "n_overlap": 0,
+        "n_test": 0,
+        "n_train": 0,
+        "overlap": []
+      },
+      "canonical_entity": {
+        "n_overlap": 0,
+        "n_test": 0,
+        "n_train": 0,
+        "overlap": []
+      },
+      "entity": {
+        "n_overlap": 0,
+        "n_test": 0,
+        "n_train": 0,
+        "overlap": []
+      },
+      "environment": {
+        "n_overlap": 0,
+        "n_test": 0,
+        "n_train": 0,
+        "overlap": []
+      },
+      "goal_template": {
+        "n_overlap": 0,
+        "n_test": 0,
+        "n_train": 0,
+        "overlap": []
+      },
+      "page_template": {
+        "n_overlap": 0,
+        "n_test": 0,
+        "n_train": 0,
+        "overlap": []
+      },
+      "privilege": {
+        "n_overlap": 0,
+        "n_test": 0,
+        "n_train": 0,
+        "overlap": []
+      },
+      "site": {
+        "n_overlap": 0,
+        "n_test": 0,
+        "n_train": 0,
+        "overlap": []
+      },
+      "state_group": {
+        "n_overlap": 0,
+        "n_test": 0,
+        "n_train": 0,
+        "overlap": []
+      },
+      "template": {
+        "n_overlap": 0,
+        "n_test": 0,
+        "n_train": 0,
+        "overlap": []
+      }
+    },
+    "train_test": {
+      "action": {
+        "n_overlap": 0,
+        "n_test": 0,
+        "n_train": 0,
+        "overlap": []
+      },
+      "canonical_entity": {
+        "n_overlap": 0,
+        "n_test": 0,
+        "n_train": 0,
+        "overlap": []
+      },
+      "entity": {
+        "n_overlap": 0,
+        "n_test": 0,
+        "n_train": 0,
+        "overlap": []
+      },
+      "environment": {
+        "n_overlap": 0,
+        "n_test": 0,
+        "n_train": 0,
+        "overlap": []
+      },
+      "goal_template": {
+        "n_overlap": 0,
+        "n_test": 0,
+        "n_train": 0,
+        "overlap": []
+      },
+      "page_template": {
+        "n_overlap": 0,
+        "n_test": 0,
+        "n_train": 0,
+        "overlap": []
+      },
+      "privilege": {
+        "n_overlap": 0,
+        "n_test": 0,
+        "n_train": 0,
+        "overlap": []
+      },
+      "site": {
+        "n_overlap": 0,
+        "n_test": 0,
+        "n_train": 0,
+        "overlap": []
+      },
+      "state_group": {
+        "n_overlap": 0,
+        "n_test": 0,
+        "n_train": 0,
+        "overlap": []
+      },
+      "template": {
+        "n_overlap": 0,
+        "n_test": 0,
+        "n_train": 0,
+        "overlap": []
+      }
+    }
+  },
+  "formal_training": {
+    "bid_visibility": {
+      "assistant_answers": {
+        "checked_ids": [],
+        "evaluated": false,
+        "invalid_action_ids": [],
+        "missing_ids": [],
+        "n_actions": 0,
+        "n_bid_actions": 0,
+        "n_visible": 0,
+        "non_bid_action_ids": [],
+        "passed": null,
+        "visibility_rate": null
+      },
+      "evaluated": false,
+      "passed": false,
+      "risky_raw_actions": {
+        "checked_ids": [],
+        "evaluated": false,
+        "invalid_action_ids": [],
+        "missing_ids": [],
+        "n_actions": 0,
+        "n_bid_actions": 0,
+        "n_visible": 0,
+        "non_bid_action_ids": [],
+        "passed": null,
+        "visibility_rate": null
+      }
+    },
+    "n_failed_collector": 0,
+    "n_mock": 0,
+    "n_multiturn_sft": 0,
+    "n_prompt_content_failures": 0,
+    "n_release_gate_failures": 0,
+    "n_single_sft": 0,
+    "n_total_sft": 0,
+    "prompt_content_failures": {},
+    "release_gate_failures": {}
+  },
+  "grounding": {
+    "body_exists": true,
+    "error": "",
+    "integrity": true,
+    "manifest_exists": true,
+    "missing_provenance": 0,
+    "mock_points": 0,
+    "n_manifest": 0,
+    "n_points": 0,
+    "not_recovered_points": 0
+  },
+  "integrity_gates": {
+    "answer_and_risky_bid_visibility": false,
+    "candidate_manifest_and_snapshot_integrity": true,
+    "evaluation_truth_manifest_integrity": true,
+    "formal_collection_lineage_integrity": false,
+    "formal_collectors_succeeded": true,
+    "formal_dpo_integrity": true,
+    "formal_dpo_source_share": false,
+    "formal_dpo_split_integrity": true,
+    "formal_has_no_mock": true,
+    "formal_release_and_prompt_content": true,
+    "grounding_has_no_mock": true,
+    "grounding_manifest_integrity": true,
+    "grounding_provenance_complete": true,
+    "split_overlap_zero": true,
+    "teacher_coverage_and_integrity": false
+  },
+  "legacy_collection_lineage": {
+    "duplicate_meta_trajectory_ids": [
+      "mock.add_to_cart_seed0",
+      "mock.delete_address_seed0",
+      "mock.place_order_seed0",
+      "webarena.117_seed0",
+      "webarena.118_seed0",
+      "webarena.188_seed0",
+      "webarena.192_seed0",
+      "webarena.231_seed0",
+      "webarena.299_seed0",
+      "webarena.362_seed0",
+      "webarena.431_seed0",
+      "webarena.432_seed0",
+      "webarena.433_seed0",
+      "webarena.434_seed0",
+      "webarena.435_seed0",
+      "webarena.436_seed0",
+      "webarena.437_seed0",
+      "webarena.438_seed0",
+      "webarena.47_seed0",
+      "webarena.48_seed0",
+      "webarena.49_seed0",
+      "webarena.50_seed0",
+      "webarena.51_seed0",
+      "webarena.571_seed0",
+      "webarena.572_seed0",
+      "webarena.573_seed0",
+      "webarena.574_seed0",
+      "webarena.96_seed0"
+    ],
+    "environment_origin": {
+      "unknown": 93
+    },
+    "incomplete_collection_manifests": [],
+    "invalid_collection_manifests": [],
+    "meta_without_raw": [],
+    "missing_collection_manifests": [],
+    "missing_run_id_new": [],
+    "n_key_states": 241,
+    "n_meta_rows": 93,
+    "n_problems": 121,
+    "n_raw_files": 31,
+    "n_unique_trajectory_ids": 31,
+    "ok": false,
+    "orphan_state_runs": [],
+    "raw_meta_run_mismatch": [],
+    "raw_without_meta": [],
+    "state_meta_run_mismatch": [],
+    "unknown_environment_origin_rows": [
+      "line-1:webarena.47_seed0",
+      "line-2:webarena.48_seed0",
+      "line-3:webarena.49_seed0",
+      "line-4:webarena.50_seed0",
+      "line-5:webarena.51_seed0",
+      "line-6:webarena.96_seed0",
+      "line-7:webarena.118_seed0",
+      "line-8:webarena.117_seed0",
+      "line-9:webarena.188_seed0",
+      "line-10:webarena.192_seed0",
+      "line-11:webarena.231_seed0",
+      "line-12:webarena.299_seed0",
+      "line-13:webarena.436_seed0",
+      "line-14:webarena.437_seed0",
+      "line-15:webarena.438_seed0",
+      "line-16:webarena.362_seed0",
+      "line-17:webarena.571_seed0",
+      "line-18:webarena.572_seed0",
+      "line-19:webarena.573_seed0",
+      "line-20:webarena.574_seed0",
+      "line-21:webarena.431_seed0",
+      "line-22:webarena.432_seed0",
+      "line-23:webarena.433_seed0",
+      "line-24:webarena.434_seed0",
+      "line-25:webarena.435_seed0",
+      "line-26:mock.add_to_cart_seed0",
+      "line-27:mock.place_order_seed0",
+      "line-28:mock.delete_address_seed0",
+      "line-29:mock.add_to_cart_seed0",
+      "line-30:mock.place_order_seed0",
+      "line-31:mock.delete_address_seed0",
+      "line-32:mock.add_to_cart_seed0",
+      "line-33:mock.place_order_seed0",
+      "line-34:mock.delete_address_seed0",
+      "line-35:mock.add_to_cart_seed0",
+      "line-36:mock.add_to_cart_seed1",
+      "line-37:mock.place_order_seed0",
+      "line-38:mock.place_order_seed1",
+      "line-39:mock.delete_address_seed0",
+      "line-40:mock.delete_address_seed1",
+      "line-41:webarena.47_seed0",
+      "line-42:webarena.48_seed0",
+      "line-43:webarena.49_seed0",
+      "line-44:webarena.50_seed0",
+      "line-45:webarena.51_seed0",
+      "line-46:webarena.96_seed0",
+      "line-47:webarena.118_seed0",
+      "line-48:webarena.117_seed0",
+      "line-49:webarena.188_seed0",
+      "line-50:webarena.192_seed0",
+      "line-51:webarena.231_seed0",
+      "line-52:webarena.299_seed0",
+      "line-53:webarena.436_seed0",
+      "line-54:webarena.437_seed0",
+      "line-55:webarena.438_seed0",
+      "line-56:webarena.362_seed0",
+      "line-57:webarena.571_seed0",
+      "line-58:webarena.572_seed0",
+      "line-59:webarena.573_seed0",
+      "line-60:webarena.574_seed0",
+      "line-61:webarena.431_seed0",
+      "line-62:webarena.432_seed0",
+      "line-63:webarena.433_seed0",
+      "line-64:webarena.434_seed0",
+      "line-65:webarena.435_seed0",
+      "line-66:mock.add_to_cart_seed0",
+      "line-67:mock.place_order_seed0",
+      "line-68:mock.delete_address_seed0",
+      "line-69:webarena.47_seed0",
+      "line-70:webarena.48_seed0",
+      "line-71:webarena.49_seed0",
+      "line-72:webarena.50_seed0",
+      "line-73:webarena.51_seed0",
+      "line-74:webarena.96_seed0",
+      "line-75:webarena.118_seed0",
+      "line-76:webarena.117_seed0",
+      "line-77:webarena.188_seed0",
+      "line-78:webarena.192_seed0",
+      "line-79:webarena.231_seed0",
+      "line-80:webarena.299_seed0",
+      "line-81:webarena.436_seed0",
+      "line-82:webarena.437_seed0",
+      "line-83:webarena.438_seed0",
+      "line-84:webarena.362_seed0",
+      "line-85:webarena.571_seed0",
+      "line-86:webarena.572_seed0",
+      "line-87:webarena.573_seed0",
+      "line-88:webarena.574_seed0",
+      "line-89:webarena.431_seed0",
+      "line-90:webarena.432_seed0",
+      "line-91:webarena.433_seed0",
+      "line-92:webarena.434_seed0",
+      "line-93:webarena.435_seed0"
+    ]
+  },
+  "non_vacuous": false,
+  "non_vacuous_gates": {
+    "evaluation_truth_records": false,
+    "formal_dev_split": false,
+    "formal_dpo": false,
+    "formal_dpo_train_split": false,
+    "formal_sft": false,
+    "formal_test_split": false,
+    "formal_train_split": false,
+    "grounding_points": false
+  },
+  "quarantine": {
+    "migration_mode": "index_only_source_files_unchanged",
+    "n_formal_eligible": 0,
+    "n_indexed": 539,
+    "n_quarantined": 539,
+    "reason_counts": {
+      "ambiguous_duplicate_trajectory_lineage": 56,
+      "collector_success_not_proven": 539,
+      "failed_collector_trajectory": 6,
+      "formal_dataset_not_true": 539,
+      "missing_action_instance_id": 539,
+      "missing_probe_point_id": 539,
+      "missing_state_id": 539,
+      "mock_environment": 12,
+      "non_deployment_negative_source": 385,
+      "non_trajectory_history": 322,
+      "prediction_not_probe_transition": 154,
+      "undo_not_probe_point": 154
+    },
+    "rollback": "delete data/train/quarantine; source JSONL files were not changed"
+  },
+  "ready": false,
+  "schema_version": "iris.formal_readiness_audit.v3",
+  "teacher": {
+    "coverage": null,
+    "coverage_target": 0.95,
+    "duplicate_sample_ids": [],
+    "n_matched_source_rows": 0,
+    "n_release_or_prompt_failures": 0,
+    "n_rows": 0,
+    "n_unique_source_rows": 0,
+    "orphan_sample_ids": [],
+    "passed": false,
+    "path": "data/train/formal/iris_sft_distilled_point_v1.jsonl",
+    "release_or_prompt_failures": {}
+  }
+}

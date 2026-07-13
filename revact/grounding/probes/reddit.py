@@ -17,8 +17,8 @@ cross-SITE claim testable by the cross_site split. The spectrum here:
   reddit.submission_create DESTRUCTIVE     REVERSIBLE_WITH_COST (dry-run)
       create-then-delete removes the post entirely (404); reversible but costs a
       destructive delete. Skeleton only (select2 forum picker + real content).
-  reddit.comment_delete  DESTRUCTIVE       IRREVERSIBLE (dry-run)
-  reddit.submission_delete DESTRUCTIVE     IRREVERSIBLE (dry-run)
+  reddit.comment_delete  DESTRUCTIVE       NOT_RECOVERED_WITHIN_BUDGET (dry-run)
+  reddit.submission_delete DESTRUCTIVE     NOT_RECOVERED_WITHIN_BUDGET (dry-run)
   reddit.edit_comment    DESTRUCTIVE       PARTIALLY_RECOVERABLE (dry-run)
       edit-back is possible but Postmill keeps no version history, so the
       ORIGINAL wording is lost to the agent — content-wise only partial.
@@ -294,10 +294,12 @@ register(ProbeSpec("reddit.submission_create", "reddit", "reddit_submission_crea
                    probe_submission_create, expected_spectrum="REVERSIBLE"))
 register(ProbeSpec("reddit.comment_delete", "reddit", "reddit_comment_delete",
                    DESTRUCTIVE, "comment_record", "none (tombstone, content lost)",
-                   probe_comment_delete, expected_spectrum="IRREVERSIBLE"))
+                   probe_comment_delete,
+                   expected_spectrum="NOT_RECOVERED_WITHIN_BUDGET"))
 register(ProbeSpec("reddit.submission_delete", "reddit", "reddit_submission_delete",
                    DESTRUCTIVE, "submission_record", "none (full removal, data loss)",
-                   probe_submission_delete, expected_spectrum="IRREVERSIBLE"))
+                   probe_submission_delete,
+                   expected_spectrum="NOT_RECOVERED_WITHIN_BUDGET"))
 register(ProbeSpec("reddit.edit_comment", "reddit", "reddit_edit_comment",
                    DESTRUCTIVE, "comment_body",
                    "edit back is possible but original wording is lost",

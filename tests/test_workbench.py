@@ -54,8 +54,12 @@ def seed(root):
     (raw / "state_bank" / "pilot_reached_states.jsonl").write_text(json.dumps(
         {"state_id": "s1", "name": "add_to_cart__prod-a", "action_type": "add_to_cart",
          "reached": True, "url": "http://x/p",
-         "risky_action": {"text": "[3] button 'Add to Cart'", "raw_action": "click('3')"},
-         "safe_answer": "go_back()", "axtree_snapshot": "tree"}))
+         "risky_action": {"text": "[3] button 'Add to Cart'", "bid": "3",
+                          "raw_action": "click('3')"},
+         "safe_answer": "go_back()", "axtree_snapshot": (
+             "RootWebArea 'P'\n[3] button 'Add to Cart'\n[4] link 'Back'\n"
+             "[5] button 'Continue'\n[6] link 'Help'\n[7] checkbox 'Gift'\n"
+             "[8] button 'Delete draft'")}))
     tr = root / "train"
     (tr / "sft").mkdir(parents=True)
     sft_rows = []
@@ -109,12 +113,32 @@ def test_datastore_joins(root):
     assert st["grounded_action_type"] == "add_to_cart"
     cands = s.candidates_for(st["name"])
     kinds = {c["kind"] for c in cands["candidates"]}
-    assert kinds == {"expert_risky", "safe_alternative"}
+    assert cands["s4_status"] == "ready" and len(cands["candidates"]) == 6
+    assert "expert_action" in kinds and len(kinds) >= 4
+    assert all(c["legal_at_snapshot"] for c in cands["candidates"])
     assert any(c["pair_type"] == "over_block" for c in cands["counterfactuals"])
     lin = s.lineage("add_to_cart__prod-a__request")
     assert lin["effective_label"] == "REVERSIBLE"
     assert lin["dpo_pairs"][0]["pair_type"] == "over_block"
     assert lin["distilled"]["prose_source"] == "teacher"
+
+
+def test_workbench_split_membership_is_explicit(root):
+    path = root / "train" / "sft" / "revact_sft.jsonl"
+    rows = [json.loads(line) for line in path.read_text().splitlines()]
+    orphan = json.loads(json.dumps(rows[0]))
+    orphan["sample_id"] = "add_to_cart__orphan__request"
+    path.write_text(path.read_text() + "\n" + json.dumps(orphan) + "\n")
+    viewed = {row["sample_id"]: row for row in DataStore(root).sft()}
+    assert viewed[orphan["sample_id"]]["split"] == "unassigned"
+
+    split_dir = root / "train" / "splits"
+    for side in ("train", "dev"):
+        with (split_dir / f"sft_{side}.jsonl").open("a") as handle:
+            handle.write("\n" + json.dumps(orphan) + "\n")
+    viewed = {row["sample_id"]: row for row in DataStore(root).sft()}
+    assert viewed[orphan["sample_id"]]["split"] == "membership_error"
+    assert DataStore(root).dpo()[0]["split"] == "train"
 
 
 def test_sample_raw_and_dataset_card(root):
@@ -132,8 +156,47 @@ def test_sample_raw_and_dataset_card(root):
     assert card["summary"]["n_sft"] == 2
     assert card["system_prompt"].startswith("You are a safe web agent")
     assert {f[0] for f in card["dpo_schema"]} >= {"pair_id", "chosen", "rejected"}
+    assert card["grounding_assets"]["formal_point"]["n_points"] == 0
+    assert card["grounding_assets"]["legacy_class_smoke"] == {
+        "n_rows": 2, "n_manifest": 1, "formal_supervision": False,
+        "binding": "action_type latest non-UNKNOWN (display only)"}
     assert card["length_stats"]["assistant"] == {
         "n": 2, "min": len(ASST), "avg": len(ASST), "max": len(ASST)}
+
+
+def test_workbench_browses_formal_single_and_multiturn_without_legacy_merge(root):
+    formal = root / "train" / "formal"
+    formal.mkdir(parents=True, exist_ok=True)
+    legacy = json.loads((root / "train" / "sft" /
+                         "revact_sft.jsonl").read_text().splitlines()[0])
+    single = json.loads(json.dumps(legacy))
+    single["sample_id"] = "formal-single"
+    single["meta"].update({"formal_dataset": True, "format": "iris.v3",
+                           "probe_point_id": "point-single"})
+    multi = json.loads(json.dumps(single))
+    multi["sample_id"] = "formal-multiturn"
+    multi["meta"].update({"kind": "multiturn",
+                          "probe_point_id": "point-multiturn",
+                          "history_source": "trajectory"})
+    (formal / "iris_sft_point_v1.jsonl").write_text(json.dumps(single) + "\n")
+    (formal / "iris_sft_multiturn_point_v1.jsonl").write_text(
+        json.dumps(multi) + "\n")
+    pair = {"pair_id": "formal-single__on-policy", "prompt": single["messages"][:-1],
+            "chosen": single["messages"][-1]["content"],
+            "rejected": single["messages"][-1]["content"].replace(
+                "EXECUTE", "AVOID"), "meta": {"pair_type": "on_policy_error"}}
+    (formal / "iris_dpo_point_v1.jsonl").write_text(json.dumps(pair) + "\n")
+
+    store = DataStore(root)
+    assert [r["sample_id"] for r in store.sft(tier="formal")] == [
+        "formal-single"]
+    assert [r["sample_id"] for r in store.sft(
+        family="multiturn", tier="formal")] == ["formal-multiturn"]
+    assert len(store.sft(family="all", tier="formal")) == 2
+    assert len(store.sft(family="all", tier="legacy")) == 2
+    assert store.dpo(tier="formal")[0]["asset_tier"] == "formal"
+    raw = store.sample_raw("formal-multiturn")
+    assert raw["asset_tier"] == "formal" and raw["family"] == "multiturn"
 
 
 # ------------------------------------------------------------ annotations -- #
@@ -152,10 +215,11 @@ def test_pipeline_overview_and_gating(root, monkeypatch):
     stages = {s["id"]: s for s in adapters.pipeline_overview(DataStore(root))}
     assert stages["collect"]["status"] == "success"
     assert stages["probe"]["status"] == "success"
-    assert stages["candidates"]["implemented"] == "placeholder"
-    # placeholder action -> explicit extension point, not a fake run
-    r = adapters.run_action("candidates", "propose")
-    assert not r["ok"] and r.get("placeholder")
+    assert stages["candidates"]["implemented"] == "real"
+    r = adapters.run_action("candidates", "propose",
+                            {"state": "add_to_cart__prod-a"})
+    assert r["ok"] and r["result"]["n"] == 6
+    assert (root / "raw" / "candidates" / "iris_candidates.v3.jsonl").exists()
     # live-gated action blocks without WA_SHOPPING
     monkeypatch.setattr(config, "WA_SHOPPING", "")
     monkeypatch.setitem(adapters.RUNTIME.settings, "env",
@@ -183,7 +247,10 @@ def test_export_applies_overlays(root, monkeypatch):
     monkeypatch.setattr("revact.server.export.EXPORTS_DIR", out_dir)
     annotations.add("sample", "add_to_cart__prod-b__constraint",
                     {"review_status": "rejected", "note": "bad obs"}, root=root)
-    rep = export_dataset(DataStore(root), {"name": "t1", "val_frac": 0.0})
+    # These historical fixtures deliberately lack point-level provenance; the
+    # overlay behavior is exercised through an explicitly non-formal export.
+    rep = export_dataset(DataStore(root), {"name": "t1", "val_frac": 0.0,
+                                           "formal": False})
     assert rep["ok"] and rep["n_test"] == 0 and rep["n_excluded"] == 1
     exp = next(out_dir.iterdir())
     got = (exp / "sft_train.jsonl").read_text()
@@ -191,16 +258,71 @@ def test_export_applies_overlays(root, monkeypatch):
     dpo_rows = (exp / "dpo_train.jsonl").read_text().strip()
     assert "pair_id" in dpo_rows and "teacher words" not in dpo_rows
     card = (exp / "dataset_card.md").read_text()
-    assert "behaviorally measured" in card
+    assert "Operational-recoverability" in card
+    assert (exp / "provenance.json").exists()
+    assert list((exp / "prompt_bundles").glob("*.json"))
     # a human override that contradicts the pinned label EXCLUDES the sample
     annotations.add("grounded", "p1",
                     {"reversibility_override": "IRREVERSIBLE"}, root=root)
-    rep2 = export_dataset(DataStore(root), {"name": "t2", "val_frac": 0.0})
+    rep2 = export_dataset(DataStore(root), {"name": "t2", "val_frac": 0.0,
+                                            "formal": False})
     assert rep2["n_train"] == 0
     assert any(e["reason"] == "label_conflict"
                for e in json.loads("[" + ",".join(
                    ln for ln in (out_dir / sorted(p.name for p in out_dir.iterdir())[-1]
-                                 / "excluded.jsonl").read_text().splitlines()) + "]"))
+                                   / "excluded.jsonl").read_text().splitlines()) + "]"))
+
+
+def test_multiturn_browser_and_formal_export_gates(root, monkeypatch):
+    sft_dir = root / "train" / "sft"
+    dpo_dir = root / "train" / "dpo"
+    split_dir = root / "train" / "formal" / "splits"
+    split_dir.mkdir(parents=True)
+
+    def mt(sid, tid, origin, is_mock, success):
+        return {"sample_id": sid,
+                "messages": [{"role": "system", "content": SYS},
+                             {"role": "user", "content":
+                              "<goal>\nG\n\n<history>\n1. click('1') -> [nav] P\n\n"
+                              "<observation>\n[3] button 'Add to Cart'\n"},
+                             {"role": "assistant", "content": ASST}],
+                "meta": {"kind": "multiturn", "action_type": "add_to_cart",
+                         "variant": "request", "decision": "EXECUTE",
+                         "reversibility": "REVERSIBLE", "constraint_style": "request",
+                         "goal_template": "request:0", "history_source": "trajectory",
+                         "trajectory_id": tid, "state_id": tid + "_s1",
+                         "canonical_entity_id": tid, "environment_origin": origin,
+                         "is_mock": is_mock, "collector_success": success}}
+
+    good = mt("mt__web__s1__add__request", "webarena.1_seed0", "webarena", False, True)
+    mock = mt("mt__mock__s1__add__request", "mock.add_seed0", "mock", True, True)
+    failed = mt("mt__fail__s1__add__request", "webarena.2_seed0", "webarena", False, False)
+    rows = [good, mock, failed]
+    (sft_dir / "revact_sft_multiturn.jsonl").write_text(
+        "\n".join(json.dumps(r) for r in rows))
+    (split_dir / "sft_train_multiturn.jsonl").write_text(
+        "\n".join(json.dumps(r) for r in rows))
+    (split_dir / "sft_test_multiturn.jsonl").write_text("")
+    pair = {"pair_id": good["sample_id"] + "__wrong", "prompt": good["messages"][:2],
+            "chosen": ASST, "rejected": ASST.replace("EXECUTE", "AVOID"),
+            "meta": dict(good["meta"], pair_type="wrong_reversibility")}
+    (dpo_dir / "revact_dpo_multiturn.jsonl").write_text(json.dumps(pair))
+    (split_dir / "dpo_train_multiturn.jsonl").write_text(json.dumps(pair))
+
+    store = DataStore(root)
+    assert len(store.sft(family="all")) == 5
+    raw = store.sample_raw(good["sample_id"])
+    assert raw["family"] == "multiturn" and len(raw["sft"]["messages"]) == 3
+
+    out_dir = root / "exports-multi"
+    monkeypatch.setattr("revact.server.export.EXPORTS_DIR", out_dir)
+    rep = export_dataset(store, {"name": "formal", "val_frac": 0.0,
+                                 "formal": True, "prefer_distilled": False})
+    # A publication export now fails before writing any release when the joint
+    # train/dev/test split report is absent or one side is empty.
+    assert rep["ok"] is False
+    assert "split" in rep["note"]
+    assert not out_dir.exists()
 
 
 # ------------------------------------------------------------------- http -- #
@@ -226,12 +348,34 @@ def test_http_roundtrip(root, monkeypatch):
 
         assert get("/api/health")["summary"]["n_sft"] == 2
         assert len(get("/api/pipeline")["stages"]) == 10
+        grounded = get("/api/grounded")
+        assert grounded["formal_point"]["n_points"] == 0
+        assert grounded["legacy_class_smoke"]["formal_supervision"] is False
+        assert grounded["canonical_schema"]["recovery_status"] == [
+            "RECOVERED", "PARTIALLY_RECOVERED",
+            "NOT_RECOVERED_WITHIN_BUDGET", "UNKNOWN"]
         assert get("/api/sft")["items"][0]["decision"] == "EXECUTE"
         assert get("/api/lineage?sample=add_to_cart__prod-a__request")["ok"]
         assert get("/api/dataset_card")["card"]["summary"]["n_sft"] == 2
+        grounding = get("/api/grounded")
+        assert grounding["formal_point"]["n_points"] == 0
+        assert grounding["legacy_class_smoke"]["formal_supervision"] is False
         raw = get("/api/sample_raw?sample=add_to_cart__prod-a__request")
         assert raw["ok"] and raw["raw"]["dpo"][0]["pair_id"].endswith("over_block")
         assert not get("/api/sample_raw?sample=nope")["ok"]
+        authored = post("/api/probe-specs", {"proposal": {
+            "name": "shopping.fixture", "site": "shopping",
+            "action_type": "add_to_cart",
+            "candidate_id": "candidate-1", "state_id": "state-1",
+            "action_instance_id": "action-1", "raw_action": "click('3')",
+            "canonical_action": "click:button:add-to-cart",
+            "signal_channels": ["ui_structural", "api"],
+            "undo_sequences": [["click('9')"]],
+            "solver_set": ["site_specific_deterministic"], "budget_k": 12,
+            "safety_level": "self_recovering", "author": "test"}})
+        assert authored["ok"] and authored["spec"]["fixture_status"] == "PENDING"
+        specs = get("/api/probe-specs")
+        assert specs["label_entry_supported"] is False and len(specs["items"]) == 1
         # config: key value goes to memory, is masked in GET, absent on save
         post("/api/config", {"models": {"teacher": {"api_key": "sk-SECRET",
                                                     "api_key_env": "T_KEY"}}})
@@ -256,6 +400,12 @@ def test_http_roundtrip(root, monkeypatch):
         fp0 = pr["fingerprint"]
         r = post("/api/prompts", {"id": "collector_system", "value": "New collector rules."})
         assert r["ok"] and r["fingerprint"] != fp0
+        changed_fp = r["fingerprint"]
+        bundle = get("/api/prompts/bundle?fp=" + changed_fp)
+        assert bundle["bundle"]["prompts"]["collector_system"] == "New collector rules."
+        diff = get(f"/api/prompts/diff?left={fp0}&right={changed_fp}")
+        assert diff["changed"]["collector_system"]["before"] != \
+            diff["changed"]["collector_system"]["after"]
         items = {i["id"]: i for i in get("/api/prompts")["items"]}
         assert items["collector_system"]["overridden"]
         assert items["collector_system"]["value"] == "New collector rules."

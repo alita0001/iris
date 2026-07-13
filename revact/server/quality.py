@@ -18,10 +18,60 @@ def _dist(items) -> dict:
     return dict(collections.Counter(items))
 
 
+def compute_release_quality(sft_rows: list[dict], dpo_rows: list[dict],
+                            *, split_by_id: dict[str, str] | None = None) -> dict:
+    """Statistics over the exact kept release rows, never the default tier."""
+    split_by_id = split_by_id or {}
+    metas = [row.get("meta") or {} for row in sft_rows]
+    dpo_metas = [row.get("meta") or {} for row in dpo_rows]
+    teacher_rows = [meta for meta in metas if
+                    meta.get("prose_source") == "teacher" or
+                    meta.get("teacher_prompts_fp")]
+    n_sft = len(sft_rows)
+    coverage = len(teacher_rows) / n_sft if n_sft else None
+    return {
+        "scope": "exact_export_rows",
+        "volumes": {
+            "sft_samples": n_sft,
+            "dpo_pairs": len(dpo_rows),
+            "distilled_samples": len(teacher_rows),
+        },
+        "rates": {"distill_coverage": coverage},
+        "teacher": {
+            "n_distilled": len(teacher_rows),
+            # Every retained formal teacher row has already passed the pinned
+            # completion/provenance gate.  With no teacher rows the statistic
+            # is undefined, not 0% agreement.
+            "pinned_label_agreement": 1.0 if teacher_rows else None,
+        },
+        "distributions": {
+            "decision": _dist(meta.get("decision", "") for meta in metas),
+            "constraint_style": _dist(
+                meta.get("constraint_style", "") for meta in metas),
+            "pair_type": _dist(meta.get("pair_type", "") for meta in dpo_metas),
+            "action_type": _dist(meta.get("action_type", "") for meta in metas),
+            "site": _dist(meta.get("site", "") for meta in metas),
+            "effect_status": _dist(
+                meta.get("effect_status", "") for meta in metas),
+            "recovery_status": _dist(
+                meta.get("recovery_status", "") for meta in metas),
+            "environment_origin": _dist(
+                meta.get("environment_origin", "") for meta in metas),
+            "split": _dist(split_by_id.get(str(row.get("sample_id") or ""),
+                                            "unassigned")
+                           for row in sft_rows),
+        },
+    }
+
+
 def compute_quality(store: DataStore | None = None) -> dict:
     store = store or DataStore()
-    sft = store.sft()
-    dpo = store.dpo()
+    sft_single = store.sft()
+    sft_multi = store.sft(family="multiturn")
+    sft = sft_single + sft_multi
+    dpo_single = store.dpo()
+    dpo_multi = store.dpo(family="multiturn")
+    dpo = dpo_single + dpo_multi
     distilled = store.sft(distilled=True)
     trajs = store.trajectory_index()
     grounded = store.grounded_runs()
@@ -36,7 +86,10 @@ def compute_quality(store: DataStore | None = None) -> dict:
         "reached_states": len(store.reached_states()),
         "grounded_probe_runs": len(grounded),
         "grounded_action_classes": len(labels),
-        "sft_samples": len(sft), "dpo_pairs": len(dpo),
+        "sft_samples": len(sft), "sft_single": len(sft_single),
+        "sft_multiturn": len(sft_multi),
+        "dpo_pairs": len(dpo), "dpo_single": len(dpo_single),
+        "dpo_multiturn": len(dpo_multi),
         "distilled_samples": len(distilled),
         "splits": store.splits_report(),
     }
@@ -61,6 +114,10 @@ def compute_quality(store: DataStore | None = None) -> dict:
         "goal_template": _dist(s["goal_template"] for s in sft),
         "pair_type": _dist(p["pair_type"] for p in dpo),
         "action_type": _dist(s["action_type"] for s in sft),
+        "sample_family": _dist(s.get("family", "single") for s in sft),
+        "environment_origin": _dist(s.get("environment_origin", "unknown") for s in sft),
+        "is_mock": _dist(str(s.get("is_mock")) for s in sft),
+        "collector_success": _dist(str(s.get("collector_success")) for s in sft),
         "split": _dist(s["split"] for s in sft),
         "decision_matrix": [
             {"action_type": a, "variant": v, "decision": d, "n": n}

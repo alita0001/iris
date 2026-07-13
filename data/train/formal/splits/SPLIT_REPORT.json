@@ -1,0 +1,136 @@
+{
+  "available": false,
+  "formal": true,
+  "reason": "formal source contains zero rows",
+  "n_train": 0,
+  "n_dev": 0,
+  "n_test": 0,
+  "n_dpo_train": 0,
+  "test_slugs": [],
+  "by_site": {},
+  "leakage": {
+    "state_group": {
+      "n_train": 0,
+      "n_test": 0,
+      "n_overlap": 0,
+      "overlap": []
+    },
+    "entity": {
+      "n_train": 0,
+      "n_test": 0,
+      "n_overlap": 0,
+      "overlap": []
+    },
+    "template": {
+      "n_train": 0,
+      "n_test": 0,
+      "n_overlap": 0,
+      "overlap": []
+    },
+    "environment": {
+      "n_train": 0,
+      "n_test": 0,
+      "n_overlap": 0,
+      "overlap": []
+    },
+    "site": {
+      "n_train": 0,
+      "n_test": 0,
+      "n_overlap": 0,
+      "overlap": []
+    },
+    "action": {
+      "n_train": 0,
+      "n_test": 0,
+      "n_overlap": 0,
+      "overlap": []
+    },
+    "privilege": {
+      "n_train": 0,
+      "n_test": 0,
+      "n_overlap": 0,
+      "overlap": []
+    }
+  },
+  "validation": {
+    "available": false,
+    "reason": "base formal split unavailable: formal source contains zero rows",
+    "n_train": 0,
+    "n_val": 0,
+    "leakage": {
+      "state_group": {
+        "n_train": 0,
+        "n_test": 0,
+        "n_overlap": 0,
+        "overlap": []
+      },
+      "entity": {
+        "n_train": 0,
+        "n_test": 0,
+        "n_overlap": 0,
+        "overlap": []
+      },
+      "template": {
+        "n_train": 0,
+        "n_test": 0,
+        "n_overlap": 0,
+        "overlap": []
+      },
+      "environment": {
+        "n_train": 0,
+        "n_test": 0,
+        "n_overlap": 0,
+        "overlap": []
+      },
+      "site": {
+        "n_train": 0,
+        "n_test": 0,
+        "n_overlap": 0,
+        "overlap": []
+      },
+      "action": {
+        "n_train": 0,
+        "n_test": 0,
+        "n_overlap": 0,
+        "overlap": []
+      },
+      "privilege": {
+        "n_train": 0,
+        "n_test": 0,
+        "n_overlap": 0,
+        "overlap": []
+      }
+    }
+  },
+  "challenges": {
+    "cross_action": {
+      "available": false,
+      "reason": "base formal split unavailable: formal source contains zero rows"
+    },
+    "cross_privilege": {
+      "available": false,
+      "reason": "base formal split unavailable: formal source contains zero rows"
+    },
+    "cross_template": {
+      "available": false,
+      "reason": "base formal split unavailable: formal source contains zero rows"
+    },
+    "cross_site": {
+      "available": false,
+      "reason": "base formal split unavailable: formal source contains zero rows"
+    }
+  },
+  "cross_site": {
+    "available": false,
+    "reason": "base formal split unavailable: formal source contains zero rows"
+  },
+  "multiturn": {
+    "available": false,
+    "reason": "no formal multi-turn rows",
+    "n_train": 0,
+    "n_dev": 0,
+    "n_test": 0,
+    "n_dpo_train": 0
+  },
+  "out_dir": "/workspace/iris/data/train/formal/splits"
+}

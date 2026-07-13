@@ -1,0 +1,1027 @@
+{
+  "base_head": "443bbe1b8682a1915d0dbd82aabd4730cee668ca",
+  "dirty": true,
+  "entries": [
+    {
+      "exists": true,
+      "path": "DATASET_CARD.md",
+      "sha256": "b8553a1b0c9e174d702849d686bdb9204bacc02946b34e8c53f93ac6271c23b0",
+      "size_bytes": 15481,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "README.md",
+      "sha256": "72bdc48ac05dfbed870f9be8ba33fcd4d0af3f36a89d55224bd7a73e9a5495e0",
+      "size_bytes": 9643,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "configs/default.yaml",
+      "sha256": "ebe2c2d62d61facea47e0d046f6d60e37fb5c4df1955a2c900e588c8ba45ff19",
+      "size_bytes": 1328,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "data/grounded/POINT_MANIFEST.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/grounded/probe_points.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/grounded/quarantine/class_probe_smoke_index.jsonl",
+      "sha256": "9d016559c712d593549cff9f32d4fc9cfd65f12eb569b311236451ad5b8c1ffc",
+      "size_bytes": 13775,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/grounded/quarantine/legacy_rows.jsonl",
+      "sha256": "5aa686b44ca11a75225b850aa81ae28f78066933ffc4a9e05bf909507e90cc49",
+      "size_bytes": 1175,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/grounded/quarantine/migration-report.json",
+      "sha256": "196d31671ef829c2bfa5ff4217936219052eb86f7450891233af3f0c7fb8cc50",
+      "size_bytes": 1184,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/manifests/prompt_generations/be0bcb2d67973aee.json",
+      "sha256": "8e79695649a1852d8dd30f73a6c9d3f908022491c71c0aa5263046a1f172d025",
+      "size_bytes": 480,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/manifests/prompt_generations/da1eca82ececeab8.json",
+      "sha256": "f96943a66ae95bd494ed2079b107c8081fd5d56ae26e75662024e3eae48b13e1",
+      "size_bytes": 479,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/manifests/prompts/2f12ffaeb195.json",
+      "sha256": "38a3da9d81d05b64354cb04101764f55e65a94d7c0a8b409dd1a86049cc2f0ce",
+      "size_bytes": 4675,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/manifests/prompts/aecee0ed158f.json",
+      "sha256": "7e19f2e5102abece48840266e5b7200875e2a30b8c2730add6a562b6f0ba0721",
+      "size_bytes": 5015,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/candidates/CANDIDATE_MANIFEST.jsonl",
+      "sha256": "d0497c79ca197cc20df7b53d8a79d9abea21bbcd16f52043bd64351e5f58951c",
+      "size_bytes": 96456,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/candidates/iris_candidates.jsonl",
+      "sha256": "d03d14cf2f88ebbd315de14a4228a7622cbf0184f8746bb66754c6a9e993d38b",
+      "size_bytes": 144408,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/candidates/iris_candidates.v2.jsonl",
+      "sha256": "599e969e79422e43ae1718c2ea796af004a9e4d22f17330424777e71effbe430",
+      "size_bytes": 143608,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/candidates/iris_candidates.v3.jsonl",
+      "sha256": "1f3cc554ba123ce10a56db1e68282fc98a8a62ffce23215a4aeba08a43377cb2",
+      "size_bytes": 143466,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/candidates/quarantine-manifest.json",
+      "sha256": "06f812ecabed3173d692276c9ae6f5bf002b41604ee8b7fe77788cc383fa8804",
+      "size_bytes": 589,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/quarantine/legacy_lineage_manifest.json",
+      "sha256": "ffd9e9feaef6aa360ca5652e828ea7ebcae957a464a66da2688071eba9914ce2",
+      "size_bytes": 6947,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/quarantine/legacy_lineage_rows.jsonl",
+      "sha256": "67b94e329a87b4c32108ca5f8c7d747c27a775e252752fc22fbbc1fd8b671784",
+      "size_bytes": 36066,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/train/ablation/iris_dpo_multiturn_synthetic_v1.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/train/ablation/iris_dpo_synthetic_point_v1.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/assembly_report.json",
+      "sha256": "3952e433077089f71b5c9b83b51df1fe3976d986c147d0cb4514a3b50f0c23b8",
+      "size_bytes": 6527,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/iris_sft_multiturn_point_v1.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/iris_sft_point_v1.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/splits/SPLIT_REPORT.json",
+      "sha256": "2378797176562ee043598df4033a20c0b7d80af7accbff9185f373b5e5e9711f",
+      "size_bytes": 2880,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/splits/dpo_dev.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/splits/dpo_dev_multiturn.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/splits/dpo_train.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/splits/dpo_train_cross_action.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/splits/dpo_train_cross_action_multiturn.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/splits/dpo_train_cross_privilege.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/splits/dpo_train_cross_privilege_multiturn.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/splits/dpo_train_cross_site.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/splits/dpo_train_cross_site_multiturn.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/splits/dpo_train_cross_template.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/splits/dpo_train_cross_template_multiturn.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/splits/dpo_train_multiturn.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/splits/sft_dev.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/splits/sft_dev_multiturn.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/splits/sft_test.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/splits/sft_test_cross_action.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/splits/sft_test_cross_action_multiturn.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/splits/sft_test_cross_privilege.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/splits/sft_test_cross_privilege_multiturn.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/splits/sft_test_cross_site.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/splits/sft_test_cross_site_multiturn.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/splits/sft_test_cross_template.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/splits/sft_test_cross_template_multiturn.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/splits/sft_test_multiturn.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/splits/sft_train.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/splits/sft_train_cross_action.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/splits/sft_train_cross_action_multiturn.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/splits/sft_train_cross_privilege.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/splits/sft_train_cross_privilege_multiturn.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/splits/sft_train_cross_site.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/splits/sft_train_cross_site_multiturn.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/splits/sft_train_cross_template.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/splits/sft_train_cross_template_multiturn.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/splits/sft_train_multiturn.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/train/quarantine/legacy_training_manifest.jsonl",
+      "sha256": "4718801b305128488d3b7665fee14cbbbedca37ee7a5762a9a8c3810191b9240",
+      "size_bytes": 298104,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/train/quarantine/migration-report.json",
+      "sha256": "c78bd81a5ab89ae0e8354932c710bdd3dff33a7ecc34945f331b910b6553eabe",
+      "size_bytes": 1668,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "docs/Limitations.md",
+      "sha256": "a0ece20444f30eebece266794f1f8c40ca600f491edc1a31bcd711fcc3d5c60b",
+      "size_bytes": 13356,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "docs/audit/IRIS-formal-readiness.json",
+      "sha256": "81c7895c2bd598f8f6ead5557c192edfde3bec2da19c07061c2c1ab97532b910",
+      "size_bytes": 15197,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "docs/audit/IRIS-remediation-baseline.md",
+      "sha256": "843f15f1c158b4415068db0b5d624b8f72c15c385b09e2dd5691671c82a59610",
+      "size_bytes": 5412,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "docs/audit/IRIS-remediation-report.md",
+      "sha256": "132f12e178fd0d732693af0f88056a480769e4ca7d0ed9b879d84c47d821098f",
+      "size_bytes": 25840,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "docs/audit/mutation-miner-fixture-report.json",
+      "sha256": "2ca18f3d4a8ecb1259cf7a4a10bcb0f1e00b0f2eb98f8652c05902cf0c3165a3",
+      "size_bytes": 1223,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "docs/findings-multisite.md",
+      "sha256": "e9a471fe79d6ab994a8188ae965a57a3660f6e99480302f13d684f2c484d15af",
+      "size_bytes": 7152,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "docs/plan/07-撞车文献汇总与改向依据.md",
+      "sha256": "55ba1a4557844e258f37e4ea5a6156a3af069770db1053d4fea499e49e629133",
+      "size_bytes": 7225,
+      "status": " M"
+    },
+    {
+      "exists": false,
+      "path": "docs/plan/IRIS工程深度评审Prompt.md",
+      "status": " D"
+    },
+    {
+      "exists": true,
+      "path": "docs/plan/IRIS项目计划书.md",
+      "sha256": "6a040859e9e2604b6537c104c17bd46efb7348846a8c00cf340f37636b0cdd74",
+      "size_bytes": 17919,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "docs/plan/S1-S8完整流程文档.md",
+      "sha256": "2c1b37c5c3eb8c677baaa307fbd1d182d21681044d934733c47f2b93b20ec452",
+      "size_bytes": 14510,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "docs/plan/项目整改prompt.md",
+      "sha256": "ebf3fb03af9db517165ef3a17265508f7bdbe2696cae4130412783e9974f7562",
+      "size_bytes": 22202,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "docs/tutorial.md",
+      "sha256": "feab3d51d71ed8cb5211b3f802f78921084c1b05a2a39caa28e0b3a351af0f52",
+      "size_bytes": 36753,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "docs/workbench.md",
+      "sha256": "40b9af94be6765727ef0ceebf2f1e12a88ac507ad165ab97171d1c0b4cefbba4",
+      "size_bytes": 8791,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/cli.py",
+      "sha256": "1ec6ca305501191365f01567c51fc2422101bf7136b5923f7ecdca4dd72da649",
+      "size_bytes": 39573,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/config.py",
+      "sha256": "9d75a675fdc5a7643c3f9d41f0d0a7799bc82cc730e6bd58ca5814dbf87b0b5d",
+      "size_bytes": 11175,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/data/assemble.py",
+      "sha256": "71a524ed432aec1100e3923ea4cd8407de3d0adb05cddaf9d4efa5ce8b9098d2",
+      "size_bytes": 48329,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/data/candidates.py",
+      "sha256": "d2f1aa5fd407c2f5b2a2f3fce09cbcccff2d51ec71a4398e3756de4632f70b88",
+      "size_bytes": 22824,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "revact/data/collect.py",
+      "sha256": "06493feddf2f1721017753ce44bbfc782f999b0b2ebcb52f8d4060164813c831",
+      "size_bytes": 14178,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/data/formal_import.py",
+      "sha256": "2127bd5d7ccfdfb3db30ea2ff1059057beb45ad5b8914f4e62c4f31f6c9118cd",
+      "size_bytes": 5298,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "revact/data/governance.py",
+      "sha256": "9001b91d0f096ad5e3803d2155a7e94db02f909d7b999483e0bd90dbfdc9b12e",
+      "size_bytes": 30277,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "revact/data/multiturn.py",
+      "sha256": "c5551539de08e683ff532eecbae99c0fc9d2bd4bbd13e92ceb4fd2c8220b1785",
+      "size_bytes": 25536,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/data/mutation_miner.py",
+      "sha256": "f9ed96ef31379e65ce8d5cf3bbfcb43b23a9d4e706a876a05692a7814db56180",
+      "size_bytes": 9933,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "revact/data/preferences.py",
+      "sha256": "344cbf145bdb9a19b8aedaa82f59003808fbc90fd82bd1c3449106553a6b31da",
+      "size_bytes": 12392,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "revact/data/quarantine.py",
+      "sha256": "860fc28efac90a4b4622fb727af2306c4098ea7baa043df1f850039356eb1c08",
+      "size_bytes": 6128,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "revact/data/splits.py",
+      "sha256": "e03fdadb4619fc0b9fb8afe1ee8d379fed2e7d182d29fd62451f9353cd7ebd77",
+      "size_bytes": 24530,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/envs/harness.py",
+      "sha256": "0726a137d2491f21aff804d06bc3a1b49a4cc1ad68b1f29997f9e278f57e3d85",
+      "size_bytes": 9812,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/envs/obs_utils.py",
+      "sha256": "c26e0fd83ac29ba5ad7e5a977a8c28a49ee94bfec8fcf9a779178d11735c0685",
+      "size_bytes": 13735,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/eval/audit.py",
+      "sha256": "9d58448c817e9fa5c8b71acc9c04e3186ba26b23c888cce1491020a82790cabe",
+      "size_bytes": 9751,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "revact/eval/decisions.py",
+      "sha256": "103cdc2f33260477ef202520f0051d676a3aac7f544a160b7326bd29e2dd9c95",
+      "size_bytes": 6801,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/eval/metrics.py",
+      "sha256": "cd4dc1626f33050f7f2f230513d05f30bee7278fc5ce91cdafbff6d394266d9a",
+      "size_bytes": 28889,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "revact/eval/rollout.py",
+      "sha256": "4b193017dec288135998b2e7097348008f4a1b9993007f5ddaaf9f99e22caac0",
+      "size_bytes": 29007,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/eval/truth.py",
+      "sha256": "97117ba57a1d4f9d2e670b0c6965cabf6ccd77609501535fce5686bf566dba89",
+      "size_bytes": 8915,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "revact/grounding/__init__.py",
+      "sha256": "712a296ec90bfca3cd4325130b67cdf772cf781b1b4c23d0b178f537dee586ad",
+      "size_bytes": 784,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/grounding/authoring.py",
+      "sha256": "eee1311df8113686627d98514a7c194d9951a9409a5a06ab4cfb0328400ab596",
+      "size_bytes": 18057,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "revact/grounding/base.py",
+      "sha256": "739f8fc3fb382dbfaf1d1245a6826a1d680961aa754a8673a90f4e8b86c40779",
+      "size_bytes": 17048,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/grounding/migration.py",
+      "sha256": "bf4dc6b8dc9cd5e762552625d715547f090849873c74d85bddc767b68e2bfc01",
+      "size_bytes": 6801,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "revact/grounding/probes/reddit.py",
+      "sha256": "eb6d5a51f0a137f0c76bdbb1046bb5239da97fb73b77c5ba65624eb2f3a16ca6",
+      "size_bytes": 16705,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/grounding/probes/shopping.py",
+      "sha256": "4e8e99c351a94cd457f1696e7e63bbcadb324fa4779cce143f08326b30fb2794",
+      "size_bytes": 17096,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/grounding/probes/shopping_admin.py",
+      "sha256": "b026d7a8af64b1a19a19624fba350312539bb81a606b44fc93272839aad9c296",
+      "size_bytes": 5482,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/grounding/schema.py",
+      "sha256": "b19ec6824c7839ed6c7a65052b9e196347937c7722a56ea5977071d149b44d60",
+      "size_bytes": 24500,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "revact/grounding/solvers.py",
+      "sha256": "fe9b753aacf33541dfcd696d7fb85ed556db3eac596b77fe02dce388a604f694",
+      "size_bytes": 16312,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "revact/policies.py",
+      "sha256": "078f7c567611f72d3317b9fc1286784a1f2c7a2349b77042eab09117ec4cc929",
+      "size_bytes": 10792,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/prompt_store.py",
+      "sha256": "ef5c6472aa6e988c86b08f736a11aec9b8299141e35a1f8cd3d63996e15a29ed",
+      "size_bytes": 9194,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "revact/prompts.py",
+      "sha256": "ba9cf6c2586303e1eb52b56498ff0510f7ac0a26ac6dbf248018fca133eda855",
+      "size_bytes": 24580,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/server/adapters.py",
+      "sha256": "8100f5f2b6ebab78e232df49a94ea202c81b90add36e3bb14ae42abf5cba191d",
+      "size_bytes": 24564,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/server/app.py",
+      "sha256": "0ba7a6dccccde3748412dfcf1241a4b9742bc3f6f7bae56fab60fce7e29fa16d",
+      "size_bytes": 22515,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/server/datasets.py",
+      "sha256": "a70f9b97d5e76c63c159f482fbb8c6b32d1c26b487c3c645893b4970214ee15a",
+      "size_bytes": 43836,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/server/export.py",
+      "sha256": "4e2fc9b648212b804cf426589fecf40e33ebc971c4878d2beb767258a1758ca2",
+      "size_bytes": 29564,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/server/quality.py",
+      "sha256": "e0a6beacd3591fd08384676b0c52c08258aa140f8d3f8eb079a970f641322c4b",
+      "size_bytes": 9349,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/train/distill.py",
+      "sha256": "eed3f41fcf9254e05d614954444cc10a53cf2e277c455c9c38e8e937aec711a0",
+      "size_bytes": 24391,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/train/dpo.py",
+      "sha256": "a208c8c9360365f5123bb30e6f699ba9ec1ca9d33bf0b5cd488939dd38333d71",
+      "size_bytes": 15108,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/train/grpo.py",
+      "sha256": "6af8a2e5ba7f960dac2a3e093324ed803439ab70c9175f5ef1071d1d00e0e6c0",
+      "size_bytes": 22060,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/train/sft.py",
+      "sha256": "5f80a9efb75ceac0d6fbef2900d2b57131dfa5ae8c38aaccfe312516c4e0d03e",
+      "size_bytes": 15970,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/train/validators.py",
+      "sha256": "9cf1c566e90f6488c29eff9cbaf2e20776c52ebbbc70ec5458d6ec6c086f0390",
+      "size_bytes": 17496,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "revact/ui/views.js",
+      "sha256": "b161120750e0e4140e5216b9bdaee21c361f83baf75b4a0d455d8e1fce8ba509",
+      "size_bytes": 69468,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "scripts/audit_formal_readiness.py",
+      "sha256": "0aa63fa07cad094aaa4db43b89ba4af066f851bdc4fc1878fa4d353dc8828ed8",
+      "size_bytes": 27086,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "scripts/audit_mutation_miner.py",
+      "sha256": "24aaacea792c837b6d2be4a135c8ae3e52ba38ea810a8149197d67d6fb9d89f3",
+      "size_bytes": 2955,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "scripts/audit_remediation_baseline.py",
+      "sha256": "3332fd2b74d7bce0e30e0389fff9ff7be39ec8f07e56b0f7711fbeea07c36702",
+      "size_bytes": 7397,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "scripts/audit_worktree.py",
+      "sha256": "c464bbcd71be5ea97c803005f7c117f12c68b5ab42b3757c6c663ef5bd3c8d70",
+      "size_bytes": 4872,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "scripts/migrate_grounding_v3.py",
+      "sha256": "71e83675acbfe66107b09a28aa9c55b3f92980a3cf23c1e56bfbccf54e7459fe",
+      "size_bytes": 865,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "scripts/quarantine_legacy_lineage.py",
+      "sha256": "4261b0bb47194cc90fa2d5cea2a42b5b8df26e1d513ab66dbe616bff319d9224",
+      "size_bytes": 4587,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "scripts/quarantine_legacy_training.py",
+      "sha256": "4b6538b588dfe43f0bd79de860b11ea63189d3527939e3e1065ca093dbe4f7f8",
+      "size_bytes": 817,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "tests/test_assemble.py",
+      "sha256": "29baa8b66b132ad8a0e00e3b88a77079d879f594024ccaf42e4cb1547fc1e31b",
+      "size_bytes": 10373,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "tests/test_candidates_s4.py",
+      "sha256": "7a234ec453901fc14b8633477429b9e833cdedf22438f0675e82cdc46604cace",
+      "size_bytes": 4593,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "tests/test_eval_audit_cli.py",
+      "sha256": "aefa45bb1fa7bb263ccf3687ddae238474da3a713408a41481cfbcc4480ecb49",
+      "size_bytes": 8321,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "tests/test_eval_metrics.py",
+      "sha256": "28c9a5b7f0e2b8d72094ea12bac62b02146b0a487f43c302a7b9789b1a480d8b",
+      "size_bytes": 11337,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "tests/test_eval_rollout_formal.py",
+      "sha256": "34f1a4b0a10883037a447f5f0edfcf741bf2d10911624ab52850780d06ba497f",
+      "size_bytes": 13837,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "tests/test_eval_truth.py",
+      "sha256": "11a1ef19a14a5574ff036cc51757c4fafb0e326064b9886530114d72544e561a",
+      "size_bytes": 3877,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "tests/test_formal_export_governance.py",
+      "sha256": "1d58f8900d5948e826f8c23c9bcf48588a7d0335a1369ef7b604eaa50eacd91e",
+      "size_bytes": 22906,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "tests/test_formal_import.py",
+      "sha256": "e03c55a4253cfded30596502ccdb0f0a58e4de43695f325829990f7cfd113f9b",
+      "size_bytes": 6252,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "tests/test_formal_preferences.py",
+      "sha256": "7b77211722cff81693f4b323c11cce802b11fb1f048c14617c53998e1b3130d2",
+      "size_bytes": 5224,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "tests/test_formal_readiness_audit.py",
+      "sha256": "4d9f040ca324bf7cb134d6d567b8c669bc8449820099053a3eac4804519f7fd5",
+      "size_bytes": 11792,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "tests/test_grounding_schema.py",
+      "sha256": "7e8a328a12768b3ebb11de53e903215b0c467411b524c806162b64d4dc0b924c",
+      "size_bytes": 12327,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "tests/test_mutation_miner.py",
+      "sha256": "dc7d9dd9e36156f3a491c052d8e093c0840337799d06970ff3475e204e1b07b7",
+      "size_bytes": 3587,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "tests/test_offline_pipeline.py",
+      "sha256": "b2e60da20d3daec5754597354409af9a876526223381feb836d1f47548407e43",
+      "size_bytes": 5954,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "tests/test_probe_authoring.py",
+      "sha256": "cb4a797088b31e7094e886cf4e719f1453c08ce99460603e0cec2ff0953ee43e",
+      "size_bytes": 4412,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "tests/test_probes_mock.py",
+      "sha256": "6de22ba5bb5c5aa432a76018eb894500fe42a3cd9768aa7429460b04bc1bf6f7",
+      "size_bytes": 4124,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "tests/test_prompt_registry_history.py",
+      "sha256": "85f9f93cdc6763383a277fad8c9459ec5cb4722a54aec45a0cf714e26116ffbb",
+      "size_bytes": 10501,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "tests/test_prompts_multiturn_train.py",
+      "sha256": "d275551126300cc908112a8c0bb9dd4ad89ceda4c49ce81c1c74387b6fcdad67",
+      "size_bytes": 21329,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "tests/test_quarantine.py",
+      "sha256": "9296d328a149b488945e21204f80cd8941055147649dbf1c4c28d8f4dace9bfb",
+      "size_bytes": 3048,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "tests/test_solver_union.py",
+      "sha256": "2773b8283e5492f2f53def9d5adc701b3731bb60da61ef0728b13a3ff58797ed",
+      "size_bytes": 6848,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "tests/test_splits.py",
+      "sha256": "4e0197368c9ceed7752de69d467ba2f5f2192337050f5db183ee1f6d18791c76",
+      "size_bytes": 12315,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "tests/test_train_remediation.py",
+      "sha256": "fa08db38d913b2d8ff6e74207d684437b853fe6bf4e58be0193a590fab58dcf6",
+      "size_bytes": 15614,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "tests/test_workbench.py",
+      "sha256": "ad7d62182d79012f7ba1c15aa8548132e0cf757fb8e91104b23acc071cd6b370",
+      "size_bytes": 22582,
+      "status": " M"
+    }
+  ],
+  "entry_count": 145,
+  "excluded_outputs": [
+    "docs/audit/IRIS-worktree-manifest.json"
+  ],
+  "generated_at": "2026-07-13T09:32:27.272177+00:00",
+  "repository_root": "/workspace/iris",
+  "schema_version": "iris.worktree_manifest.v1",
+  "worktree_sha256": "13bccab60836feae48c5909895342a20511dea45ef484e148c8573c40fc7ea90"
+}

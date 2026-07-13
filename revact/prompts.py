@@ -35,20 +35,21 @@ meta records fingerprint() so every dataset build is attributable to the
 exact prompt set that produced it. Any change to the format must happen HERE,
 followed by re-materialization (assemble + assemble-multiturn + split).
 
-In MULTI-TURN samples only the first user turn carries <goal>+<history>;
-subsequent user turns carry just the new <observation> (the conversation
-itself is the history — see data/multiturn.py).
+Trajectory-conditioned samples use this same stateless two-message policy
+input as deployment: system + one user message containing the compacted real
+history and current observation.  Keeping a separate chat-shaped training
+serializer previously caused a silent train/deploy topology mismatch.
 """
 from __future__ import annotations
 
-import hashlib
 import json
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
-from .config import CONFIG_DIR
+from .config import (CONFIG_DIR, MAX_AXTREE_CHARS_POLICY,
+                     POLICY_HISTORY_STEPS)
 
 # --------------------------------------------------------------------------- #
 # Default prompt texts
@@ -60,8 +61,8 @@ _DEFAULT_AGENT_SYSTEM = (
     "You receive the goal, a numbered history of your previous actions (each line "
     "shows the action, a [nav]/[state-change]/[update]/[no-effect] flag, and what "
     "changed; [no-effect] means the action changed nothing, so try something "
-    "different), and the current page; earlier turns of this conversation are "
-    "also your history. Act with exactly ONE action per turn, chosen from: "
+    "different), and the current page. Act with exactly ONE action per turn, "
+    "chosen from: "
     "click('bid'), fill('bid', 'text'), select_option('bid', 'value'), "
     "scroll(0, 300), go_back(), goto('url'), send_msg_to_user('text'), "
     "report_infeasible('reason'), noop(). "
@@ -69,8 +70,11 @@ _DEFAULT_AGENT_SYSTEM = (
     "action you are considering could change account or website state, FIRST "
     "state the current situation, predict the effect of that action, then check "
     "whether an undo path exists INSIDE this site for this account (look for "
-    "actual remove/cancel/reset controls — do not guess from button words), "
-    "conclude whether it is REVERSIBLE here, state the undo plan (or 'none "
+    "actual remove/cancel/reset controls when they are visible. Explicitly say "
+    "whether an undo claim is (a) visible in the current input, (b) a learned "
+    "mechanism prediction, or (c) still unknown; never claim that a post-action "
+    "probe or control was observed at deployment. Do not guess from button words. "
+    "Conclude the budget-relative recovery prediction, state the undo plan (or 'none "
     "available'), and decide EXECUTE / VERIFY / CONFIRM / AVOID. Output exactly: "
     "<think><observation>..<reasoning>..<prediction>..<rev_check>.."
     "<reversibility>..<undo>..<decision>..</think><answer>.."
@@ -108,7 +112,7 @@ Write exactly four lines, no extra text:
 <observation> one sentence on the current page and goal
 <reasoning> why the decision follows from the goal and the reversibility fact
 <prediction> what executing the action would change, consistent with the real effect
-<rev_check> how you verify reversibility from the page itself: which in-site undo control exists (or is missing), consistent with the measured undo path
+<rev_check> distinguish what is visible in the current pre-action input from what was measured only in the post-action probe; do not claim that a post-action undo control is currently visible. Explain the mechanism consistently with the recorded undo path
 Keep each line under 40 words. Do not use the literal label words "{reversibility}" or "{decision}"; explain naturally."""
 
 
@@ -289,8 +293,50 @@ def effective() -> dict:
 def fingerprint() -> str:
     """Short stable hash of the effective prompt set — stamped into sample
     meta / dataset card so a build is attributable to its prompts."""
-    blob = json.dumps(effective(), ensure_ascii=False, sort_keys=True)
-    return hashlib.sha1(blob.encode("utf-8")).hexdigest()[:12]
+    from .prompt_store import content_fingerprint
+    return content_fingerprint(effective())
+
+
+def snapshot(*, root: Path | None = None, parent_fp: str = "",
+             author: str = "pipeline", model_config: dict | None = None) -> str:
+    """Persist the effective full prompt text under its content fingerprint.
+
+    Dataset materializers call this instead of recording an orphan hash.  Plain
+    :func:`fingerprint` remains side-effect free for UI reads and tests.
+    """
+    from .prompt_store import store_bundle
+
+    values = effective()
+    if model_config is not None:
+        raise ValueError(
+            "model_config must be recorded with snapshot_generation(), not "
+            "inside the prompt-content fingerprint")
+    path = store_bundle(values, root=root, parent_fp=parent_fp, author=author,
+                        model_config=None)
+    return path.stem
+
+
+def snapshot_generation(*, root: Path | None = None, producer: str,
+                        model: str | dict, decode_config: dict,
+                        parent_fp: str = "", author: str = "pipeline") -> dict:
+    """Persist linked prompt-content and generation-configuration bundles.
+
+    Both fingerprints are returned so old consumers can keep using
+    ``prompts_fp`` while artifact producers additionally stamp the exact model
+    and decoding identity as ``prompt_generation_fp``.
+    """
+    from .prompt_store import store_generation_bundle
+
+    prompts_fp = snapshot(root=root, parent_fp=parent_fp, author=author)
+    generation_path = store_generation_bundle(
+        prompts_fp=prompts_fp,
+        producer=producer,
+        model=model,
+        decode_config=decode_config,
+        root=root,
+    )
+    return {"prompts_fp": prompts_fp,
+            "prompt_generation_fp": generation_path.stem}
 
 
 def registry_view() -> list[dict]:
@@ -348,8 +394,53 @@ def render_user(goal: str, obs_txt: str, history: Optional[list] = None) -> str:
 
 
 def render_followup(obs_txt: str) -> str:
-    """Subsequent user turns in a multi-turn sample: only the new observation."""
+    """Legacy chat-shaped follow-up renderer (read compatibility only).
+
+    New dataset materialization uses :func:`build_policy_messages`, matching
+    the stateless deployment topology.  Keeping this helper avoids breaking old
+    artifacts and UI parsers; it must not be used to build new formal samples.
+    """
     return f"<observation>\n{obs_txt}\n"
+
+
+def build_policy_messages(
+    goal: str,
+    obs_txt: str,
+    history: Optional[list] = None,
+    *,
+    system_prompt: Optional[str] = None,
+    max_history: Optional[int] = None,
+    max_axtree_chars: Optional[int] = None,
+    required_actions: Optional[list[str]] = None,
+) -> list[dict]:
+    """Canonical train/deploy policy serializer.
+
+    All current policy inputs are exactly ``system`` + ``user``.  The latter is
+    rendered by :func:`render_user` after applying the one shared history budget
+    and action-anchored AXTree pruning.  Dataset assembly may pass
+    ``required_actions``; an absent click bid then raises rather than creating
+    an impossible supervision row.  Live policies omit it because their action
+    has not been selected yet.
+    """
+    from .envs.obs_utils import (action_bid, prune_axtree_txt,
+                                 require_action_bid_visible)
+
+    k = POLICY_HISTORY_STEPS if max_history is None else int(max_history)
+    if k < 0:
+        raise ValueError("max_history must be non-negative")
+    max_chars = (MAX_AXTREE_CHARS_POLICY if max_axtree_chars is None
+                 else int(max_axtree_chars))
+    required = list(required_actions or [])
+    anchor_bids = [bid for action in required if (bid := action_bid(action))]
+    pruned = prune_axtree_txt(obs_txt or "", max_chars=max_chars,
+                              anchor_bids=anchor_bids)
+    for action in required:
+        require_action_bid_visible(action, pruned)
+    compacted = list(history or [])[-k:] if k else []
+    return [
+        {"role": "system", "content": system_prompt or get("agent_system")},
+        {"role": "user", "content": render_user(goal, pruned, compacted)},
+    ]
 
 
 def parse_user(user: str) -> dict:
@@ -371,6 +462,22 @@ def parse_user(user: str) -> dict:
     if m:
         return {"goal": m.group(1).strip(), "history": "", "obs": m.group(2).strip()}
     return {"goal": user.strip(), "history": "", "obs": ""}
+
+
+def parse_observation_message(user: str) -> str:
+    """Current AXTree from either canonical stateless or legacy follow-up user.
+
+    New formal artifacts always use :func:`render_user`; accepting the legacy
+    ``<observation>``-only form here lets validators diagnose old rows precisely
+    (50 truly missing bids rather than all 62 failing only because of topology).
+    """
+    parsed = parse_user(user)
+    if parsed["obs"]:
+        return parsed["obs"]
+    import re
+
+    m = re.search(r"<observation>\s*\n(.*)", user or "", re.DOTALL)
+    return m.group(1).strip() if m else ""
 
 
 # --------------------------------------------------------------------------- #
@@ -417,6 +524,13 @@ def state_history(state: dict) -> tuple[list[dict], str]:
 
     provenance: 'plan' (recorded reach plan), 'canonical' (synthesized from
     action type + url), or 'none'."""
+    # New point-level reached states carry deltas computed from consecutive
+    # observations.  Trust them only when provenance is explicitly trajectory;
+    # plan/canonical fallbacks remain legacy/development-only.
+    real_history = state.get("history")
+    if (state.get("history_source") == "trajectory" and
+            isinstance(real_history, list)):
+        return list(real_history), "trajectory"
     entries = history_from_plan(state.get("reach_plan"))
     if entries:
         return entries, "plan"

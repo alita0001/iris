@@ -171,12 +171,13 @@ STAGES: list[Stage] = [
            Action("assemble", "物化（运行 assemble）", "cli", [])],
           ["train/sft/revact_sft.jsonl"], "real"),
     Stage("candidates", "候选动作生成", "S4",
-          "现有 pipeline 每个状态只带 expert risky action + rule-safe alternative；"
-          "生成式候选动作提案（页面元素枚举/诱饵类）尚未实现——通过人工标注 overlay 补充。",
-          [Action("propose", "LLM 候选动作提案", "placeholder", [],
-                  "扩展点：revact/data/ 新增 candidates.py 后在此接入")],
-          ["raw/state_bank/*reached_states.jsonl", "annotations/candidate.jsonl"],
-          "placeholder"),
+          "从当前 AXTree 枚举真实 interactive bids，生成并验证每状态 4–6 个候选；"
+          "类别仅是提案覆盖，effect/recovery 必须由后续 point probe 测量。",
+          [Action("propose", "枚举并物化合法候选", "inprocess", [],
+                  "参数 state；写入 raw/candidates/iris_candidates.v3.jsonl")],
+          ["raw/state_bank/*reached_states.jsonl",
+           "raw/candidates/iris_candidates*.jsonl"],
+          "real"),
     Stage("counterfactuals", "反事实动作生成", "S8b",
           "四类 DPO rejected 变体（false_safe/over_block/goal_violation/"
           "wrong_reversibility），assemble 的真实 builder。",
@@ -462,6 +463,16 @@ def _run_inprocess(stage: Stage, action: Action, params: dict,
                     if (p := store.constraint_preview(s["name"]))]
         return {"ok": True, "result": previews,
                 "note": f"constraint preview × {len(previews)} states"}
+    if stage.id == "candidates" and action.id == "propose":
+        name = str(params.get("state") or "")
+        if not name:
+            return {"ok": False, "error": "缺少 state 参数"}
+        try:
+            result = store.materialize_candidates(name)
+        except Exception as exc:
+            return {"ok": False, "error": str(exc)}
+        return {"ok": True, "result": result,
+                "note": f"S4 candidates × {result['n']} -> {result['artifact']}"}
     if stage.id == "counterfactuals" and action.id == "preview":
         name = params.get("state", "")
         res = store.candidates_for(name) if name else None

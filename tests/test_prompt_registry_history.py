@@ -5,6 +5,9 @@ import json
 import pytest
 
 from revact import prompts
+from revact.prompt_store import (content_fingerprint, diff_bundles,
+                                 load_bundle, load_generation_bundle,
+                                 store_bundle, store_generation_bundle)
 from revact.data.assemble import build_fields, build_rev_fields, render_assistant
 from revact.envs.obs_utils import history_entry, obs_delta
 
@@ -48,6 +51,61 @@ def test_corrupt_overrides_file_falls_back(tmp_path, monkeypatch):
     f.write_text("{not json")
     monkeypatch.setenv("REVACT_PROMPTS_FILE", str(f))
     assert prompts.get("agent_system").startswith("You are a safe web agent")
+
+
+def test_immutable_prompt_bundles_restore_full_text_and_diff(tmp_path):
+    first = {"agent_system": "one", "pool": ["a"]}
+    second = {"agent_system": "two", "pool": ["a"]}
+    p1 = store_bundle(first, root=tmp_path, author="test")
+    p2 = store_bundle(second, root=tmp_path, parent_fp=content_fingerprint(first),
+                      author="test")
+    # Content addressing is idempotent and never rewrites first-writer metadata.
+    before = p1.read_bytes()
+    assert store_bundle(first, root=tmp_path, author="someone-else") == p1
+    assert p1.read_bytes() == before
+    assert load_bundle(content_fingerprint(first), root=tmp_path)["prompts"] == first
+    diff = diff_bundles(content_fingerprint(first), content_fingerprint(second),
+                        root=tmp_path)
+    assert diff["n_changed"] == 1
+    assert diff["changed"]["agent_system"] == {"before": "one", "after": "two"}
+    assert p1 != p2
+    with pytest.raises(ValueError):
+        load_bundle("../../etc/passwd", root=tmp_path)
+
+
+def test_generation_bundle_separates_config_and_restores_full_prompt(tmp_path):
+    prompt_values = {"agent_system": "one", "pool": ["a"]}
+    prompt_path = store_bundle(prompt_values, root=tmp_path, author="test")
+    common = {
+        "prompts_fp": prompt_path.stem,
+        "producer": "test.materializer",
+        "model": {"provider": "fixture", "name": "teacher", "revision": "1"},
+        "root": tmp_path,
+    }
+    greedy = store_generation_bundle(
+        **common, decode_config={"temperature": 0.0, "top_p": 1.0})
+    sampled = store_generation_bundle(
+        **common, decode_config={"temperature": 0.7, "top_p": 0.9})
+
+    # Same prompt text remains backwards-compatible while generation identity
+    # changes with decoding parameters.
+    assert greedy.stem != sampled.stem
+    assert content_fingerprint(prompt_values) == prompt_path.stem
+    restored = load_generation_bundle(sampled.stem, root=tmp_path)
+    assert restored["prompts_fp"] == prompt_path.stem
+    assert restored["decode_config"] == {"temperature": 0.7, "top_p": 0.9}
+    assert restored["prompt_bundle"]["prompts"] == prompt_values
+
+    tampered = json.loads(sampled.read_text(encoding="utf-8"))
+    tampered["decode_config"]["temperature"] = 0.1
+    sampled.write_text(json.dumps(tampered), encoding="utf-8")
+    with pytest.raises(ValueError, match="integrity check"):
+        load_generation_bundle(sampled.stem, root=tmp_path)
+
+    # The old API must not silently discard a model configuration.
+    with pytest.raises(ValueError, match="generation provenance"):
+        store_bundle(prompt_values, root=tmp_path,
+                     model_config={"temperature": 1.0})
 
 
 # ------------------------------------------------------------ delta history -- #
@@ -100,7 +158,7 @@ def test_rev_fields_consume_grounded_evidence():
     assert "2 steps" in undo and "remove the item from the cart" in undo
     assert "2 steps" in rev_check
     _, undo_irrev = build_rev_fields("place_order", {"label": "IRREVERSIBLE"})
-    assert undo_irrev == "none available"
+    assert undo_irrev == "not found within the recorded budget"
     rc_unknown, undo_unknown = build_rev_fields("address_add", {"label": "UNKNOWN"})
     assert undo_unknown == "unverified" and "cannot verify" in rc_unknown
 
@@ -130,21 +188,30 @@ def test_assemble_meta_carries_provenance(tmp_path, monkeypatch):
         "name": "add_to_cart__prod-a", "reached": True, "url": "http://x/p",
         "risky_action": {"text": "[3] button 'Add to Cart'",
                          "raw_action": "click('3')"},
-        "safe_answer": "go_back()", "axtree_snapshot": "tree"}))
+        "safe_answer": "go_back()",
+        "axtree_snapshot": "[3] button 'Add to Cart'"}))
     rev = tmp_path / "rev.jsonl"
     rev.write_text(json.dumps({
         "action_type": "add_to_cart", "label": "REVERSIBLE",
         "grounding": "cart_item_count", "destructive": False,
         "evidence": {"undo_steps": 1, "undo_actions": ["click('45')"],
                      "residual_diff": {"count_delta": 0}}}))
-    rep = assemble(reached, rev, tmp_path)
+    rep = assemble(reached, rev, tmp_path, formal=False)
     rows = [json.loads(ln) for ln in
-            (tmp_path / "train" / "sft" / "revact_sft.jsonl").open()]
+            open(rep["sft_path"])]
     assert rep["n_sft"] == 2 and len(rows) == 2
     for r in rows:
-        assert r["meta"]["format"] == "iris.v2"
+        assert r["meta"]["format"] == "iris.v2-legacy"
+        assert r["meta"]["formal_dataset"] is False
         assert r["meta"]["prompts_fp"] == prompts.fingerprint()
-        assert r["meta"]["undo_steps"] == 1
+        assert load_bundle(r["meta"]["prompts_fp"], root=tmp_path)["prompts"] \
+            == prompts.effective()
+        generated_with = load_generation_bundle(
+            r["meta"]["prompt_generation_fp"], root=tmp_path)
+        assert generated_with["prompts_fp"] == r["meta"]["prompts_fp"]
+        assert generated_with["producer"] == "revact.data.assemble"
+        assert generated_with["prompt_bundle"]["prompts"] == prompts.effective()
+        assert r["meta"]["undo_cost_steps"] == 1
         asst = r["messages"][-1]["content"]
         assert "<rev_check>" in asst and "<undo>" in asst
 

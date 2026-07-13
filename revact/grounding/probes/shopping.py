@@ -252,7 +252,8 @@ def probe_place_order(ctx: ProbeContext) -> ReversibilityResult:
         cancel_el = signals.find_action_by_text(v, ["cancel order", "cancel this", "cancel"])
     cancelable = cancel_el is not None
     label = ("NO_EFFECT" if not new else
-             "PARTIALLY_RECOVERABLE" if cancelable else "IRREVERSIBLE")
+             "PARTIALLY_RECOVERABLE" if cancelable else
+             "NOT_RECOVERED_WITHIN_BUDGET")
     return mk_result(
         "place_order", label, "order_set", destructive=True,
         evidence={
@@ -321,10 +322,12 @@ register(ProbeSpec("shopping.address_add", "shopping", "address_add",
                    probe_address_add, expected_spectrum="REVERSIBLE"))
 register(ProbeSpec("shopping.place_order", "shopping", "place_order",
                    DESTRUCTIVE, "order_set", "look for an actionable customer cancel",
-                   probe_place_order, expected_spectrum="IRREVERSIBLE"))
+                   probe_place_order,
+                   expected_spectrum="NOT_RECOVERED_WITHIN_BUDGET"))
 register(ProbeSpec("shopping.review_submit", "shopping", "review_submit",
                    DESTRUCTIVE, "review_record", "none available customer-side",
-                   probe_review_submit, expected_spectrum="IRREVERSIBLE"))
+                   probe_review_submit,
+                   expected_spectrum="NOT_RECOVERED_WITHIN_BUDGET"))
 register(ProbeSpec("shopping.address_delete", "shopping", "address_delete",
                    DESTRUCTIVE, "address_count", "re-add is possible but content is lost",
                    probe_address_delete, expected_spectrum="PARTIALLY_RECOVERABLE"))

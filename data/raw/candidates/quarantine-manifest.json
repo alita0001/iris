@@ -1,0 +1,11 @@
+{
+  "schema_version": "iris.candidate_quarantine.v1",
+  "source_file": "iris_candidates.v2.jsonl",
+  "source_sha256": "599e969e79422e43ae1718c2ea796af004a9e4d22f17330424777e71effbe430",
+  "rows": 300,
+  "formal_eligible": false,
+  "reason": "legacy builder forced category diversity by relabeling ordinary controls and recorded every source as a11y_enumeration",
+  "replacement_file": "iris_candidates.v3.jsonl",
+  "migration_mode": "non_destructive_rebuild_source_retained",
+  "rollback": "delete iris_candidates.v3.jsonl and this manifest; iris_candidates.v2.jsonl was never modified"
+}

@@ -1,7 +1,7 @@
 /* All tab views. Each entry: async render(container). Data always comes from
    the API (pipeline artifacts + annotation overlays) — nothing is baked in. */
 
-const LABELS = ['REVERSIBLE', 'REVERSIBLE_WITH_COST', 'PARTIALLY_RECOVERABLE',
+const LEGACY_LABELS = ['REVERSIBLE', 'REVERSIBLE_WITH_COST', 'PARTIALLY_RECOVERABLE',
   'IRREVERSIBLE', 'NO_EFFECT', 'UNKNOWN'];
 const KS_TYPES = ['bottleneck', 'precondition', 'irreversible-risk',
   'goal-progress', 'constraint-sensitive'];
@@ -70,6 +70,7 @@ const PipelineView = {
     if (a.id === 'distill') f.push('limit:number:10');
     if (a.id === 'crawl') f.push('cap:number:40');
     if (a.id === 'scale') f.push('n_place_order:number:6');
+    if (a.id === 'propose') f.push('state:text:');
     return f.map(spec => {
       const [name, type, dflt] = spec.split(':');
       if (type === 'select') {
@@ -487,27 +488,38 @@ const CandidatesView = {
   async render(el) {
     const states = await API.get('/api/states');
     if (!states.ok) { el.innerHTML = `<div class="empty">${esc(states.error)}</div>`; return; }
-    const bound = states.items.filter(s => s.grounded_action_type);
-    if (!this.state && bound.length) this.state = bound[0].name;
+    const available = states.items;
+    if (!this.state && available.length) this.state = available[0].name;
     el.innerHTML = `
       <div class="fl"><label>状态</label>
-        <select id="cd-state">${bound.map(s => `<option${s.name === this.state ? ' selected' : ''}>${esc(s.name)}</option>`).join('')}</select>
-        <button class="btn sm" id="cd-regen">重新生成（重算反事实）</button>
+        <select id="cd-state">${available.map(s => `<option${s.name === this.state ? ' selected' : ''}>${esc(s.name)}</option>`).join('')}</select>
+        <button class="btn primary sm" id="cd-materialize">枚举并物化 S4</button>
+        <button class="btn sm" id="cd-regen">刷新预览</button>
         <button class="btn sm" onclick="APP.go('grounded')">送去 undo 标注 →</button>
-        <span class="mini-note">共 ${bound.length} 个已绑定 grounded 标签的状态（未绑定的 ${states.items.length - bound.length} 个不产样本）</span></div>
+        <span class="mini-note">共 ${available.length} 个 reached states；S4 不读取 grounded 标签</span></div>
       <div id="cd-body" class="loading">加载中…</div>`;
     $('#cd-state').addEventListener('change', e => { this.state = e.target.value; this.render(el); });
     $('#cd-regen').addEventListener('click', () => this.render(el));
+    $('#cd-materialize').addEventListener('click', async () => {
+      const rr = await API.runStage('candidates', 'propose', {state: this.state});
+      toast(rr.ok ? `已物化 ${rr.result.n} 个合法候选` : rr.error,
+        rr.ok ? 'ok' : 'err');
+      if (rr.ok) this.render(el);
+    });
     const r = await API.get('/api/candidates?state=' + encodeURIComponent(this.state));
     const body = $('#cd-body');
     body.classList.remove('loading');
-    if (!r.ok || !r.candidates) { body.innerHTML = '<div class="empty">该状态无法生成候选（未绑定 grounded 标签）</div>'; return; }
+    if (!r.ok || !r.candidates) { body.innerHTML = '<div class="empty">该状态无法生成候选</div>'; return; }
     const c = r.candidates, anns = r.annotations || {};
+    if (c.s4_status !== 'ready') {
+      body.innerHTML = `<div class="empty">S4 fail-closed：${esc(c.s4_error || '候选不足或 expert bid 不合法')}</div>`;
+      return;
+    }
     const candRows = c.candidates.map(x => `<tr>
       <td>${badge(x.kind, 'plain')}</td><td>${esc(x.text)}</td>
       <td style="font-family:var(--mono)">${esc(x.raw_action)}</td>
-      <td>${x.reversibility ? badge(x.reversibility) : '—'}</td>
-      <td>${x.grounded ? badge('grounded', 'accepted') : badge('rule', 'plain')}</td></tr>`).join('');
+      <td>${esc(x.bid)}</td><td>${badge(x.legal_at_snapshot ? 'legal' : 'illegal', x.legal_at_snapshot ? 'accepted' : 'needs-review')}</td>
+      <td>${esc(x.source)} · ${esc(x.proposer_version)}</td></tr>`).join('');
     const cfRows = c.counterfactuals.map((x, i) => `<tr>
       <td>${badge(x.pair_type, 'plain')}</td><td>${esc(x.variant)}</td>
       <td style="font-family:var(--mono)">${esc(x.raw_action)}</td>
@@ -520,7 +532,8 @@ const CandidatesView = {
       <td><button class="btn sm danger cd-del" data-k="${esc(k)}">删除</button></td></tr>`).join('');
     body.innerHTML = `
       <h2>候选动作（pipeline 真实来源）</h2>
-      <div class="tbl"><table><thead><tr><th>类型</th><th>text</th><th>action</th><th>grounded 可逆性</th><th>来源</th></tr></thead>
+      <p class="mini-note">类别是覆盖提案，不是安全/可逆性标签；每个 bid 均由当前 snapshot 精确校验，后续标签只能来自 execute–then–undo point probe。</p>
+      <div class="tbl"><table><thead><tr><th>提案类别</th><th>text</th><th>action</th><th>bid</th><th>合法性</th><th>来源</th></tr></thead>
         <tbody>${candRows}</tbody></table></div>
       <h2>反事实动作（DPO rejected builders，实时计算）</h2>
       <div class="tbl"><table><thead><tr><th>pair type</th><th>variant</th><th>action</th><th>宣称可逆性</th><th>宣称决策</th><th></th></tr></thead>
@@ -534,7 +547,7 @@ const CandidatesView = {
         <input type="text" id="cd-raw" placeholder="raw action，如 click('123')" style="min-width:160px">
         <input type="text" id="cd-note" placeholder="备注/预期后果">
         <button class="btn primary sm" id="cd-add">添加候选</button></div>
-      <p class="warn-note">当前 pipeline 无生成式候选提案阶段（S4 placeholder）：以上候选=专家动作+规则安全动作+DPO 反事实；人工添加仅作标注资产，接入自动生成见 docs/workbench.md 扩展点。</p>`;
+      <p class="warn-note">人工/LLM 只能补充候选提案；工作台不提供最终 effect/recovery/safety label 输入。正式候选仍须通过 snapshot bid 校验与 point probe。</p>`;
     $$('.cf-show', body).forEach(b => b.addEventListener('click', () => {
       $('#cd-seq').innerHTML = `<h2>rejected 完整序列</h2>${seq(c.counterfactuals[+b.dataset.i].rendered)}`;
     }));
@@ -556,15 +569,18 @@ const CandidatesView = {
 /* ------------------------------------------------------------ grounded -- */
 const GroundedView = {
   async render(el) {
-    const [r, probes] = await Promise.all([API.get('/api/grounded'), API.get('/api/probes')]);
+    const [r, probes, authored] = await Promise.all([
+      API.get('/api/grounded'), API.get('/api/probes'), API.get('/api/probe-specs')]);
     if (!r.ok) { el.innerHTML = `<div class="empty">${esc(r.error)}</div>`; return; }
     const anns = r.annotations || {};
+    const formal = r.formal_point || {items: [], manifest: [], ok: false};
+    const canonical = r.canonical_schema || {};
     const bySite = {};
     (probes.items || []).forEach(p => { (bySite[p.site] = bySite[p.site] || []).push(p); });
     const siteBlocks = Object.keys(bySite).sort().map(site => {
       const rows = bySite[site].map(p => `<tr>
         <td style="font-family:var(--mono)">${esc(p.name)}</td>
-        <td>${badge(p.destructive.replace('_', '-'), p.destructive === 'destructive' ? 'IRREVERSIBLE' : 'plain')}</td>
+        <td>${badge(p.destructive.replace('_', '-'), p.destructive === 'destructive' ? 'AVOID' : 'plain')}</td>
         <td class="mini-note">${esc(p.grounding)}</td>
         <td>${p.live_label ? badge(p.live_label) : badge('未采集', 'plain')}</td>
         <td class="mini-note">${esc(p.expected_spectrum)}</td></tr>`).join('');
@@ -572,15 +588,69 @@ const GroundedView = {
         <div class="tbl"><table><thead><tr><th>probe</th><th>等级</th><th>backend 信号</th><th>当前标签</th><th>预期谱系</th></tr></thead>
           <tbody>${rows}</tbody></table></div>`;
     }).join('');
+    const formalRows = (formal.items || []).map(p => `<tr>
+      <td style="font-family:var(--mono)">${esc(p.probe_point_id)}</td>
+      <td>${esc(p.state_id)}</td><td>${esc(p.action_instance_id)}</td>
+      <td>${esc(p.site)} / ${esc(p.action_type)}</td>
+      <td>${badge(p.effect_status)}</td><td>${badge(p.recovery_status)}</td>
+      <td>${p.undo_cost_steps ?? '—'}</td>
+      <td class="mini-note">k=${p.budget_k}; ${esc((p.solver_set || []).join(', '))}</td>
+      </tr>`).join('');
     el.innerHTML = `
       <div class="fl">
         <button class="btn primary sm" id="gp-mock">mock 探针（离线·全站点）</button>
         <button class="btn sm" id="gp-live">live 非破坏（shopping）</button>
         <button class="btn sm" id="gp-live-reddit">live 非破坏（reddit）</button>
         <span class="warn-note">破坏性探针不在工作台开放：需 CLI 双闸门（--commit + REVACT_ALLOW_DESTRUCTIVE=1）+ 逐批批准</span></div>
-      <details open><summary>探针注册表（${(probes.items || []).length} 个，按站点分组）与 live 标签</summary>
+      <details open><summary>Formal point grounding：${formal.n_points || 0} points / ${formal.n_manifest || 0} manifest</summary>
+        <p class="${formal.ok && formal.one_to_one ? 'mini-note' : 'warn-note'}">
+          schema=${esc(canonical.schema_version || 'unknown')}；body↔manifest 1:1=${formal.one_to_one ? 'yes' : 'no'}；
+          effect=${esc((canonical.effect_status || []).join('/'))}；recovery=${esc((canonical.recovery_status || []).join('/'))}。
+          ${formal.error ? 'integrity error: ' + esc(formal.error) : ''}
+        </p>
+        <div class="tbl"><table><thead><tr><th>probe_point_id</th><th>state_id</th><th>action_instance_id</th><th>site/action</th><th>effect</th><th>recovery</th><th>undo cost</th><th>budget/solvers</th></tr></thead>
+          <tbody>${formalRows || '<tr><td colspan="8" class="empty">当前没有 formal point；下方 legacy smoke 不会进入正式训练。</td></tr>'}</tbody></table></div>
+      </details>
+      <details><summary>Legacy class-smoke 探针注册表（${(probes.items || []).length} 个，仅审计/兼容显示）</summary>
         ${siteBlocks}</details>
+      <details><summary>Declarative probe authoring（${(authored.items || []).length} 个待审 spec）</summary>
+        <p class="mini-note">这里只定义动作、signal、undo、预算和安全等级；不能填写最终 label。spec 必须通过 fixture、code review 和真实执行后才可产生 point evidence。</p>
+        <div class="fl">
+          <input id="pa-site" placeholder="site" value="shopping" style="width:100px">
+          <input id="pa-type" placeholder="spec name / action type" style="width:150px">
+          <input id="pa-state" placeholder="state_id" style="width:150px">
+          <input id="pa-candidate" placeholder="candidate_id" style="width:150px">
+          <input id="pa-instance" placeholder="action_instance_id" style="width:160px">
+          <input id="pa-raw" placeholder="raw action: click('123')" style="width:180px">
+          <input id="pa-canonical" placeholder="canonical action" style="width:180px">
+          <input id="pa-signals" placeholder="ui_structural,api,db" value="ui_structural,api" style="width:170px">
+          <input id="pa-undo" placeholder="undo actions; 分号分隔" style="width:200px">
+          <input id="pa-budget" type="number" value="12" min="1" style="width:70px">
+          <select id="pa-safety"><option>non_destructive</option><option>self_recovering</option><option>destructive</option></select>
+          <button class="btn primary sm" id="pa-save">保存待审 spec</button>
+        </div>
+        <div class="tbl"><table><thead><tr><th>spec</th><th>site/action</th><th>signals</th><th>budget</th><th>safety</th><th>fixture/review</th></tr></thead><tbody>
+          ${(authored.items || []).map(s => `<tr><td>${esc(s.spec_id)}</td><td>${esc(s.site)} / ${esc(s.name)}</td><td>${esc(s.signal_channels.join(','))}</td><td>${s.budget_k}</td><td>${esc(s.safety_level)}</td><td>${esc(s.fixture_status)} / ${esc(s.code_review_status)}</td></tr>`).join('') || '<tr><td colspan="6" class="empty">暂无 spec</td></tr>'}
+        </tbody></table></div>
+      </details>
       <div class="panes"><div class="list" id="gp-list"></div><div class="detail" id="gp-detail"></div></div>`;
+    $('#pa-save').addEventListener('click', async () => {
+      const proposal = {
+        name: $('#pa-type').value.trim(), action_type: $('#pa-type').value.trim(),
+        site: $('#pa-site').value.trim(),
+        state_id: $('#pa-state').value.trim(), candidate_id: $('#pa-candidate').value.trim(),
+        action_instance_id: $('#pa-instance').value.trim(),
+        raw_action: $('#pa-raw').value.trim(), canonical_action: $('#pa-canonical').value.trim(),
+        signal_channels: $('#pa-signals').value.split(',').map(x => x.trim()).filter(Boolean),
+        undo_sequences: [$('#pa-undo').value.split(';').map(x => x.trim()).filter(Boolean)],
+        solver_set: ['site_specific_deterministic', 'affordance_bfs', 'llm_undo_attacker'],
+        budget_k: +$('#pa-budget').value,
+        safety_level: $('#pa-safety').value,
+      };
+      const rr = await API.post('/api/probe-specs', {proposal});
+      toast(rr.ok ? 'spec 已保存（pending，无 label）' : rr.error, rr.ok ? 'ok' : 'err');
+      if (rr.ok) this.render(el);
+    });
     $('#gp-mock').addEventListener('click', async () => {
       const rr = await API.runStage('probe', 'probe_mock', {});
       if (rr.ok && rr.job) { toast('mock 探针已启动', 'ok'); APP.showJob(rr.job.job_id); } else toast(rr.error, 'err');
@@ -604,7 +674,7 @@ const GroundedView = {
           <img src="/api/screenshot?path=${encodeURIComponent(p)}" alt="">
           <figcaption>${esc(p.split('/').pop())}</figcaption></figure>`).join('');
         return `<h3>${esc(g.action_type)} ${badge(g.label)}
-            ${g.commit_mode ? badge('commit', 'IRREVERSIBLE') : badge('dry-run / non-destructive', 'plain')}
+            ${g.commit_mode ? badge('backend commit observed', 'AVOID') : badge('dry-run / non-destructive', 'plain')}
             ${g.effective ? badge('当前生效标签', 'EXECUTE') : ''}
             ${a.reversibility_override ? badge('人工覆核: ' + a.reversibility_override, 'needs-review') : ''}</h3>
           <dl class="kv"><dt>probe</dt><dd>${esc(g.probe_name || '(legacy)')}</dd>
@@ -622,7 +692,7 @@ const GroundedView = {
           <pre>${esc(JSON.stringify({ undoable: g.label === 'REVERSIBLE', undo_action: (g.undo_actions || [])[0] || null, reversibility_label: g.label, grounding_evidence: g.grounding + ':' + JSON.stringify(g.evidence.baseline ?? null) }, null, 1))}</pre>
           ${reviewBox('grounded', g.probe_id || ('row-' + g.row), a, { extra: `
             <div class="fl"><label>标签覆核</label>
-              <select class="ann-field" data-field="reversibility_override">${['', ...LABELS].map(l =>
+              <select class="ann-field" data-field="reversibility_override">${['', ...LEGACY_LABELS].map(l =>
                 `<option${(a.reversibility_override || '') === l ? ' selected' : ''}>${l}</option>`).join('')}</select>
               <label>置信度</label><input type="number" class="ann-field" data-field="confidence" min="0" max="1" step="0.05" value="${a.confidence ?? ''}" style="width:80px"></div>
             <p class="warn-note">人工覆核不改写行为标签：与 pinned 标签冲突的样本在导出时被排除并记录审计（见导出说明）。</p>` })}`;
@@ -634,7 +704,8 @@ const GroundedView = {
 const DistillView = {
   async render(el) {
     const [tmplR, distR] = await Promise.all([
-      API.get('/api/sft'), API.get('/api/sft?distilled=1')]);
+      API.get('/api/sft?tier=formal'),
+      API.get('/api/sft?tier=formal&distilled=1')]);
     if (!tmplR.ok) { el.innerHTML = `<div class="empty">${esc(tmplR.error)}</div>`; return; }
     const anns = distR.annotations || {};
     const byId = {}; tmplR.items.forEach(s => { byId[s.sample_id] = s; });
@@ -642,7 +713,7 @@ const DistillView = {
     el.innerHTML = `
       <div class="fl">
         <label>limit</label><input type="number" id="ds-limit" value="10" min="1" style="width:90px">
-        <button class="btn primary sm" id="ds-run">运行蒸馏（需 teacher key）</button>
+        <button class="btn primary sm" id="ds-run"${tmplR.items.length ? '' : ' disabled'}>运行蒸馏（需 teacher key）</button>
         <span class="mini-note">已蒸馏 ${items.length} / ${tmplR.items.length}（teacher 在 pin 死结论下只写措辞；QC 拒绝矛盾输出）</span></div>
       <div class="panes"><div class="list" id="ds-list"></div><div class="detail" id="ds-detail"></div></div>`;
     $('#ds-run').addEventListener('click', async () => {
@@ -673,8 +744,8 @@ const DistillView = {
           ${reviewBox('distill', d.sample_id, anns[d.sample_id])}`;
       });
     if (!items.length) {
-      $('#ds-detail').innerHTML = `<div class="empty">尚无蒸馏产物。配置 teacher 模型 key 后点「运行蒸馏」，
-        产物写入 train/sft/revact_sft_distilled.jsonl（不覆盖模板版）。</div>`;
+      $('#ds-detail').innerHTML = `<div class="empty">当前 formal source=${tmplR.items.length}、teacher=${items.length}。
+        formal point-level 样本为空时蒸馏保持阻塞；legacy 模板不会被静默送给 teacher。</div>`;
     }
   },
 };
@@ -729,16 +800,24 @@ const QualityView = {
 
 /* -------------------------------------------------------------- browser -- */
 const BrowserView = {
-  f: { action_type: '', variant: '', style: '', decision: '', reversibility: '', split: '', status: '', q: '' },
+  f: { tier: '', family: '', action_type: '', variant: '', style: '', decision: '', reversibility: '', split: '', status: '', q: '' },
   async render(el) {
-    const [r, annR, exps] = await Promise.all([
-      API.get('/api/sft'), API.get('/api/annotations/sample'), API.get('/api/exports')]);
-    if (!r.ok) { el.innerHTML = `<div class="empty">${esc(r.error)}</div>`; return; }
+    const [formalR, legacyR, annR, exps] = await Promise.all([
+      API.get('/api/sft?family=all&tier=formal'),
+      API.get('/api/sft?family=all&tier=legacy'),
+      API.get('/api/annotations/sample'), API.get('/api/exports')]);
+    if (!formalR.ok || !legacyR.ok) {
+      el.innerHTML = `<div class="empty">${esc(formalR.error || legacyR.error)}</div>`;
+      return;
+    }
+    const r = { items: [...formalR.items, ...legacyR.items] };
     const anns = annR.ok ? annR.effective : {};
     const f = this.f;
     const items = r.items.filter(s => {
       const a = anns[s.sample_id] || {};
-      return (!f.action_type || s.action_type === f.action_type)
+      return (!f.tier || s.asset_tier === f.tier)
+        && (!f.family || s.family === f.family)
+        && (!f.action_type || s.action_type === f.action_type)
         && (!f.variant || s.variant === f.variant)
         && (!f.style || s.constraint_style === f.style)
         && (!f.decision || s.decision === f.decision)
@@ -751,6 +830,8 @@ const BrowserView = {
     el.innerHTML = `
       <div class="fl">
         <input type="text" class="br-f" data-f="q" placeholder="搜索 id / goal" value="${esc(f.q)}" style="min-width:180px">
+        <label>tier</label>${sel('tier', ['formal', 'legacy'])}
+        <label>family</label>${sel('family', ['single', 'multiturn'])}
         <label>action</label>${sel('action_type', r.items.map(s => s.action_type))}
         <label>variant</label>${sel('variant', r.items.map(s => s.variant))}
         <label>style</label>${sel('style', r.items.map(s => s.constraint_style))}
@@ -767,6 +848,7 @@ const BrowserView = {
           <label>val 比例</label><input type="number" id="ex-val" value="0.15" step="0.05" min="0" max="0.5" style="width:80px">
           <label><input type="checkbox" id="ex-needs"> 含待复核</label>
           <label><input type="checkbox" id="ex-distill" checked> 优先蒸馏 prose</label>
+          <label><input type="checkbox" id="ex-formal" checked> 正式治理闸门</label>
           <button class="btn primary sm" id="ex-run">导出 train/val/test + dataset card</button></div>
         <div id="ex-result"></div>
         <h2>历史导出（${(exps.items || []).length}）</h2>
@@ -785,18 +867,20 @@ const BrowserView = {
         name: $('#ex-name').value, val_frac: +$('#ex-val').value,
         include_needs_review: $('#ex-needs').checked,
         prefer_distilled: $('#ex-distill').checked,
+        formal: $('#ex-formal').checked,
       });
       if (rr.ok) {
         const res = rr.result;
         $('#ex-result').innerHTML = `<div class="goal">✓ ${esc(res.dir)}<br>
           train=${res.n_train} val=${res.n_val} test=${res.n_test} dpo=${res.n_dpo} 排除=${res.n_excluded}<br>
+          multiturn: train=${res.n_multiturn_train} val=${res.n_multiturn_val} test=${res.n_multiturn_test} dpo=${res.n_multiturn_dpo}<br>
           文件：${esc(res.files.join(', '))}</div>`;
         toast('导出完成', 'ok');
       } else toast(rr.error, 'err');
     });
     master($('#br-list'), $('#br-detail'), items,
       s => `${esc(s.sample_id)} ${annBadge(anns[s.sample_id])}
-        <span class="sub">${badge(s.decision)} ${badge(s.reversibility)} ${s.split === 'test' ? badge('test', 'test') : ''}</span>`,
+        <span class="sub">${badge(s.asset_tier, s.asset_tier === 'formal' ? 'accepted' : 'plain')} ${badge(s.decision)} ${badge(s.reversibility)} ${badge(s.split || 'unassigned', s.split === 'test' ? 'test' : 'plain')}</span>`,
       s => `<h3>${esc(s.sample_id)}</h3><div id="br-lineage" class="loading">加载 lineage…</div>`,
       s => this.loadLineage(s, anns));
   },
@@ -804,7 +888,8 @@ const BrowserView = {
   async loadLineage(s, anns) {
     const [r, rawR] = await Promise.all([
       API.get('/api/lineage?sample=' + encodeURIComponent(s.sample_id)),
-      API.get('/api/sample_raw?sample=' + encodeURIComponent(s.sample_id))]);
+      API.get('/api/sample_raw?sample=' + encodeURIComponent(s.sample_id) +
+        '&tier=' + encodeURIComponent(s.asset_tier))]);
     const box = $('#br-lineage');
     if (!box) return;
     box.classList.remove('loading');
@@ -818,9 +903,14 @@ const BrowserView = {
         <dt>① 来源状态</dt><dd>${L.state ? esc(L.state.name) + ' (' + esc(L.state.source) + ', ' + esc(L.state.url) + ')' : '—'}</dd>
         <dt>② 相关 key states</dt><dd>${L.related_key_states.map(k => esc(k.state_id)).join(', ') || '—（reach 直达，非轨迹挖掘）'}</dd>
         <dt>③ 约束/目标</dt><dd>${esc(sm.goal)} ${badge(sm.constraint_style, 'plain')} <span class="mini-note">${esc(sm.goal_template)}</span></dd>
-        <dt>④ grounded 标签</dt><dd>${badge(L.effective_label)}（${L.grounded_runs.length} 次探针 run）</dd>
-        <dt>⑤ DPO 反事实</dt><dd>${L.dpo_pairs.map(p => badge(p.pair_type, 'plain')).join(' ') || '—'}</dd>
-        <dt>⑥ teacher prose</dt><dd>${L.distilled ? badge('已蒸馏', 'accepted') : badge('模板', 'plain')}</dd></dl>
+        <dt>④ candidate / transition</dt><dd>${L.candidate
+          ? esc(L.candidate.candidate_id) + ' · ' + esc(L.candidate.canonical_action)
+          : '—'}${L.transition ? ' → ' + esc(L.transition.post_observation_hash || 'post') : ''}</dd>
+        <dt>⑤ grounding</dt><dd>${L.formal_grounding_point
+          ? badge(L.formal_grounding_point.recovery_status) + '（唯一 point join）'
+          : badge(L.legacy_display_label || 'NONE') + '（legacy class-smoke，仅展示；' + L.grounded_runs.length + ' runs）'}</dd>
+        <dt>⑥ DPO 反事实</dt><dd>${L.dpo_pairs.map(p => badge(p.pair_type, 'plain')).join(' ') || '—'}</dd>
+        <dt>⑦ teacher / split</dt><dd>${L.distilled ? badge('已蒸馏', 'accepted') : badge('模板', 'plain')} ${badge(L.split || 'unsplit', 'plain')}</dd></dl>
       <div class="goal">${esc(sm.goal)}</div>
       <h2>assistant 目标序列（${L.distilled ? '蒸馏版' : '模板版'}）</h2>
       ${seq((L.distilled || sm).assistant)}
@@ -844,11 +934,11 @@ const BrowserView = {
       <details><summary>${esc(p.pair_id)}</summary><pre>${esc(JSON.stringify(p, null, 1))}</pre></details>`).join('');
     return `
       <h2>完整样本形态（原始 JSONL，未截断）</h2>
-      <p class="mini-note">split=${esc(raw.split)} · 单步决策样本：输入 = system + user（goal + 当前
-        observation，无历史轨迹），监督目标 = assistant 一条。字段 schema 见列表上方「Dataset Card」。</p>
+      <p class="mini-note">tier=${esc(raw.asset_tier)} · split=${esc(raw.split)} · family=${esc(raw.family)} · 原始 messages 全文；
+        两个 family 均采用 system + 单个 stateless user + assistant；multiturn 的差异是 user 内 history 来自连续轨迹。</p>
       ${(raw.sft.messages || []).map(msg).join('')}
       <details><summary>meta（审计字段，训练不喂入）</summary>${kvTable(raw.sft.meta)}</details>
-      <details><summary>原始 JSON（SFT 行，可直接对照 train/sft/revact_sft.jsonl）</summary>
+      <details><summary>原始 JSON（SFT 行；来源 tier=${esc(raw.asset_tier)}）</summary>
         <pre>${esc(JSON.stringify(raw.sft, null, 1))}</pre></details>
       ${raw.distilled ? `<details><summary>蒸馏版原始 JSON（teacher prose，结论 pin 死）</summary>
         <pre>${esc(JSON.stringify(raw.distilled, null, 1))}</pre></details>` : ''}
@@ -869,10 +959,11 @@ const BrowserView = {
     body.innerHTML = `
       <p class="note">${esc(c.granularity)}</p>
       <div class="tiles">
-        <div class="tile"><b>${sum.n_sft ?? '—'}</b><span>SFT 样本（单步决策）</span></div>
+        <div class="tile"><b>${sum.n_sft ?? '—'} / ${sum.n_sft_multiturn ?? 0}</b><span>SFT 单步 / 多轮</span></div>
         <div class="tile"><b>${sum.n_dpo ?? '—'}</b><span>DPO 偏好对</span></div>
         <div class="tile"><b>${Object.keys(sum.effective_labels || {}).length}</b><span>grounded 动作类</span></div>
-        <div class="tile"><b>${splits.sft_train ?? '—'} / ${splits.sft_test ?? '—'}</b><span>split train / test</span></div>
+        <div class="tile"><b>${splits.formal?.sft_train ?? 0} / ${splits.formal?.sft_dev ?? 0} / ${splits.formal?.sft_test ?? 0}</b><span>formal train / dev / test</span></div>
+        <div class="tile"><b>${splits.legacy?.sft_train ?? 0} / ${splits.legacy?.sft_dev ?? 0} / ${splits.legacy?.sft_test ?? 0}</b><span>legacy train / dev / test</span></div>
         <div class="tile"><b>${sum.n_distilled ?? 0}</b><span>teacher 蒸馏样本</span></div>
       </div>
       <h2>一条 SFT 样本的三段 messages</h2>
@@ -884,7 +975,7 @@ const BrowserView = {
       <h2>meta 字段（审计 / 切分用，训练不喂入）</h2>
       ${tbl(['字段', '说明'], c.meta_schema.map(f =>
         `<tr>${mono(f[0])}<td class="mini-note">${esc(f[1])}</td></tr>`).join(''))}
-      <h2>assistant 输出规格（&lt;think&gt; 七字段 + &lt;answer&gt;，格式 iris.v2）</h2>
+      <h2>assistant 输出规格（formal iris.v3；iris.v2 仅 legacy 兼容）</h2>
       ${tbl(['字段', '内容'], c.assistant_format.map(f =>
         `<tr>${mono(f[0])}<td class="mini-note">${esc(f[1])}</td></tr>`).join(''))}
       <h2>DPO 行字段 schema</h2>

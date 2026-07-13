@@ -7,13 +7,17 @@ paths:
 webarena:
   # shopping / shopping_admin come from env WA_SHOPPING / WA_SHOPPING_ADMIN
   session_task: webarena.21    # any shopping task; used only to bootstrap a session
-  shopping: http://-user2-dind:7770
-  shopping_admin: http://-user2-dind:7780/admin
-  reddit: http://-user2-dind:9999
+  shopping: http://user2-dind:7770
+  shopping_admin: http://user2-dind:7780/admin
+  reddit: http://user2-dind:9999
 
 obs:
   max_axtree_chars_snapshot: 6000
   max_axtree_chars_policy: 12000
+  # One shared history budget for dataset materialization and live policies.
+  # Keeping separate train/deploy values previously produced a silent shift
+  # (multi-turn assembly kept 5 steps while IrisPolicy kept 6).
+  policy_history_steps: 6
 
 fingerprint:
   text_jaccard: 0.05
