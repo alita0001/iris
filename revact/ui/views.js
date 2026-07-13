@@ -662,9 +662,11 @@ const DistillView = {
             ${line('observation', t && t.observation, d.observation)}
             ${line('reasoning', t && t.reasoning, d.reasoning)}
             ${line('prediction', t && t.prediction, d.prediction)}
+            ${line('rev_check', t && t.rev_check, d.rev_check)}
           </tbody></table></div>
           <h2>pinned 结论（必须逐字一致）</h2>
           <dl class="kv"><dt>reversibility</dt><dd>${esc(d.reversibility)} ${t && t.reversibility === d.reversibility ? '✓' : '✗ 漂移!'}</dd>
+            <dt>undo</dt><dd>${esc(d.undo)} ${t && t.undo === d.undo ? '✓' : '✗ 漂移!'}</dd>
             <dt>decision</dt><dd>${esc(d.decision)} ${t && t.decision === d.decision ? '✓' : '✗ 漂移!'}</dd>
             <dt>answer</dt><dd>${esc(d.answer)} ${t && t.answer === d.answer ? '✓' : '✗ 漂移!'}</dd></dl>
           <details><summary>完整 assistant 序列</summary>${seq(d.assistant)}</details>
@@ -882,7 +884,7 @@ const BrowserView = {
       <h2>meta 字段（审计 / 切分用，训练不喂入）</h2>
       ${tbl(['字段', '说明'], c.meta_schema.map(f =>
         `<tr>${mono(f[0])}<td class="mini-note">${esc(f[1])}</td></tr>`).join(''))}
-      <h2>assistant 输出规格（&lt;think&gt; 五字段 + &lt;answer&gt;）</h2>
+      <h2>assistant 输出规格（&lt;think&gt; 七字段 + &lt;answer&gt;，格式 iris.v2）</h2>
       ${tbl(['字段', '内容'], c.assistant_format.map(f =>
         `<tr>${mono(f[0])}<td class="mini-note">${esc(f[1])}</td></tr>`).join(''))}
       <h2>DPO 行字段 schema</h2>
@@ -891,7 +893,7 @@ const BrowserView = {
       <h2>消息长度统计（字符）</h2>
       ${tbl(['role', 'n', 'min', 'avg', 'max'], Object.entries(c.length_stats || {}).map(([k, v]) =>
         `<tr>${mono(k)}<td>${v.n ?? 0}</td><td>${v.min ?? '—'}</td><td>${v.avg ?? '—'}</td><td>${v.max ?? '—'}</td></tr>`).join(''))}
-      <details><summary>system prompt（全数据集固定一条）</summary><pre>${esc(c.system_prompt)}</pre></details>
+      <details><summary>system prompt（全数据集固定一条，prompt 指纹 ${esc(c.prompts_fingerprint || '—')}）</summary><pre>${esc(c.system_prompt)}</pre></details>
       <p class="mini-note">选中左侧任一样本，详情底部「完整样本形态」区块展示该样本未截断的原始 JSONL
         （messages 三段 + meta + 派生 DPO 对）。</p>`;
   },

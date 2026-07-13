@@ -92,6 +92,8 @@ def test_reach_then_assemble(tmp_path):
     assert res["n_sft"] >= 4
     for s in res["samples"]:
         asst = s["messages"][2]["content"]
-        for tag in ("<observation>", "<prediction>", "<reversibility>",
-                    "<decision>", "<answer>"):
+        for tag in ("<observation>", "<prediction>", "<rev_check>",
+                    "<reversibility>", "<undo>", "<decision>", "<answer>"):
             assert tag in asst
+        # inverse world model reasons before it labels (P2)
+        assert asst.index("<rev_check>") < asst.index("<reversibility>")

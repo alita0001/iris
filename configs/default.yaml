@@ -7,6 +7,9 @@ paths:
 webarena:
   # shopping / shopping_admin come from env WA_SHOPPING / WA_SHOPPING_ADMIN
   session_task: webarena.21    # any shopping task; used only to bootstrap a session
+  shopping: http://-user2-dind:7770
+  shopping_admin: http://-user2-dind:7780/admin
+  reddit: http://-user2-dind:9999
 
 obs:
   max_axtree_chars_snapshot: 6000

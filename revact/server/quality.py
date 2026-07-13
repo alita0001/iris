@@ -90,12 +90,14 @@ def compute_quality(store: DataStore | None = None) -> dict:
         if not t:
             continue
         pinned_ok = (d["reversibility"] == t["reversibility"]
+                     and d.get("undo") == t.get("undo")
                      and d["decision"] == t["decision"]
                      and d["answer"] == t["answer"])
         agree += pinned_ok
         label_drift += not pinned_ok
-        prose_changed += (d["observation"], d["reasoning"], d["prediction"]) != \
-            (t["observation"], t["reasoning"], t["prediction"])
+        prose_changed += (d["observation"], d["reasoning"], d["prediction"],
+                          d.get("rev_check")) != \
+            (t["observation"], t["reasoning"], t["prediction"], t.get("rev_check"))
     teacher = {
         "n_distilled": len(distilled),
         "pinned_label_agreement": round(agree / max(len(distilled), 1), 3),

@@ -71,7 +71,8 @@ CARD_META_SCHEMA = [
     ("goal_template", "目标模板 id（审计：防止决策可由单一表面形式预测）"),
     ("reversibility_grounded", "恒 true：标签来自探针实测而非规则"),
     ("undo_steps", "实测 undo 步数（探针 undo 控制器实录；无实测为 null）"),
-    ("prose_source", "template | teacher（蒸馏只升级措辞，结论 pin 死）"),
+    ("prose_source", "template | teacher（蒸馏只升级 observation/reasoning/prediction/rev_check 措辞，结论 pin 死）"),
+    ("rev_check_source", "teacher | template（仅蒸馏样本：标记 <rev_check> 措辞是否由 teacher 写；早于 rev_check 字段的历史蒸馏产物迁移时记 template）"),
     ("history_source", "plan（记录的 reach 计划）| canonical（按动作类合成）| none | "
      "trajectory（多轮：真实轨迹）"),
     ("risky_raw_action", "该状态风险控件的可执行动作（GRPO 约束违反奖励用）"),
@@ -308,9 +309,12 @@ class DataStore:
                 "split": "test" if r.get("sample_id") in test_ids else "train",
                 "goal": goal, "obs": _clip(obs, 4000),
                 "assistant": asst, "answer": _answer_of(asst),
+                "undo_steps": m.get("undo_steps"),
                 "observation": _field_of(asst, "observation"),
                 "reasoning": _field_of(asst, "reasoning"),
                 "prediction": _field_of(asst, "prediction"),
+                "rev_check": _field_of(asst, "rev_check"),
+                "undo": _field_of(asst, "undo"),
             })
         return out
 

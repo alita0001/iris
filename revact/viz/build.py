@@ -284,7 +284,7 @@ pre{background:var(--card2);border:1px solid var(--line);border-radius:6px;paddi
   border:1px solid var(--line);border-radius:6px;padding:10px 12px;overflow-x:auto}
 .seq .t{color:var(--mut)}
 .seq .f-observation{color:#475569}.seq .f-reasoning{color:#334155}
-.seq .f-prediction{color:var(--revc)}
+.seq .f-prediction{color:var(--revc)}.seq .f-rev_check{color:#7c5cad}.seq .f-undo{color:#2a7f62}
 .seq .f-reversibility{font-weight:700}.seq .f-decision{font-weight:700}
 .seq .f-answer{color:var(--acc);font-weight:600}
 .bars{margin:6px 0 14px}
