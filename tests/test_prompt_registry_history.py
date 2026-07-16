@@ -16,6 +16,12 @@ from revact.envs.obs_utils import history_entry, obs_delta
 def test_defaults_and_module_attrs():
     assert prompts.get("agent_system") == prompts.SYSTEM
     assert prompts.get("collector_system") == prompts.SYSTEM_COLLECTOR
+    assert "give_up()" in prompts.get("undo_attacker_system")
+    assert "{observation}" in prompts.get("undo_attacker_user")
+    assert "effect, recovery, normative_risk" in prompts.get(
+        "opinion_rater_system")
+    assert all(token in prompts.get("opinion_rater_user") for token in (
+        "{goal}", "{observation}", "{action}"))
     assert "<rev_check>" in prompts.SYSTEM and "<undo>" in prompts.SYSTEM
     assert len(prompts.get_list("explicit_constraint_templates")) >= 10
 
@@ -132,6 +138,30 @@ def test_obs_delta_flags():
     post = _view("http://x/p", "RootWebArea 'P'", backend={"cart": ["i1"], "orders": []})
     d = obs_delta(pre, post)
     assert d["flag"] == "state-change" and "cart items 0 -> 1" in d["delta"]
+
+
+def test_obs_delta_does_not_treat_order_text_navigation_as_mutation():
+    listing = _view(
+        "http://x/history?p=3",
+        "RootWebArea 'Orders'\n[10] link 'Order #178'\n[11] link 'Order #179'",
+    )
+    detail = _view(
+        "http://x/view/order_id/178/",
+        "RootWebArea 'Order #178'\nStaticText 'Order #178'",
+    )
+    delta = obs_delta(listing, detail)
+    assert delta["flag"] == "nav"
+    assert "new order" not in delta["delta"]
+
+
+def test_obs_delta_accepts_explicit_persistent_probe_signal():
+    pre = _view("http://x/p", "RootWebArea 'P'")
+    post = _view("http://x/p", "RootWebArea 'P changed'")
+    pre["persistent_signal"] = {"subscribed": False}
+    post["persistent_signal"] = {"subscribed": True}
+    delta = obs_delta(pre, post)
+    assert delta == {
+        "flag": "state-change", "delta": "persistent site signal changed"}
 
 
 def test_history_entry_and_render():

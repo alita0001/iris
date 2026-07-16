@@ -157,10 +157,20 @@ def migrate_legacy_grounding(data_root: Path) -> dict[str, Any]:
         "legacy_place_order_policy": (
             "Rows without point-level provenance are EXCLUDED/UNKNOWN for formal "
             "training; IRREVERSIBLE is not carried into the canonical ontology."),
+        # Only migration-owned inventory artifacts are safe to delete.  The
+        # canonical point body/manifest may be populated by later live runs;
+        # listing them here would turn an otherwise index-only rollback into
+        # destructive data loss.
         "rollback": [
             str(paths.quarantine), str(paths.smoke_index), str(paths.report),
-            str(paths.points), str(paths.point_manifest),
         ],
+        "canonical_point_artifacts": {
+            "body": str(paths.points),
+            "manifest": str(paths.point_manifest),
+            "rollback_policy": (
+                "never delete or rewrite; this migration only ensures the "
+                "append targets exist and creates zero point rows"),
+        },
     }
 
     _atomic_create_or_verify(paths.quarantine, _text_jsonl(quarantine))

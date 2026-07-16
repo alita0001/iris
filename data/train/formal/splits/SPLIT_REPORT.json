@@ -1,13 +1,17 @@
 {
+  "schema_version": "iris.split_report.v2",
   "available": false,
   "formal": true,
-  "reason": "formal source contains zero rows",
+  "reason": "joint state/entity/goal-template/page-template/environment graph has one connected component; a non-leaking train/test split is unavailable",
   "n_train": 0,
   "n_dev": 0,
   "n_test": 0,
   "n_dpo_train": 0,
   "test_slugs": [],
-  "by_site": {},
+  "by_site": {
+    "http://user2-dind:7770": 42,
+    "http://user2-dind:9999": 20
+  },
   "leakage": {
     "state_group": {
       "n_train": 0,
@@ -21,7 +25,25 @@
       "n_overlap": 0,
       "overlap": []
     },
+    "canonical_entity": {
+      "n_train": 0,
+      "n_test": 0,
+      "n_overlap": 0,
+      "overlap": []
+    },
     "template": {
+      "n_train": 0,
+      "n_test": 0,
+      "n_overlap": 0,
+      "overlap": []
+    },
+    "goal_template": {
+      "n_train": 0,
+      "n_test": 0,
+      "n_overlap": 0,
+      "overlap": []
+    },
+    "page_template": {
       "n_train": 0,
       "n_test": 0,
       "n_overlap": 0,
@@ -52,9 +74,522 @@
       "overlap": []
     }
   },
+  "joint_graph": {
+    "schema_version": "iris.formal_joint_graph_diagnostics.v1",
+    "isolation_axes": [
+      "state_group",
+      "canonical_entity",
+      "goal_template",
+      "page_template",
+      "environment"
+    ],
+    "diagnostic_axes": [
+      "state_group",
+      "canonical_entity",
+      "goal_template",
+      "page_template",
+      "environment",
+      "site",
+      "action"
+    ],
+    "n_rows": 62,
+    "n_components": 1,
+    "partition_metadata_complete": true,
+    "missing_isolation_metadata": [],
+    "components": [
+      {
+        "component_id": "component-b2e6e11d05d26369",
+        "n_rows": 62,
+        "sample_ids_sha256": "b2e6e11d05d26369876c3735a986fe880d46c5b9b17f1c1eb1ed4f2820327a4f",
+        "sample_id_preview": [
+          "mt__pt_add_to_cart__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716__run_20260716T035657209223Z-bbaa9745__s1__add_to_cart__constraint",
+          "mt__pt_add_to_cart__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716__run_20260716T035657209223Z-bbaa9745__s1__add_to_cart__request",
+          "mt__pt_add_to_cart__cell-phone-stand-doboli-phone-stand-for-__recapture-20260716__run_20260716T035657209223Z-bbaa9745__s1__add_to_cart__constraint",
+          "mt__pt_add_to_cart__cell-phone-stand-doboli-phone-stand-for-__recapture-20260716__run_20260716T035657209223Z-bbaa9745__s1__add_to_cart__request",
+          "mt__pt_add_to_cart__figatia-astronomy-telescope-phone-adapte__recapture-20260716__run_20260716T035657209223Z-bbaa9745__s1__add_to_cart__constraint",
+          "mt__pt_add_to_cart__figatia-astronomy-telescope-phone-adapte__recapture-20260716__run_20260716T035657209223Z-bbaa9745__s1__add_to_cart__request",
+          "mt__pt_compare_add__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716__run_20260716T035657209223Z-bbaa9745__s1__compare_add__constraint",
+          "mt__pt_compare_add__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716__run_20260716T035657209223Z-bbaa9745__s1__compare_add__request",
+          "mt__pt_compare_add__cell-phone-stand-doboli-phone-stand-for-__recapture-20260716__run_20260716T035657209223Z-bbaa9745__s1__compare_add__constraint",
+          "mt__pt_compare_add__cell-phone-stand-doboli-phone-stand-for-__recapture-20260716__run_20260716T035657209223Z-bbaa9745__s1__compare_add__request",
+          "mt__pt_compare_add__figatia-astronomy-telescope-phone-adapte__recapture-20260716__run_20260716T035657209223Z-bbaa9745__s1__compare_add__constraint",
+          "mt__pt_compare_add__figatia-astronomy-telescope-phone-adapte__recapture-20260716__run_20260716T035657209223Z-bbaa9745__s1__compare_add__request",
+          "mt__pt_reddit_subscribe__technology__run_20260715T112745383440Z-4674bc4f__s1__reddit_subscribe__constraint",
+          "mt__pt_reddit_subscribe__technology__run_20260715T112745383440Z-4674bc4f__s1__reddit_subscribe__request",
+          "mt__pt_reddit_vote__103102__run_20260715T112745383440Z-4674bc4f__s1__reddit_vote__constraint",
+          "mt__pt_reddit_vote__103102__run_20260715T112745383440Z-4674bc4f__s1__reddit_vote__request",
+          "mt__pt_reddit_vote__59447__run_20260715T102709982138Z-90cdf7bc__s1__reddit_vote__constraint",
+          "mt__pt_reddit_vote__59447__run_20260715T102709982138Z-90cdf7bc__s1__reddit_vote__request",
+          "mt__pt_wishlist_add__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716__run_20260716T035657209223Z-bbaa9745__s1__wishlist_add__constraint",
+          "mt__pt_wishlist_add__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716__run_20260716T035657209223Z-bbaa9745__s1__wishlist_add__request"
+        ],
+        "distributions": {
+          "state_group": {
+            "pt_add_to_cart__car-mount-phone-holder-sturdy-cup-holder": 2,
+            "pt_add_to_cart__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716": 4,
+            "pt_add_to_cart__cell-phone-stand-doboli-phone-stand-for-__recapture-20260716": 4,
+            "pt_add_to_cart__figatia-astronomy-telescope-phone-adapte__recapture-20260716": 4,
+            "pt_compare_add__car-mount-phone-holder-sturdy-cup-holder": 2,
+            "pt_compare_add__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716": 4,
+            "pt_compare_add__cell-phone-stand-doboli-phone-stand-for-__recapture-20260716": 4,
+            "pt_compare_add__figatia-astronomy-telescope-phone-adapte__recapture-20260716": 4,
+            "pt_reddit_subscribe__AskReddit": 2,
+            "pt_reddit_subscribe__books": 2,
+            "pt_reddit_subscribe__technology": 4,
+            "pt_reddit_vote__103102": 4,
+            "pt_reddit_vote__59421": 2,
+            "pt_reddit_vote__59447": 4,
+            "pt_reddit_vote__81371": 2,
+            "pt_wishlist_add__car-mount-phone-holder-sturdy-cup-holder": 2,
+            "pt_wishlist_add__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716": 4,
+            "pt_wishlist_add__cell-phone-stand-doboli-phone-stand-for-__recapture-20260716": 4,
+            "pt_wishlist_add__figatia-astronomy-telescope-phone-adapte__recapture-20260716": 4
+          },
+          "canonical_entity": {
+            "car-mount-phone-holder-sturdy-cup-holder-phone-mount-fit-with-all-mobile-phones": 18,
+            "cell-phone-stand-doboli-phone-stand-for-desk-phone-holder-stand-compatible-with-iphone-and-all-mobile-phones-tablet-black": 12,
+            "figatia-astronomy-telescope-phone-adapter-mount-binoculars-holder-for-smart-phones": 12,
+            "reddit:forum:AskReddit": 2,
+            "reddit:forum:books": 2,
+            "reddit:forum:technology": 4,
+            "reddit:submission:103102": 4,
+            "reddit:submission:59421": 2,
+            "reddit:submission:59447": 4,
+            "reddit:submission:81371": 2
+          },
+          "goal_template": {
+            "explicit_constraint:0": 3,
+            "explicit_constraint:1": 1,
+            "explicit_constraint:10": 1,
+            "explicit_constraint:2": 2,
+            "explicit_constraint:3": 2,
+            "explicit_constraint:5": 2,
+            "explicit_constraint:6": 2,
+            "explicit_constraint:7": 2,
+            "explicit_constraint:8": 3,
+            "explicit_constraint:9": 3,
+            "implicit_constraint:0": 2,
+            "implicit_constraint:2": 4,
+            "implicit_constraint:3": 2,
+            "implicit_constraint:4": 2,
+            "request:0": 1,
+            "request:1": 5,
+            "request:2": 11,
+            "request:3": 5,
+            "request:4": 9
+          },
+          "page_template": {
+            "reddit.forum": 8,
+            "reddit.submission": 12,
+            "shopping.product_detail": 42
+          },
+          "environment": {
+            "http://user2-dind:7770": 42,
+            "http://user2-dind:9999": 20
+          },
+          "site": {
+            "reddit": 20,
+            "shopping": 42
+          },
+          "action": {
+            "add_to_cart": 14,
+            "compare_add": 14,
+            "reddit_subscribe": 8,
+            "reddit_vote": 12,
+            "wishlist_add": 14
+          }
+        },
+        "merge_evidence": {
+          "shared_isolation_values": {
+            "state_group": [
+              {
+                "value": "pt_add_to_cart__car-mount-phone-holder-sturdy-cup-holder",
+                "n_rows": 2
+              },
+              {
+                "value": "pt_add_to_cart__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716",
+                "n_rows": 4
+              },
+              {
+                "value": "pt_add_to_cart__cell-phone-stand-doboli-phone-stand-for-__recapture-20260716",
+                "n_rows": 4
+              },
+              {
+                "value": "pt_add_to_cart__figatia-astronomy-telescope-phone-adapte__recapture-20260716",
+                "n_rows": 4
+              },
+              {
+                "value": "pt_compare_add__car-mount-phone-holder-sturdy-cup-holder",
+                "n_rows": 2
+              },
+              {
+                "value": "pt_compare_add__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716",
+                "n_rows": 4
+              },
+              {
+                "value": "pt_compare_add__cell-phone-stand-doboli-phone-stand-for-__recapture-20260716",
+                "n_rows": 4
+              },
+              {
+                "value": "pt_compare_add__figatia-astronomy-telescope-phone-adapte__recapture-20260716",
+                "n_rows": 4
+              },
+              {
+                "value": "pt_reddit_subscribe__AskReddit",
+                "n_rows": 2
+              },
+              {
+                "value": "pt_reddit_subscribe__books",
+                "n_rows": 2
+              },
+              {
+                "value": "pt_reddit_subscribe__technology",
+                "n_rows": 4
+              },
+              {
+                "value": "pt_reddit_vote__103102",
+                "n_rows": 4
+              },
+              {
+                "value": "pt_reddit_vote__59421",
+                "n_rows": 2
+              },
+              {
+                "value": "pt_reddit_vote__59447",
+                "n_rows": 4
+              },
+              {
+                "value": "pt_reddit_vote__81371",
+                "n_rows": 2
+              },
+              {
+                "value": "pt_wishlist_add__car-mount-phone-holder-sturdy-cup-holder",
+                "n_rows": 2
+              },
+              {
+                "value": "pt_wishlist_add__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716",
+                "n_rows": 4
+              },
+              {
+                "value": "pt_wishlist_add__cell-phone-stand-doboli-phone-stand-for-__recapture-20260716",
+                "n_rows": 4
+              },
+              {
+                "value": "pt_wishlist_add__figatia-astronomy-telescope-phone-adapte__recapture-20260716",
+                "n_rows": 4
+              }
+            ],
+            "canonical_entity": [
+              {
+                "value": "car-mount-phone-holder-sturdy-cup-holder-phone-mount-fit-with-all-mobile-phones",
+                "n_rows": 18
+              },
+              {
+                "value": "cell-phone-stand-doboli-phone-stand-for-desk-phone-holder-stand-compatible-with-iphone-and-all-mobile-phones-tablet-black",
+                "n_rows": 12
+              },
+              {
+                "value": "figatia-astronomy-telescope-phone-adapter-mount-binoculars-holder-for-smart-phones",
+                "n_rows": 12
+              },
+              {
+                "value": "reddit:forum:AskReddit",
+                "n_rows": 2
+              },
+              {
+                "value": "reddit:forum:books",
+                "n_rows": 2
+              },
+              {
+                "value": "reddit:forum:technology",
+                "n_rows": 4
+              },
+              {
+                "value": "reddit:submission:103102",
+                "n_rows": 4
+              },
+              {
+                "value": "reddit:submission:59421",
+                "n_rows": 2
+              },
+              {
+                "value": "reddit:submission:59447",
+                "n_rows": 4
+              },
+              {
+                "value": "reddit:submission:81371",
+                "n_rows": 2
+              }
+            ],
+            "goal_template": [
+              {
+                "value": "explicit_constraint:0",
+                "n_rows": 3
+              },
+              {
+                "value": "explicit_constraint:2",
+                "n_rows": 2
+              },
+              {
+                "value": "explicit_constraint:3",
+                "n_rows": 2
+              },
+              {
+                "value": "explicit_constraint:5",
+                "n_rows": 2
+              },
+              {
+                "value": "explicit_constraint:6",
+                "n_rows": 2
+              },
+              {
+                "value": "explicit_constraint:7",
+                "n_rows": 2
+              },
+              {
+                "value": "explicit_constraint:8",
+                "n_rows": 3
+              },
+              {
+                "value": "explicit_constraint:9",
+                "n_rows": 3
+              },
+              {
+                "value": "implicit_constraint:0",
+                "n_rows": 2
+              },
+              {
+                "value": "implicit_constraint:2",
+                "n_rows": 4
+              },
+              {
+                "value": "implicit_constraint:3",
+                "n_rows": 2
+              },
+              {
+                "value": "implicit_constraint:4",
+                "n_rows": 2
+              },
+              {
+                "value": "request:1",
+                "n_rows": 5
+              },
+              {
+                "value": "request:2",
+                "n_rows": 11
+              },
+              {
+                "value": "request:3",
+                "n_rows": 5
+              },
+              {
+                "value": "request:4",
+                "n_rows": 9
+              }
+            ],
+            "page_template": [
+              {
+                "value": "reddit.forum",
+                "n_rows": 8
+              },
+              {
+                "value": "reddit.submission",
+                "n_rows": 12
+              },
+              {
+                "value": "shopping.product_detail",
+                "n_rows": 42
+              }
+            ],
+            "environment": [
+              {
+                "value": "http://user2-dind:7770",
+                "n_rows": 42
+              },
+              {
+                "value": "http://user2-dind:9999",
+                "n_rows": 20
+              }
+            ]
+          },
+          "cross_environment_or_site_goal_templates": [
+            "explicit_constraint:0",
+            "explicit_constraint:8",
+            "explicit_constraint:9",
+            "implicit_constraint:3",
+            "request:1",
+            "request:2",
+            "request:3",
+            "request:4"
+          ]
+        }
+      }
+    ],
+    "goal_template_bridges": {
+      "cross_environment_values": [
+        "explicit_constraint:0",
+        "explicit_constraint:8",
+        "explicit_constraint:9",
+        "implicit_constraint:3",
+        "request:1",
+        "request:2",
+        "request:3",
+        "request:4"
+      ],
+      "cross_site_values": [
+        "explicit_constraint:0",
+        "explicit_constraint:8",
+        "explicit_constraint:9",
+        "implicit_constraint:3",
+        "request:1",
+        "request:2",
+        "request:3",
+        "request:4"
+      ],
+      "details": [
+        {
+          "goal_template": "explicit_constraint:0",
+          "n_rows": 3,
+          "environments": {
+            "http://user2-dind:7770": 2,
+            "http://user2-dind:9999": 1
+          },
+          "sites": {
+            "reddit": 1,
+            "shopping": 2
+          },
+          "cross_environment": true,
+          "cross_site": true,
+          "component_ids": [
+            "component-b2e6e11d05d26369"
+          ]
+        },
+        {
+          "goal_template": "explicit_constraint:8",
+          "n_rows": 3,
+          "environments": {
+            "http://user2-dind:7770": 1,
+            "http://user2-dind:9999": 2
+          },
+          "sites": {
+            "reddit": 2,
+            "shopping": 1
+          },
+          "cross_environment": true,
+          "cross_site": true,
+          "component_ids": [
+            "component-b2e6e11d05d26369"
+          ]
+        },
+        {
+          "goal_template": "explicit_constraint:9",
+          "n_rows": 3,
+          "environments": {
+            "http://user2-dind:7770": 2,
+            "http://user2-dind:9999": 1
+          },
+          "sites": {
+            "reddit": 1,
+            "shopping": 2
+          },
+          "cross_environment": true,
+          "cross_site": true,
+          "component_ids": [
+            "component-b2e6e11d05d26369"
+          ]
+        },
+        {
+          "goal_template": "implicit_constraint:3",
+          "n_rows": 2,
+          "environments": {
+            "http://user2-dind:7770": 1,
+            "http://user2-dind:9999": 1
+          },
+          "sites": {
+            "reddit": 1,
+            "shopping": 1
+          },
+          "cross_environment": true,
+          "cross_site": true,
+          "component_ids": [
+            "component-b2e6e11d05d26369"
+          ]
+        },
+        {
+          "goal_template": "request:1",
+          "n_rows": 5,
+          "environments": {
+            "http://user2-dind:7770": 2,
+            "http://user2-dind:9999": 3
+          },
+          "sites": {
+            "reddit": 3,
+            "shopping": 2
+          },
+          "cross_environment": true,
+          "cross_site": true,
+          "component_ids": [
+            "component-b2e6e11d05d26369"
+          ]
+        },
+        {
+          "goal_template": "request:2",
+          "n_rows": 11,
+          "environments": {
+            "http://user2-dind:7770": 9,
+            "http://user2-dind:9999": 2
+          },
+          "sites": {
+            "reddit": 2,
+            "shopping": 9
+          },
+          "cross_environment": true,
+          "cross_site": true,
+          "component_ids": [
+            "component-b2e6e11d05d26369"
+          ]
+        },
+        {
+          "goal_template": "request:3",
+          "n_rows": 5,
+          "environments": {
+            "http://user2-dind:7770": 4,
+            "http://user2-dind:9999": 1
+          },
+          "sites": {
+            "reddit": 1,
+            "shopping": 4
+          },
+          "cross_environment": true,
+          "cross_site": true,
+          "component_ids": [
+            "component-b2e6e11d05d26369"
+          ]
+        },
+        {
+          "goal_template": "request:4",
+          "n_rows": 9,
+          "environments": {
+            "http://user2-dind:7770": 6,
+            "http://user2-dind:9999": 3
+          },
+          "sites": {
+            "reddit": 3,
+            "shopping": 6
+          },
+          "cross_environment": true,
+          "cross_site": true,
+          "component_ids": [
+            "component-b2e6e11d05d26369"
+          ]
+        }
+      ]
+    },
+    "explanation": "all rows are transitively connected by one or more formal isolation values; shared goal-template bridges are listed explicitly"
+  },
   "validation": {
     "available": false,
-    "reason": "base formal split unavailable: formal source contains zero rows",
+    "reason": "base formal split unavailable: joint state/entity/goal-template/page-template/environment graph has one connected component; a non-leaking train/test split is unavailable",
     "n_train": 0,
     "n_val": 0,
     "leakage": {
@@ -70,7 +605,25 @@
         "n_overlap": 0,
         "overlap": []
       },
+      "canonical_entity": {
+        "n_train": 0,
+        "n_test": 0,
+        "n_overlap": 0,
+        "overlap": []
+      },
       "template": {
+        "n_train": 0,
+        "n_test": 0,
+        "n_overlap": 0,
+        "overlap": []
+      },
+      "goal_template": {
+        "n_train": 0,
+        "n_test": 0,
+        "n_overlap": 0,
+        "overlap": []
+      },
+      "page_template": {
         "n_train": 0,
         "n_test": 0,
         "n_overlap": 0,
@@ -100,37 +653,389 @@
         "n_overlap": 0,
         "overlap": []
       }
-    }
+    },
+    "joint_graph": null
   },
   "challenges": {
     "cross_action": {
-      "available": false,
-      "reason": "base formal split unavailable: formal source contains zero rows"
+      "available": true,
+      "values": [
+        "add_to_cart",
+        "compare_add",
+        "reddit_subscribe",
+        "reddit_vote",
+        "wishlist_add"
+      ],
+      "held_out": [
+        "reddit_subscribe"
+      ],
+      "n_train": 2,
+      "n_test": 8,
+      "leakage": {
+        "state_group": {
+          "n_train": 1,
+          "n_test": 3,
+          "n_overlap": 0,
+          "overlap": []
+        },
+        "entity": {
+          "n_train": 1,
+          "n_test": 3,
+          "n_overlap": 0,
+          "overlap": []
+        },
+        "canonical_entity": {
+          "n_train": 1,
+          "n_test": 3,
+          "n_overlap": 0,
+          "overlap": []
+        },
+        "template": {
+          "n_train": 2,
+          "n_test": 8,
+          "n_overlap": 0,
+          "overlap": []
+        },
+        "goal_template": {
+          "n_train": 2,
+          "n_test": 8,
+          "n_overlap": 0,
+          "overlap": []
+        },
+        "page_template": {
+          "n_train": 1,
+          "n_test": 1,
+          "n_overlap": 0,
+          "overlap": []
+        },
+        "environment": {
+          "n_train": 1,
+          "n_test": 1,
+          "n_overlap": 0,
+          "overlap": []
+        },
+        "site": {
+          "n_train": 1,
+          "n_test": 1,
+          "n_overlap": 0,
+          "overlap": []
+        },
+        "action": {
+          "n_train": 1,
+          "n_test": 1,
+          "n_overlap": 0,
+          "overlap": []
+        },
+        "privilege": {
+          "n_train": 1,
+          "n_test": 1,
+          "n_overlap": 1,
+          "overlap": [
+            "customer"
+          ]
+        }
+      }
     },
     "cross_privilege": {
       "available": false,
-      "reason": "base formal split unavailable: formal source contains zero rows"
+      "values": [
+        "customer"
+      ],
+      "reason": "requires at least two non-empty groups"
     },
     "cross_template": {
       "available": false,
-      "reason": "base formal split unavailable: formal source contains zero rows"
+      "values": [
+        "explicit_constraint:0",
+        "explicit_constraint:1",
+        "explicit_constraint:10",
+        "explicit_constraint:2",
+        "explicit_constraint:3",
+        "explicit_constraint:5",
+        "explicit_constraint:6",
+        "explicit_constraint:7",
+        "explicit_constraint:8",
+        "explicit_constraint:9",
+        "implicit_constraint:0",
+        "implicit_constraint:2",
+        "implicit_constraint:3",
+        "implicit_constraint:4",
+        "request:0",
+        "request:1",
+        "request:2",
+        "request:3",
+        "request:4"
+      ],
+      "held_out": [
+        "explicit_constraint:1",
+        "explicit_constraint:10",
+        "explicit_constraint:2",
+        "request:0"
+      ],
+      "reason": "axis is entangled with state/entity groups; train or test is empty",
+      "n_train": 0,
+      "n_test": 5,
+      "strict_overlap_axes": [],
+      "leakage": {
+        "state_group": {
+          "n_train": 0,
+          "n_test": 4,
+          "n_overlap": 0,
+          "overlap": []
+        },
+        "entity": {
+          "n_train": 0,
+          "n_test": 3,
+          "n_overlap": 0,
+          "overlap": []
+        },
+        "canonical_entity": {
+          "n_train": 0,
+          "n_test": 3,
+          "n_overlap": 0,
+          "overlap": []
+        },
+        "template": {
+          "n_train": 0,
+          "n_test": 4,
+          "n_overlap": 0,
+          "overlap": []
+        },
+        "goal_template": {
+          "n_train": 0,
+          "n_test": 4,
+          "n_overlap": 0,
+          "overlap": []
+        },
+        "page_template": {
+          "n_train": 0,
+          "n_test": 3,
+          "n_overlap": 0,
+          "overlap": []
+        },
+        "environment": {
+          "n_train": 0,
+          "n_test": 2,
+          "n_overlap": 0,
+          "overlap": []
+        },
+        "site": {
+          "n_train": 0,
+          "n_test": 2,
+          "n_overlap": 0,
+          "overlap": []
+        },
+        "action": {
+          "n_train": 0,
+          "n_test": 4,
+          "n_overlap": 0,
+          "overlap": []
+        },
+        "privilege": {
+          "n_train": 0,
+          "n_test": 1,
+          "n_overlap": 0,
+          "overlap": []
+        }
+      }
     },
     "cross_site": {
       "available": false,
-      "reason": "base formal split unavailable: formal source contains zero rows"
+      "values": [
+        "reddit",
+        "shopping"
+      ],
+      "held_out": [
+        "reddit"
+      ],
+      "reason": "axis is entangled with state/entity groups; train or test is empty",
+      "n_train": 0,
+      "n_test": 20,
+      "strict_overlap_axes": [],
+      "leakage": {
+        "state_group": {
+          "n_train": 0,
+          "n_test": 7,
+          "n_overlap": 0,
+          "overlap": []
+        },
+        "entity": {
+          "n_train": 0,
+          "n_test": 7,
+          "n_overlap": 0,
+          "overlap": []
+        },
+        "canonical_entity": {
+          "n_train": 0,
+          "n_test": 7,
+          "n_overlap": 0,
+          "overlap": []
+        },
+        "template": {
+          "n_train": 0,
+          "n_test": 12,
+          "n_overlap": 0,
+          "overlap": []
+        },
+        "goal_template": {
+          "n_train": 0,
+          "n_test": 12,
+          "n_overlap": 0,
+          "overlap": []
+        },
+        "page_template": {
+          "n_train": 0,
+          "n_test": 2,
+          "n_overlap": 0,
+          "overlap": []
+        },
+        "environment": {
+          "n_train": 0,
+          "n_test": 1,
+          "n_overlap": 0,
+          "overlap": []
+        },
+        "site": {
+          "n_train": 0,
+          "n_test": 1,
+          "n_overlap": 0,
+          "overlap": []
+        },
+        "action": {
+          "n_train": 0,
+          "n_test": 2,
+          "n_overlap": 0,
+          "overlap": []
+        },
+        "privilege": {
+          "n_train": 0,
+          "n_test": 1,
+          "n_overlap": 0,
+          "overlap": []
+        }
+      }
     }
   },
   "cross_site": {
     "available": false,
-    "reason": "base formal split unavailable: formal source contains zero rows"
+    "values": [
+      "reddit",
+      "shopping"
+    ],
+    "held_out": [
+      "reddit"
+    ],
+    "reason": "axis is entangled with state/entity groups; train or test is empty",
+    "n_train": 0,
+    "n_test": 20,
+    "strict_overlap_axes": [],
+    "leakage": {
+      "state_group": {
+        "n_train": 0,
+        "n_test": 7,
+        "n_overlap": 0,
+        "overlap": []
+      },
+      "entity": {
+        "n_train": 0,
+        "n_test": 7,
+        "n_overlap": 0,
+        "overlap": []
+      },
+      "canonical_entity": {
+        "n_train": 0,
+        "n_test": 7,
+        "n_overlap": 0,
+        "overlap": []
+      },
+      "template": {
+        "n_train": 0,
+        "n_test": 12,
+        "n_overlap": 0,
+        "overlap": []
+      },
+      "goal_template": {
+        "n_train": 0,
+        "n_test": 12,
+        "n_overlap": 0,
+        "overlap": []
+      },
+      "page_template": {
+        "n_train": 0,
+        "n_test": 2,
+        "n_overlap": 0,
+        "overlap": []
+      },
+      "environment": {
+        "n_train": 0,
+        "n_test": 1,
+        "n_overlap": 0,
+        "overlap": []
+      },
+      "site": {
+        "n_train": 0,
+        "n_test": 1,
+        "n_overlap": 0,
+        "overlap": []
+      },
+      "action": {
+        "n_train": 0,
+        "n_test": 2,
+        "n_overlap": 0,
+        "overlap": []
+      },
+      "privilege": {
+        "n_train": 0,
+        "n_test": 1,
+        "n_overlap": 0,
+        "overlap": []
+      }
+    }
   },
   "multiturn": {
     "available": false,
-    "reason": "no formal multi-turn rows",
+    "reason": "joint state/entity/goal-template/page-template/environment graph has one connected component; a non-leaking train/test split is unavailable",
     "n_train": 0,
     "n_dev": 0,
     "n_test": 0,
     "n_dpo_train": 0
   },
+  "additional_dpo_paths": [
+    "/workspace/iris/data/train/formal/iris_dpo_on_policy_transition_v3_strict_openrouter_20260715.jsonl",
+    "/workspace/iris/data/train/formal/iris_dpo_on_policy_transition_v3_strict_openrouter_llama32_3b_20260716.jsonl",
+    "/workspace/iris/data/train/formal/iris_dpo_on_policy_transition_v3_strict_openrouter_qwen3_8b_20260716.jsonl",
+    "/workspace/iris/data/train/formal/iris_dpo_on_policy_transition_v3_strict_openrouter_technology_20260715.jsonl"
+  ],
+  "additional_dpo_releases": [
+    {
+      "path": "/workspace/iris/data/train/formal/iris_dpo_on_policy_transition_v3_strict_openrouter_20260715.jsonl",
+      "manifest_path": "/workspace/iris/data/train/formal/iris_dpo_on_policy_transition_v3_strict_openrouter_20260715.jsonl.manifest.json",
+      "release_id": "transition-v3-strict-openrouter-live-20260715",
+      "body_sha256": "93bb8be2e940d777b80632eb888b821420fa3799e81a16da24eb3eb9a430e905",
+      "n_rows": 2
+    },
+    {
+      "path": "/workspace/iris/data/train/formal/iris_dpo_on_policy_transition_v3_strict_openrouter_llama32_3b_20260716.jsonl",
+      "manifest_path": "/workspace/iris/data/train/formal/iris_dpo_on_policy_transition_v3_strict_openrouter_llama32_3b_20260716.jsonl.manifest.json",
+      "release_id": "strict-openrouter-llama32-3b-shopping-constraint-20260716-v1",
+      "body_sha256": "64528412293c288aecb28e7660d3a74efa66f94fa7d75118dc68c4558b30b29d",
+      "n_rows": 9
+    },
+    {
+      "path": "/workspace/iris/data/train/formal/iris_dpo_on_policy_transition_v3_strict_openrouter_qwen3_8b_20260716.jsonl",
+      "manifest_path": "/workspace/iris/data/train/formal/iris_dpo_on_policy_transition_v3_strict_openrouter_qwen3_8b_20260716.jsonl.manifest.json",
+      "release_id": "strict-openrouter-qwen3-8b-shopping-constraint-20260716-v1",
+      "body_sha256": "1b32c31155fbf6fa80561dab4f1543a70c579037fc93c4d0608c5244e6f8bff6",
+      "n_rows": 9
+    },
+    {
+      "path": "/workspace/iris/data/train/formal/iris_dpo_on_policy_transition_v3_strict_openrouter_technology_20260715.jsonl",
+      "manifest_path": "/workspace/iris/data/train/formal/iris_dpo_on_policy_transition_v3_strict_openrouter_technology_20260715.jsonl.manifest.json",
+      "release_id": "transition-v3-strict-openrouter-technology-live-20260715",
+      "body_sha256": "85267f9b26afa471602d5f16776f2e93d9973c915e3d1ec4ed1c6b757323f439",
+      "n_rows": 2
+    }
+  ],
+  "n_additional_dpo": 22,
   "out_dir": "/workspace/iris/data/train/formal/splits"
 }

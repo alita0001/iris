@@ -1,0 +1,12 @@
+{
+  "commit": false,
+  "failures": [],
+  "n_executed": 1,
+  "n_persisted": 1,
+  "n_specs": 1,
+  "persist_error": "",
+  "persisted_point_ids": [
+    "point-faecb74ebfe8edb06654"
+  ],
+  "spec": "data/grounded/specs/live-reddit-safe-20260713-05.jsonl"
+}

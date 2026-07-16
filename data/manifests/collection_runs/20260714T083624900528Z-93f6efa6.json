@@ -1,0 +1,34 @@
+{
+  "schema_version": "iris.collection-run.v2",
+  "run_id": "20260714T083624900528Z-93f6efa6",
+  "status": "COMPLETE",
+  "started_at": "2026-07-14T08:36:24.900629+00:00",
+  "completed_at": "2026-07-14T08:37:14.791280+00:00",
+  "trajectories": [
+    {
+      "trajectory_id": "webarena.96_seed1__run_20260714T083624900528Z-93f6efa6",
+      "logical_trajectory_id": "webarena.96_seed1",
+      "run_id": "20260714T083624900528Z-93f6efa6",
+      "task_id": "webarena.96",
+      "seed": 1,
+      "n_steps": 3,
+      "terminated": true,
+      "truncated": false,
+      "max_reward": 0.0,
+      "success": false,
+      "collector_success": false,
+      "environment_origin": "webarena",
+      "environment_family": "shopping",
+      "is_mock": false,
+      "n_key_states": 4,
+      "final_model_response": "The goal is to find the status of the latest order and its arrival date. Currently, I'm on the order details page for order #000000193. The status is shown as \"Pending\" near the top. However, I don't see an estimated arrival date or shipping date on this page. I might need to look for a shipping/tracking section or check if there's a link for tracking. The page shows shipping method and address but no delivery estimate. Possibly the arrival date is not displayed because the order is pending. I s",
+      "final_finish_reason": "stop",
+      "read_only_guard_rejections": [],
+      "raw_artifact": "raw/trajectories/webarena.96_seed1__run_20260714T083624900528Z-93f6efa6.jsonl",
+      "n_key_states_written": 0,
+      "key_state_ids": []
+    }
+  ],
+  "state_bank": "raw/state_bank/shopping_key_states.jsonl",
+  "meta": "raw/trajectories_meta.jsonl"
+}

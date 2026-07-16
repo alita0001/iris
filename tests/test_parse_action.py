@@ -26,6 +26,11 @@ def test_none_on_empty():
     assert parse_action("no action here") is None
 
 
+def test_rejects_trailing_payload_or_second_answer_tag():
+    assert parse_action("scroll(0, 300)<answer> scroll(0, 300)") is None
+    assert parse_action("click('12') and click('13')") is None
+
+
 def test_terminal_detection():
     assert is_terminal_action("send_msg_to_user('done')")
     assert not is_terminal_action("click('3')")

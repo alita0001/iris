@@ -306,21 +306,35 @@ def obs_delta(prev_view: dict, view: dict) -> dict:
     """{'flag', 'delta'} describing what the last action observably changed.
 
     Flags (all computable at deployment time — no grounded labels involved):
-      state-change  a backend-ish signal moved (cart rows, order ids,
-                    addresses, form values, mock backend_state);
+      state-change  a persistent backend/probe signal moved;
       nav           URL changed, no state signal moved;
-      update        same URL, page content changed (menu opened, tab switched);
+      update        same URL, page/form/UI content changed without a persistent
+                    signal (menu opened, tab switched, form edited);
       no-effect     nothing observable changed — the caller's cue to try a
                     DIFFERENT action instead of repeating this one.
     """
     from .fingerprint import fingerprint, state_distance
 
     d = state_distance(fingerprint(prev_view or {}), fingerprint(view or {}))
-    signals = _entity_signals(d)
+    # ``key_entities`` also contains order-looking text scraped from the
+    # current AXTree.  Moving from an order list to an existing order detail
+    # therefore changes that set even though no order was created.  It is
+    # evidence about page visibility, not persistence.  Only a structured
+    # backend channel or an explicitly supplied probe signal may justify the
+    # stronger ``state-change`` history flag.
+    backend_observed = (prev_view.get("backend_state") is not None and
+                        view.get("backend_state") is not None)
+    persistent_before = prev_view.get("persistent_signal")
+    persistent_after = view.get("persistent_signal")
+    persistent_observed = (persistent_before is not None and
+                           persistent_after is not None)
+    persistent_changed = (persistent_observed and
+                          persistent_before != persistent_after)
+    signals = _entity_signals(d) if backend_observed else []
     label = _page_label(view)
-    if signals or d["backend_changed"] or d["form_changed"]:
+    if d["backend_changed"] is True or persistent_changed:
         if not signals:
-            signals = ["site state changed"]
+            signals = ["persistent site signal changed"]
         delta = "; ".join(signals)
         if d["url_changed"] and label:
             delta += f" (now on: {label})"
@@ -328,7 +342,10 @@ def obs_delta(prev_view: dict, view: dict) -> dict:
     if d["url_changed"]:
         where = label or "new page"
         return {"flag": "nav", "delta": f"{where} ({_short_url(view.get('url', ''))})"}
-    if d["axtree_changed"] or d["title_changed"]:
+    if d["form_changed"]:
+        return {"flag": "update", "delta": "form values changed (same page)"}
+    if d["axtree_changed"] or d["title_changed"] or \
+            d["entities_added"] or d["entities_removed"]:
         return {"flag": "update",
                 "delta": "page content changed (same URL)"}
     return {"flag": "no-effect", "delta": "no visible change"}

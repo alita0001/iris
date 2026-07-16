@@ -18,6 +18,11 @@ from typing import Any, Iterable, Mapping, Sequence
 
 
 CANDIDATE_SCHEMA_VERSION = "iris.candidate.v2"
+FORMAL_CANDIDATE_ARTIFACT_VERSION = "formal_candidates.v4"
+FORMAL_CANDIDATE_BODY_NAME = f"{FORMAL_CANDIDATE_ARTIFACT_VERSION}.jsonl"
+FORMAL_CANDIDATE_MANIFEST_NAME = "FORMAL_CANDIDATE_MANIFEST.v4.jsonl"
+LEGACY_CANDIDATE_BODY_NAME = "iris_candidates.v3.jsonl"
+LEGACY_CANDIDATE_MANIFEST_NAME = "CANDIDATE_MANIFEST.jsonl"
 
 CATEGORY_EXPERT = "expert_action"
 CATEGORY_SAFE_ALTERNATIVE = "safe_alternative"
@@ -61,6 +66,21 @@ _INTERACTIVE_ROLES = frozenset({
     "tab", "treeitem",
 })
 _LINE_RE = re.compile(r"^\s*\[([^\]]+)\]\s+([A-Za-z_][\w-]*)\s*(.*)$")
+
+# These are *surface-form proposal* rules, not policy or safety labels.  Use
+# token/phrase boundaries so product names such as ``Bananas`` and navigation
+# labels such as ``Stored Payment Methods`` do not become high-risk controls by
+# substring accident.
+_CONSTRAINT_TRIGGER_PHRASES = (
+    "place order", "delete", "refund", "submit", "publish", "pay", "ban",
+)
+_UNCERTAIN_PHRASES = ("continue", "proceed", "learn more")
+_GLOBAL_CHROME_NAMES = frozenset({
+    "advanced search", "my account", "my cart", "my wish list", "search",
+    "sign out", "skip to content", "store logo",
+})
+_LOCAL_ACTION_WINDOW_LINES = 40
+_MAX_GLOBAL_CHROME_CANDIDATES = 1
 
 # An S4 proposer must not smuggle an opinion into the behavioral label chain.
 _LABEL_LIKE_FIELDS = frozenset({
@@ -106,6 +126,40 @@ def interactive_elements(axtree_txt: str) -> list[dict[str, str]]:
             "line": line.strip(),
         })
     return out
+
+
+def _phrase_present(text: str, phrase: str) -> bool:
+    """Match a normalized phrase at alphanumeric token boundaries."""
+    body = r"\s+".join(re.escape(token) for token in phrase.split())
+    return re.search(rf"(?<![a-z0-9]){body}(?![a-z0-9])", text.lower()) is not None
+
+
+def _interactive_positions(axtree_txt: str) -> dict[str, tuple[int, int]]:
+    """Return source-line/depth positions without changing the public parser."""
+    out: dict[str, tuple[int, int]] = {}
+    for line_index, line in enumerate((axtree_txt or "").splitlines()):
+        match = _LINE_RE.match(line)
+        if not match or match.group(2).lower() not in _INTERACTIVE_ROLES:
+            continue
+        leading = line[:len(line) - len(line.lstrip(" \t"))]
+        # AXTree output normally uses tabs.  Expanding spaces as one indentation
+        # unit is sufficient for deterministic locality tie-breaking; line
+        # distance remains the primary signal.
+        depth = leading.count("\t") + len(leading.replace("\t", ""))
+        out.setdefault(match.group(1), (line_index, depth))
+    return out
+
+
+def _normalized_control_name(element: Mapping[str, str]) -> str:
+    return re.sub(r"\s+", " ", str(element.get("name") or "").strip().lower())
+
+
+def _is_global_chrome(element: Mapping[str, str]) -> bool:
+    """Identify repeated site navigation, never task-local action siblings."""
+    name = _normalized_control_name(element)
+    if name in _GLOBAL_CHROME_NAMES or name.endswith(" my cart"):
+        return True
+    return str(element.get("role") or "").lower() == "menuitem"
 
 
 @dataclass(frozen=True)
@@ -252,18 +306,17 @@ def candidate_from_proposal(
 def _rule_category(element: Mapping[str, str], *, expert_bid: str) -> str:
     """Candidate-family proposal only; never an effect/recovery/safety label."""
     bid = str(element["bid"])
-    text = f"{element.get('role', '')} {element.get('name', '')}".lower()
+    text = _normalized_control_name(element)
     if bid == str(expert_bid):
         return CATEGORY_EXPERT
-    if any(word in text for word in ("back", "cancel", "close", "return")):
-        return CATEGORY_SAFE_ALTERNATIVE
-    if any(word in text for word in (
-            "place order", "delete", "refund", "submit", "publish", "pay", "ban")):
+    if any(_phrase_present(text, phrase)
+           for phrase in _CONSTRAINT_TRIGGER_PHRASES):
         return CATEGORY_CONSTRAINT_TRIGGER
-    if any(word in text for word in (
-            "undo", "retract", "unsubscribe", "remove from", "restore")):
-        return CATEGORY_SAFE_ALTERNATIVE
-    if any(word in text for word in ("continue", "next", "proceed", "learn more")):
+    # "Safe", "decoy", goal-relative, and policy-error roles require evidence
+    # outside a static AXTree and therefore are never assigned by this rule.
+    # Bare "Next" is also deliberately ordinary: in the current Magento pages
+    # it overwhelmingly denotes an image-carousel button.
+    if any(_phrase_present(text, phrase) for phrase in _UNCERTAIN_PHRASES):
         return CATEGORY_UNCERTAIN
     return CATEGORY_ORDINARY
 
@@ -290,11 +343,39 @@ def build_a11y_candidate_set(
     if str(expert_bid) not in by_bid:
         raise CandidateValidationError(
             f"expert bid [{expert_bid}] is not a legal interactive control")
-    ordered = [by_bid[str(expert_bid)]] + [
-        row for row in elements if row["bid"] != str(expert_bid)]
+    expert = by_bid[str(expert_bid)]
+    if len(elements) < 4:
+        raise CandidateValidationError(
+            f"snapshot exposes only {len(elements)} legal controls; need >=4")
+
+    positions = _interactive_positions(axtree_txt)
+    expert_line, expert_depth = positions.get(str(expert_bid), (0, 0))
+
+    def locality_key(row: Mapping[str, str]) -> tuple[int, int, int]:
+        line, depth = positions.get(str(row["bid"]), (10**9, 10**9))
+        return (abs(line - expert_line), abs(depth - expert_depth), line)
+
+    remaining = [row for row in elements if row["bid"] != str(expert_bid)]
+    non_chrome = [row for row in remaining if not _is_global_chrome(row)]
+    global_chrome = [row for row in remaining if _is_global_chrome(row)]
+    local = sorted(
+        (row for row in non_chrome
+         if locality_key(row)[0] <= _LOCAL_ACTION_WINDOW_LINES),
+        key=locality_key,
+    )
+    local_ids = {id(row) for row in local}
+    nonlocal_controls = sorted(
+        (row for row in non_chrome if id(row) not in local_ids),
+        key=locality_key,
+    )
+    global_chrome.sort(key=locality_key)
+
+    ordered = [expert] + local + nonlocal_controls + \
+        global_chrome[:_MAX_GLOBAL_CHROME_CANDIDATES]
     if len(ordered) < 4:
         raise CandidateValidationError(
-            f"snapshot exposes only {len(ordered)} legal controls; need >=4")
+            "snapshot exposes fewer than four task-local controls after the "
+            "global-chrome cap")
 
     categorized = [(row, _rule_category(row, expert_bid=str(expert_bid)))
                    for row in ordered]
@@ -380,10 +461,12 @@ def candidate_manifest_row(candidate: Candidate) -> dict[str, Any]:
 
 
 def candidate_manifest_path(path: Path) -> Path:
-    return path.with_name("CANDIDATE_MANIFEST.jsonl")
+    if path.name == FORMAL_CANDIDATE_BODY_NAME:
+        return path.with_name(FORMAL_CANDIDATE_MANIFEST_NAME)
+    return path.with_name(LEGACY_CANDIDATE_MANIFEST_NAME)
 
 
-def write_candidate_manifest(path: Path) -> Path:
+def write_candidate_manifest(path: Path, manifest: Path | None = None) -> Path:
     """Regenerate the 1:1 content-hash manifest for an immutable candidate body."""
     path = Path(path)
     rows: list[Candidate] = []
@@ -397,7 +480,7 @@ def write_candidate_manifest(path: Path) -> Path:
                 f"{path}:{line_no}: missing/duplicate candidate_id")
         seen.add(candidate.candidate_id)
         rows.append(candidate)
-    manifest = candidate_manifest_path(path)
+    manifest = Path(manifest) if manifest else candidate_manifest_path(path)
     manifest.parent.mkdir(parents=True, exist_ok=True)
     temporary = manifest.with_suffix(manifest.suffix + ".tmp")
     with temporary.open("w", encoding="utf-8") as handle:

@@ -8,11 +8,15 @@ bundle before an SFT/DPO row can be copied to an export.
 from __future__ import annotations
 
 import json
+import hashlib
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from .candidates import (Candidate, CandidateValidationError,
+from .candidates import (FORMAL_CANDIDATE_ARTIFACT_VERSION,
+                         FORMAL_CANDIDATE_BODY_NAME,
+                         FORMAL_CANDIDATE_MANIFEST_NAME, Candidate,
+                         CandidateValidationError,
                          assert_candidate_manifest_integrity,
                          validate_candidate_snapshot_artifact)
 from ..grounding.schema import (GroundingPoint, GroundingValidationError,
@@ -37,6 +41,7 @@ class FormalReleaseContext:
     grounding_error: str = ""
     candidates: dict[str, Candidate] = field(default_factory=dict)
     candidate_error: str = ""
+    candidate_asset_tier: str = FORMAL_CANDIDATE_ARTIFACT_VERSION
     truth: dict[str, EvaluationTruthRecord] = field(default_factory=dict)
     truth_error: str = ""
 
@@ -63,8 +68,9 @@ def formal_release_context(root: Path) -> FormalReleaseContext:
         points = load_probe_points(points_path, validate=True)
     except (GroundingValidationError, json.JSONDecodeError, OSError, TypeError) as exc:
         return FormalReleaseContext(root=root, grounding_error=str(exc))
-    candidate_path = root / "raw" / "candidates" / "iris_candidates.v3.jsonl"
-    candidate_manifest = candidate_path.with_name("CANDIDATE_MANIFEST.jsonl")
+    candidate_path = root / "raw" / "candidates" / FORMAL_CANDIDATE_BODY_NAME
+    candidate_manifest = candidate_path.with_name(
+        FORMAL_CANDIDATE_MANIFEST_NAME)
     candidates: dict[str, Candidate] = {}
     candidate_error = ""
     if points:
@@ -75,7 +81,9 @@ def formal_release_context(root: Path) -> FormalReleaseContext:
                 candidates, root / "raw" / "state_bank")
         except (CandidateValidationError, json.JSONDecodeError, OSError,
                 TypeError) as exc:
-            candidate_error = str(exc)
+            candidate_error = (
+                f"{FORMAL_CANDIDATE_ARTIFACT_VERSION}: {exc}; "
+                "legacy iris_candidates.v3 is not a formal fallback")
 
     truth_path = root / "eval" / "truth.jsonl"
     truth_manifest = root / "eval" / "TRUTH_MANIFEST.jsonl"
@@ -393,6 +401,8 @@ def audit_collection_lineage(root: Path, site: str = "shopping") -> dict:
     missing_raw = sorted(tid for tid in meta_by_tid if tid and tid not in raw_files)
     missing_meta = sorted(tid for tid in raw_files if tid not in meta_by_tid)
     run_mismatch, missing_run_new = [], []
+    missing_policy_attempt_artifacts: list[str] = []
+    invalid_policy_attempt_artifacts: list[str] = []
     for tid, rows in meta_by_tid.items():
         for m in rows:
             run_id = str(m.get("run_id", ""))
@@ -406,6 +416,64 @@ def audit_collection_lineage(root: Path, site: str = "shopping") -> dict:
                 run_mismatch.append(tid)
             if any(str(s.get("trajectory_id", "")) != tid for s in steps):
                 run_mismatch.append(tid)
+            capture = m.get("policy_attempt_source_capture")
+            if not isinstance(capture, dict):
+                continue  # frozen rows collected before the sidecar existed
+            artifact = str(m.get("policy_attempt_artifact") or "")
+            attempt_path = None
+            if artifact:
+                candidate = (root / artifact).resolve()
+                try:
+                    candidate.relative_to(root.resolve())
+                except ValueError:
+                    invalid_policy_attempt_artifacts.append(tid)
+                    continue
+                attempt_path = candidate
+            if attempt_path is None or not attempt_path.is_file():
+                missing_policy_attempt_artifacts.append(tid)
+                continue
+            try:
+                attempts = _jsonl(attempt_path)
+                declared_n = capture.get("n_policy_attempts")
+                declared_unexecuted = capture.get(
+                    "n_unexecuted_policy_attempts")
+                invalid = (
+                    declared_n != len(attempts)
+                    or declared_unexecuted != sum(
+                        row.get("execution_status") == "NO_ACTION"
+                        for row in attempts)
+                    or any(str(row.get("run_id") or "") != run_id
+                           or str(row.get("trajectory_id") or "") != tid
+                           or str(row.get("task_id") or "") !=
+                           str(m.get("task_id") or "")
+                           for row in attempts)
+                )
+                for attempt in attempts:
+                    messages = attempt.get("policy_input_messages") or []
+                    completion = str(
+                        attempt.get("proposed_completion") or "")
+                    executed = str(
+                        attempt.get("executed_completion") or "")
+                    if messages and attempt.get(
+                            "policy_input_messages_sha256") != hashlib.sha256(
+                                json.dumps(
+                                    messages, ensure_ascii=False,
+                                    sort_keys=True, separators=(",", ":"),
+                                    allow_nan=False,
+                                ).encode("utf-8")).hexdigest():
+                        invalid = True
+                    if completion and attempt.get(
+                            "proposed_completion_sha256") != hashlib.sha256(
+                                completion.encode("utf-8")).hexdigest():
+                        invalid = True
+                    if executed and attempt.get(
+                            "executed_completion_sha256") != hashlib.sha256(
+                                executed.encode("utf-8")).hexdigest():
+                        invalid = True
+                if invalid:
+                    invalid_policy_attempt_artifacts.append(tid)
+            except (json.JSONDecodeError, OSError, TypeError, ValueError):
+                invalid_policy_attempt_artifacts.append(tid)
     orphan_state_runs = sorted({
         tid for tid, rows in state_by_tid.items()
         if any(r.get("run_id") for r in rows) and tid not in meta_by_tid})
@@ -445,7 +513,9 @@ def audit_collection_lineage(root: Path, site: str = "shopping") -> dict:
                 + len(set(run_mismatch)) + len(missing_run_new)
                 + len(orphan_state_runs) + len(state_run_mismatch)
                 + len(missing_manifest) + len(incomplete_manifests)
-                + len(invalid_manifests) + len(unknown_origins))
+                + len(invalid_manifests) + len(unknown_origins)
+                + len(missing_policy_attempt_artifacts)
+                + len(invalid_policy_attempt_artifacts))
     return {
         "n_meta_rows": len(meta), "n_unique_trajectory_ids": len(meta_by_tid),
         "n_raw_files": len(raw_files), "n_key_states": len(states),
@@ -460,6 +530,10 @@ def audit_collection_lineage(root: Path, site: str = "shopping") -> dict:
         "missing_collection_manifests": missing_manifest,
         "incomplete_collection_manifests": incomplete_manifests,
         "invalid_collection_manifests": invalid_manifests,
+        "missing_policy_attempt_artifacts": sorted(set(
+            missing_policy_attempt_artifacts)),
+        "invalid_policy_attempt_artifacts": sorted(set(
+            invalid_policy_attempt_artifacts)),
         "n_problems": problems, "ok": problems == 0,
     }
 
@@ -494,7 +568,12 @@ def audit_formal_collection_lineage(root: Path,
         state_dir = root / "state_bank"
 
     meta_rows = _jsonl(meta_path)
+    # ``formal_point_reached_states.jsonl`` is a derived assembler view of the
+    # immutable collection row, not a second collection event.  Counting it in
+    # the raw closure makes a valid single/multiturn dual view appear to have a
+    # two-way state join.  Only source collection banks participate here.
     state_rows = [row for path in sorted(state_dir.glob("*.jsonl"))
+                  if path.name != "formal_point_reached_states.jsonl"
                   for row in _jsonl(path)] if state_dir.exists() else []
     meta_by_identity: dict[tuple[str, str], list[dict]] = defaultdict(list)
     state_by_identity: dict[tuple[str, str, str], list[dict]] = defaultdict(list)

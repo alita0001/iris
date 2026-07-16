@@ -55,6 +55,13 @@ class RuntimeConfig:
                             "temperature": 0.7, "top_p": 1.0, "max_tokens": 400},
                 "judge": {"provider": "deepseek", "base_url": "", "model": "",
                           "api_key_env": "DEEPSEEK_API_KEY", "mode": "deepseek"},
+                # Opinion ratings are a separate baseline role.  Keep the
+                # route/model blank and provider generic so OpenRouter remains
+                # a user selection, never a repository-wide default.
+                "opinion": {"provider": "custom", "base_url": "", "model": "",
+                            "api_key_env": "REVACT_OPINION_API_KEY",
+                            "temperature": 0.0, "top_p": 1.0,
+                            "max_tokens": 300},
             },
             "run": {"task_file": "data/raw/pilot_task_ids.json", "seeds": "0",
                     "max_steps": 25, "sample_limit": 10, "screenshots": True,
@@ -77,6 +84,8 @@ class RuntimeConfig:
             if key_env and self.secrets.get(key_env):
                 out[key_env] = self.secrets[key_env]
             if role == "policy":
+                if m.get("provider"):
+                    out["REVACT_LLM_PROVIDER"] = str(m["provider"])
                 if m.get("model"):
                     out["REVACT_LLM_MODEL"] = str(m["model"])
                 if m.get("base_url"):
@@ -88,6 +97,8 @@ class RuntimeConfig:
                 if m.get("top_p") is not None:
                     out["REVACT_LLM_TOP_P"] = str(m["top_p"])
             elif role == "teacher":
+                if m.get("provider"):
+                    out["REVACT_DISTILL_PROVIDER"] = str(m["provider"])
                 if m.get("model"):
                     out["REVACT_DISTILL_MODEL"] = str(m["model"])
                 if m.get("base_url"):
@@ -95,8 +106,31 @@ class RuntimeConfig:
                 if key_env:
                     out["REVACT_DISTILL_KEY_ENV"] = key_env
             elif role == "judge":
+                if m.get("provider"):
+                    out["REVACT_WA_JUDGE_PROVIDER"] = str(m["provider"])
                 if m.get("base_url"):
                     out["REVACT_WA_JUDGE_BASE_URL"] = str(m["base_url"])
+                if m.get("model"):
+                    out["REVACT_WA_JUDGE_MODEL"] = str(m["model"])
+                if key_env:
+                    out["REVACT_WA_JUDGE_API_KEY_ENV"] = str(key_env)
+                if m.get("mode"):
+                    out["REVACT_WA_JUDGE"] = str(m["mode"])
+            elif role == "opinion":
+                if m.get("provider"):
+                    out["REVACT_OPINION_PROVIDER"] = str(m["provider"])
+                if m.get("base_url"):
+                    out["REVACT_OPINION_BASE_URL"] = str(m["base_url"])
+                if m.get("model"):
+                    out["REVACT_OPINION_MODEL"] = str(m["model"])
+                if key_env:
+                    out["REVACT_OPINION_KEY_ENV"] = str(key_env)
+                if m.get("temperature") is not None:
+                    out["REVACT_OPINION_TEMPERATURE"] = str(m["temperature"])
+                if m.get("top_p") is not None:
+                    out["REVACT_OPINION_TOP_P"] = str(m["top_p"])
+                if m.get("max_tokens") is not None:
+                    out["REVACT_OPINION_MAX_TOKENS"] = str(m["max_tokens"])
         drt = (self.settings.get("run") or {}).get("data_root", "")
         if drt:
             out["REVACT_DATA_ROOT"] = drt
@@ -330,10 +364,12 @@ def _build_cmd(stage: Stage, action: Action, params: dict,
         if action.id == "collect_mock":
             return python_cli("collect", "--mock", "--seeds", seeds)
         if action.id == "collect_live":
+            judge = ((cfg.settings.get("models") or {}).get("judge") or {})
             cmd = python_cli("collect", "--seeds", seeds,
                              "--max-steps", str(_int(params, "max_steps",
                                                      int(run.get("max_steps", 25)), 1, 100)),
-                             "--wa-judge", str(params.get("wa_judge", "deepseek")))
+                             "--wa-judge", str(params.get(
+                                 "wa_judge", judge.get("mode", "off"))))
             task_file = str(params.get("task_file", run.get("task_file", "")))
             if task_file:
                 p = (config.PROJECT_ROOT / task_file).resolve()
@@ -346,6 +382,10 @@ def _build_cmd(stage: Stage, action: Action, params: dict,
                 cmd += ["--api-key-env", str(model["api_key_env"])]
             if params.get("screenshots", run.get("screenshots")):
                 cmd += ["--screenshots"]
+            if params.get("read_only_live", run.get("read_only_live", True)):
+                cmd += ["--read-only-live"]
+            if params.get("only_success", run.get("only_success", True)):
+                cmd += ["--only-success"]
             return cmd
         if action.id == "inspect":
             return python_cli("inspect")
@@ -453,6 +493,7 @@ def _run_inprocess(stage: Stage, action: Action, params: dict,
             "product_urls": (store.root / "raw" / "product_urls.json").exists(),
             "policy_key": cfg.has_key("policy"),
             "teacher_key": cfg.has_key("teacher"),
+            "opinion_key": cfg.has_key("opinion"),
         }
         ok = checks["pilot_task_ids"]
         return {"ok": ok, "result": checks,

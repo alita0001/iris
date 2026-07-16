@@ -395,18 +395,33 @@ def promote_authored_spec(
 
 def load_probe_execution_specs(path: Path) -> list[ProbeExecutionSpec]:
     text = Path(path).read_text(encoding="utf-8")
-    if text.lstrip().startswith("["):
+    stripped = text.lstrip()
+    if stripped.startswith("["):
         rows = json.loads(text)
-    elif text.lstrip().startswith("{"):
-        payload = json.loads(text)
-        rows = payload.get("points", [payload]) if isinstance(payload, dict) else payload
     else:
-        rows = [json.loads(line) for line in text.splitlines() if line.strip()]
+        # JSONL also starts with ``{``.  Parse a whole JSON object only when the
+        # complete file is one document; ``Extra data`` falls back to one
+        # object per non-empty line.
+        try:
+            payload = json.loads(text)
+        except json.JSONDecodeError as exc:
+            if "Extra data" not in str(exc):
+                raise
+            rows = [json.loads(line) for line in text.splitlines()
+                    if line.strip()]
+        else:
+            rows = (payload.get("points", [payload])
+                    if isinstance(payload, dict) else payload)
     if not isinstance(rows, list) or not rows:
         raise ProbeAuthoringError("execution spec must contain at least one point")
     specs = [ProbeExecutionSpec.from_dict(row) for row in rows]
-    for attr in ("probe_name", "probe_point_id", "probe_run_id"):
+    for attr in ("probe_name", "probe_point_id"):
         values = [str(getattr(spec, attr)) for spec in specs]
         if len(values) != len(set(values)):
             raise ProbeAuthoringError(f"duplicate execution {attr}")
+    run_ids = {spec.probe_run_id for spec in specs}
+    if len(run_ids) != 1:
+        raise ProbeAuthoringError(
+            f"one execution batch must share exactly one probe_run_id, got "
+            f"{sorted(run_ids)}")
     return specs

@@ -1,0 +1,532 @@
+{
+  "base_head": "b67852828d6d9fb335114c2ceb1dc3a7002faca7",
+  "dirty": true,
+  "entries": [
+    {
+      "exists": true,
+      "path": "DATASET_CARD.md",
+      "sha256": "456fccf22e9f8997586987158bdbdb24847f72b030e3f08fbbdc39a7d41eb71f",
+      "size_bytes": 16074,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "README.md",
+      "sha256": "ed2669ac0a62fb294517903a0db579be28174dbd245e498bf320f7783b6f2cde",
+      "size_bytes": 10383,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "data/eval/TRUTH_MANIFEST.jsonl",
+      "sha256": "dbe0d2cc8283fa9bbe20ec5cb729180492c4b7a8f102e275da3ecf2096c801dc",
+      "size_bytes": 2459,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/eval/authoring/live-safe-smoke-policy-v1.json",
+      "sha256": "54fea4b0511d420caed1d076d24d71a8fde47bae1bef10c3b673779af1e36595",
+      "size_bytes": 1451,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/eval/authoring/live-safe-smoke-truth-v1.jsonl",
+      "sha256": "2b554fe4bad5738674dc15243ebc055c01a8632bc8cf1df0713ddae4d917ce52",
+      "size_bytes": 7609,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/eval/truth.jsonl",
+      "sha256": "1c1aeaf380990c1f49d59b8135541ad27e2e4a4ea1498277c3e763c0e7ec0acf",
+      "size_bytes": 7609,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/grounded/POINT_MANIFEST.jsonl",
+      "sha256": "c4a31fa3ccb68c2221e5427c8cf4d8bb825e101f371db3d9e73150e48e03c6b8",
+      "size_bytes": 1979,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "data/grounded/probe_points.jsonl",
+      "sha256": "601d25fc52e6c20e775e6aadab2e8c9439d86081e95b791d0ad08501a2eade4b",
+      "size_bytes": 9924,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "data/grounded/specs/authored_specs.jsonl",
+      "sha256": "b7e9b606612f208d0d0a9f25474c1f95dc4f678dd68453949b7fd2962cf260dc",
+      "size_bytes": 3022,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/grounded/specs/live-safe-smoke-20260713-01.jsonl",
+      "sha256": "5abd75fcab0a98abe876c2651b85f4eb3fc6ec9068c3d9094e83afa107ef0bb2",
+      "size_bytes": 6338,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/grounded/specs/live-safe-smoke-20260713-02.jsonl",
+      "sha256": "da817d298396adfa9d1dd22ffd64aa60f7c0392aa468fe071c69d68fa6e0cabe",
+      "size_bytes": 6338,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/grounded/specs/live-safe-smoke-20260713-03.jsonl",
+      "sha256": "517f2cf434e70715ff54fa022c28dfc89519e4916f6e04d96d9fddb0d1ab1b13",
+      "size_bytes": 6338,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/grounded/specs/live-safe-smoke-20260713-04.jsonl",
+      "sha256": "54d3a345230b925f2e44ba96d36d3aea20589eaa33620407aaa28aa6a0aa7e61",
+      "size_bytes": 6338,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/grounded/specs/live-safe-smoke-20260713-05.jsonl",
+      "sha256": "8075001b436c77ea71935f5308da32be228fdb1656e2423ec2993df5f6e12474",
+      "size_bytes": 6338,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/manifests/collection_runs/20260713T114934746916Z-0f7a123c.json",
+      "sha256": "6a42eb15b1bb50cd4772dbb8284139dbb7ca424680bc4c4ae74668c1f4a3273d",
+      "size_bytes": 21503,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/candidates/CANDIDATE_MANIFEST.jsonl",
+      "sha256": "c3df2636e7623142a9e42762a11ed4fdddd368a011132386194ae4b5b6a68d3e",
+      "size_bytes": 102348,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/candidates/iris_candidates.v3.jsonl",
+      "sha256": "031979430259d44f9282805e7ed4daa25ca0bb8d4273eeacb6c910aabcfbf8f1",
+      "size_bytes": 152152,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/quarantine/legacy_lineage_manifest.json",
+      "sha256": "7537a564706774b364e82d98a1f8ec9f9c0cf8b3b051cffc6e60480b4500ba89",
+      "size_bytes": 13702,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/state_bank/formal_point_reached_states.jsonl",
+      "sha256": "4ba741ea81ad06df5540a6a633c8afd117a4432d9bc27f0c1e806216131004c4",
+      "size_bytes": 93688,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/state_bank/shopping_key_states.jsonl",
+      "sha256": "2232b8dc32a327c9f5cb82db350b7d89486bdd721911c698f1faf73369f9da06",
+      "size_bytes": 13030707,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/trajectories/pt_add_to_cart__cablevantage-hdmi-cable-30-feet-v1-4-ult__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "c1f72d0d6b4ea8ddfc01ff085725a0a29a048fc3e60d646269d0b3a405ed75f1",
+      "size_bytes": 15010,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/trajectories/pt_add_to_cart__cablevantage-premium-hdmi-cable-25ft-25f__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "081be4a4a68c463efa1892c4aee556853ea37ea7bb1f20b0873b2d94f3072bd5",
+      "size_bytes": 15027,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/trajectories/pt_compare_add__anpdasi-cell-phone-stand-fully-foldable-__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "43821d2800b6b629af783f077edcd76c29c28a9765fd0cfd2f52d92535724f5f",
+      "size_bytes": 15038,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/trajectories/pt_compare_add__asus-cm-16-docsis-3-0-cablelabs-certifie__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "09d6dff5100902eaa57a8641edabadd716dac47325c036490bef2db545985941",
+      "size_bytes": 14955,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/trajectories/pt_compare_add__banana-phone-bluetooth-handset-for-iphon__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "73f1124a16a510433c5155fee058e66e2d2ccf6b9a762efd19d45a63097f4440",
+      "size_bytes": 14981,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/trajectories/pt_compare_add__car-mount-phone-holder-sturdy-cup-holder__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "593e84e3863616df9ad922042124eece37cb8873ba68c69009fb5ec85cf4a068",
+      "size_bytes": 14820,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/trajectories/pt_compare_add__cell-phone-stand-doboli-phone-stand-for-__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "3e21c105f223ea2da4b7b0f1e16c49531cca27f0df2750e5e7547ceba630356b",
+      "size_bytes": 15110,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/trajectories/pt_compare_add__figatia-astronomy-telescope-phone-adapte__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "a3ce2213211884be05f785cc448ce40ac76a146bf838ae3453b222a5acbc26fc",
+      "size_bytes": 15011,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/trajectories/pt_compare_add__rg6-coaxial-cable-bnc-male-to-male-coax-__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "069ba5e03c113fb1d4bf9469063e1748dc9fbd84fa1a23c526bca43c877dc79b",
+      "size_bytes": 14999,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/trajectories/pt_compare_add__vicseed-phone-cup-holder-for-car-militar__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "fb994c5d8ed65a08f715a64224b5283bc711b85e37afdab58440e9cf2cb97019",
+      "size_bytes": 15245,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/trajectories/pt_wishlist_add__anpdasi-cell-phone-stand-fully-foldable-__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "9aaf51fbba783e050a0d9533b407e538ee50a40682e767cb0b93600fc3b12d0c",
+      "size_bytes": 15040,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/trajectories/pt_wishlist_add__asus-cm-16-docsis-3-0-cablelabs-certifie__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "67085eff89da92307b2fb0b894f2e8b4d8bf21a7240979f36346aca37365a777",
+      "size_bytes": 14957,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/trajectories/pt_wishlist_add__banana-phone-bluetooth-handset-for-iphon__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "f53c5b7d72bfd5d61c91139887f767acdbd6674fdad31737b0419c26be6ff4dd",
+      "size_bytes": 14983,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/trajectories/pt_wishlist_add__car-mount-phone-holder-sturdy-cup-holder__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "652b8d74569bd2fb4832aeceebaa10d75bb78bef0da5d8a038697e6339aa3162",
+      "size_bytes": 14822,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/trajectories/pt_wishlist_add__cell-phone-stand-doboli-phone-stand-for-__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "aa752305642a500e54cda8387eda0ec52f2824c73f7bf0dbbbc92e40ce016f61",
+      "size_bytes": 15112,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/trajectories/pt_wishlist_add__figatia-astronomy-telescope-phone-adapte__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "65afb8ddb1f555f96886ba4668d0ac360bb636b7ad9279bf065a3b12ace75c03",
+      "size_bytes": 15013,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/trajectories/pt_wishlist_add__rg6-coaxial-cable-bnc-male-to-male-coax-__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "c2ecec1cdaa15cf1d9f43bef101d446f8baa88a1e538df0e0e11476d69978989",
+      "size_bytes": 15001,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/trajectories/pt_wishlist_add__vicseed-phone-cup-holder-for-car-militar__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "d874dd763e0ce199e07d924f05df3f5a305e5992220e9d785be640ead76a4e1f",
+      "size_bytes": 15247,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/trajectories_meta.jsonl",
+      "sha256": "eea7966651792533999e42263d980590aa829ff7f6620e5daebdce4e6299cced",
+      "size_bytes": 58399,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "data/train/ablation/iris_dpo_synthetic_point_v1.jsonl",
+      "sha256": "5b601ef6cfb9778ca5067827eb6f5b99f4cf29ef8f2740fa6733942292f90f47",
+      "size_bytes": 229801,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/assembly_report.json",
+      "sha256": "c19d1ff90227dc9be072b4b4914672e2f5cb2c22af133c9d8e55f83b9b63146f",
+      "size_bytes": 407,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/iris_sft_point_v1.jsonl",
+      "sha256": "5a954d223b451320d20aa946a39eebd4c321ea73c48534fb750bc9cc236facb4",
+      "size_bytes": 86367,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/splits/SPLIT_REPORT.json",
+      "sha256": "896baf4ce80266e37595bd7a9da02d2bdc2ff07dbf3e43999b9f54552133f597",
+      "size_bytes": 3588,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "docs/audit/IRIS-formal-readiness.json",
+      "sha256": "99e4bcba93a12e8a8de71128cea3cee045830851fa5888fb552a22c19d607109",
+      "size_bytes": 15220,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "docs/audit/IRIS-live-point-code-snapshot-02.json",
+      "sha256": "7300bc017c37722b405266bfc986b24f116ff62601ea3a00ef989f3fe59cf13e",
+      "size_bytes": 13366,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "docs/audit/IRIS-live-point-code-snapshot-03.json",
+      "sha256": "de1534a0d340eb0913824c0802f7024a737e1903dc1d2922071d13402d09483e",
+      "size_bytes": 13836,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "docs/audit/IRIS-live-point-code-snapshot-04.json",
+      "sha256": "44f59e4ef338444086ad85a9493012d561b64fdba2157d1ef468eeb071bada39",
+      "size_bytes": 14306,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "docs/audit/IRIS-live-point-code-snapshot-05.json",
+      "sha256": "50c2bd5fbb33eda5d66bad21bc4952331b639d8c2a61126218b2e2d3c660ee23",
+      "size_bytes": 14776,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "docs/audit/IRIS-live-point-code-snapshot.json",
+      "sha256": "9493a4a3f91bb6799b710be82ee56be0258b8f3b04121a23d5cf32f282e5d023",
+      "size_bytes": 11785,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "docs/audit/IRIS-live-point-smoke-report-05.json",
+      "sha256": "22763dba1674a8048768c4203de341058bbf9c4711f62e923ae6c22cca4127fe",
+      "size_bytes": 318,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "docs/audit/IRIS-truth-authoring-code-snapshot.json",
+      "sha256": "4d9180599fe5576f602cc863be5fd7612dead8db944ff091febfadbc9006ac1e",
+      "size_bytes": 16795,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "docs/plan/IRIS项目计划书.md",
+      "sha256": "b3d3f88c685c0dc70af5e1d6c6f1cf2ea22cb1952b46f180acc6010ba2bbf0b9",
+      "size_bytes": 18894,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "docs/plan/S1-S8完整流程文档.md",
+      "sha256": "3371a3056e89a2b47605440263fe1285b7d7858eb3026e5a0cb08668611fad2b",
+      "size_bytes": 15732,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "docs/workbench.md",
+      "sha256": "b5b3c4dd49b8e6ca92aeb5a8b4f69dd80e1647497ed4b34effd60a1848b34f5d",
+      "size_bytes": 9339,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/cli.py",
+      "sha256": "f33f30a69e7306f7628abf5735af10b457d0a90847f811019cb50a655cd7c680",
+      "size_bytes": 47457,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/data/collect.py",
+      "sha256": "c2a8d31f088966811e0cb32825cd051fff1fd1cdacfc2350be6ce2cac21681bb",
+      "size_bytes": 14358,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/data/point_collect.py",
+      "sha256": "0890d6ee74812ec6db3fc6462d93c4a80bcad8c9a71f022cd213e4f0d28d5a24",
+      "size_bytes": 10887,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/eval/rollout.py",
+      "sha256": "31d47a45a19c537b3468c79840c63590527c219129bc53f82e5024ce00048565",
+      "size_bytes": 29727,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/eval/truth_authoring.py",
+      "sha256": "29715f76d307a0ce327388c400bc229fc7bbb375d8a726f7f58c5ef1a5439862",
+      "size_bytes": 6590,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "revact/grounding/authoring.py",
+      "sha256": "f0207d066128246bfeb0f2f8ccabfdb2e4b88613c3f7b78fd578dfb057812314",
+      "size_bytes": 18633,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/grounding/batch_prepare.py",
+      "sha256": "fb35c9bbad362a203513ff497e5caf117aad18d4daec2e045aebae63c2a901f4",
+      "size_bytes": 16028,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "revact/grounding/point_runner.py",
+      "sha256": "6d538b869144db74792aab4412644ce73f8439342194c8fb8c8102290d855e0d",
+      "size_bytes": 39125,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/grounding/schema.py",
+      "sha256": "f39e4952eb5caa914809f0731550fe96c97fe08b017cf4483ef0b3737fea34c7",
+      "size_bytes": 24728,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/grounding/signals.py",
+      "sha256": "f75312849a460a54f9faa121b8f03249f7ca7f53ac6bbf23d9d4ebb019b593e3",
+      "size_bytes": 11829,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "scripts/quarantine_legacy_lineage.py",
+      "sha256": "9b636da0d545547ca63d0a47e13dcb288cb8aa2fbc18ae5a1addc35d68106775",
+      "size_bytes": 5151,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "tests/test_eval_rollout_formal.py",
+      "sha256": "9933833043bca54efab2ef2b22bd024c5d7695e49503438d81354d25e5b553d5",
+      "size_bytes": 13972,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "tests/test_eval_truth.py",
+      "sha256": "127c3fcd37fbb5ba6310cf01da44f4019e009c7a2c9b9221aa345d26c2564186",
+      "size_bytes": 5243,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "tests/test_formal_export_governance.py",
+      "sha256": "74b5fd574eac789661837062f9858a0e9887ba50c0dc32e924704c1d5b768f4f",
+      "size_bytes": 24911,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "tests/test_grounding_schema.py",
+      "sha256": "6e200edd74b73637d8b0b6e66f0ba4c07cfc4647833b3ea8d83c2985e2b4616c",
+      "size_bytes": 16338,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "tests/test_point_live_pipeline.py",
+      "sha256": "45eeb5071f8ead902e612429c9756c132818356f7567ee31b2e462812d12256d",
+      "size_bytes": 9596,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "tests/test_probe_authoring.py",
+      "sha256": "62b4a437829f625999b8e41827603ba4993b9a60408cd957753926f7c91d0561",
+      "size_bytes": 5976,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "tests/test_prompts_multiturn_train.py",
+      "sha256": "e307c24a78f44e240b7755364ab1a59896be1bf5396036e57b44ef3541fc0fcb",
+      "size_bytes": 21728,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "tests/test_quarantine.py",
+      "sha256": "731b2711c1552ae013f376d75f4ec0fd793561ebdc294d608d9915e7c2181cc3",
+      "size_bytes": 3359,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "tests/test_train_remediation.py",
+      "sha256": "c75fc1a5f3758d564df6d665606c57bd3695488397081d544657dd9822358f22",
+      "size_bytes": 18957,
+      "status": " M"
+    }
+  ],
+  "entry_count": 74,
+  "excluded_outputs": [
+    "docs/audit/IRIS-live-point-code-snapshot-06.json"
+  ],
+  "generated_at": "2026-07-13T14:03:09.504877+00:00",
+  "repository_root": "/workspace/iris",
+  "schema_version": "iris.worktree_manifest.v1",
+  "worktree_sha256": "694866c40ac4a843b28b376178494dbee0b8547cd1c0c115545d7d46e7e28c74"
+}

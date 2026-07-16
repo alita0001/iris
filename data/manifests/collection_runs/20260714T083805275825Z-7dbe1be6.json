@@ -1,0 +1,40 @@
+{
+  "schema_version": "iris.collection-run.v2",
+  "run_id": "20260714T083805275825Z-7dbe1be6",
+  "status": "COMPLETE",
+  "started_at": "2026-07-14T08:38:05.275935+00:00",
+  "completed_at": "2026-07-14T08:38:54.707337+00:00",
+  "trajectories": [
+    {
+      "trajectory_id": "webarena.117_seed0__run_20260714T083805275825Z-7dbe1be6",
+      "logical_trajectory_id": "webarena.117_seed0",
+      "run_id": "20260714T083805275825Z-7dbe1be6",
+      "task_id": "webarena.117",
+      "seed": 0,
+      "n_steps": 4,
+      "terminated": true,
+      "truncated": false,
+      "max_reward": 1.0,
+      "success": true,
+      "collector_success": true,
+      "environment_origin": "webarena",
+      "environment_family": "shopping",
+      "is_mock": false,
+      "n_key_states": 5,
+      "final_model_response": "The earliest (first) purchase date shown in your order history is **3/2/22**.  \nsend_msg_to_user('Your first purchase date (oldest order in your history) is 3/2/22.')",
+      "final_finish_reason": "stop",
+      "read_only_guard_rejections": [],
+      "raw_artifact": "raw/trajectories/webarena.117_seed0__run_20260714T083805275825Z-7dbe1be6.jsonl",
+      "n_key_states_written": 5,
+      "key_state_ids": [
+        "webarena.117_seed0__run_20260714T083805275825Z-7dbe1be6_s0",
+        "webarena.117_seed0__run_20260714T083805275825Z-7dbe1be6_s1",
+        "webarena.117_seed0__run_20260714T083805275825Z-7dbe1be6_s2",
+        "webarena.117_seed0__run_20260714T083805275825Z-7dbe1be6_s3",
+        "webarena.117_seed0__run_20260714T083805275825Z-7dbe1be6_s4"
+      ]
+    }
+  ],
+  "state_bank": "raw/state_bank/shopping_key_states.jsonl",
+  "meta": "raw/trajectories_meta.jsonl"
+}

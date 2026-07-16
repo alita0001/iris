@@ -1,19 +1,21 @@
 {
   "formal_eligible": 0,
-  "generated_at": "2026-07-13T09:32:49.397219+00:00",
+  "generated_at": "2026-07-16T04:36:27.249250+00:00",
   "mode": "index_only_non_destructive",
   "n_duplicate_trajectory_ids": 28,
-  "n_meta_rows": 93,
+  "n_legacy_rows": 93,
+  "n_meta_rows": 138,
   "n_rows_with_duplicate_id": 90,
-  "n_unique_trajectory_ids": 31,
-  "note": "93 historical meta rows are observations, not independent run IDs; new collection uses transactional run manifests and immutable IDs.",
+  "n_transactional_rows_excluded": 45,
+  "n_unique_trajectory_ids": 76,
+  "note": "93 historical/ambiguous rows are quarantine observations, not independent formal runs; 45 transactional rows remain outside quarantine.",
   "rollback": "delete only data/raw/quarantine/legacy_lineage_*; sources unchanged",
   "schema_version": "iris.legacy_lineage_quarantine.report.v1",
   "source_assets": [
     {
-      "bytes": 40029,
+      "bytes": 76370,
       "path": "data/raw/trajectories_meta.jsonl",
-      "sha256": "c7814672df21ba0f6cefb93424d9cc6bac80fc6ddf9853892fcc7262cdbd21bd"
+      "sha256": "19eac612aac68ba600baa57de8c34cced79ff52802bc68e00db796c3f664bc51"
     },
     {
       "bytes": 1803,
@@ -46,9 +48,224 @@
       "sha256": "11e94f91730a3d2a352ea75b30630b0d223c706f32020487aa914e63a8df8b6d"
     },
     {
+      "bytes": 15038,
+      "path": "data/raw/trajectories/pt_add_to_cart__anpdasi-cell-phone-stand-fully-foldable-__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "990d83761ecc1c217a9410596170775f42320f3e740e81bbb9bbb9ceb0b8f495"
+    },
+    {
+      "bytes": 14955,
+      "path": "data/raw/trajectories/pt_add_to_cart__asus-cm-16-docsis-3-0-cablelabs-certifie__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "120619eaef02f97d3472ff0895c8be9509aa1b752aa5ca5a57000540b9aaf791"
+    },
+    {
+      "bytes": 14981,
+      "path": "data/raw/trajectories/pt_add_to_cart__banana-phone-bluetooth-handset-for-iphon__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "8758ddb10d7dfc05a5ee29bbf6c883c6e09782e85761e2901fc997f749d8164e"
+    },
+    {
+      "bytes": 15010,
+      "path": "data/raw/trajectories/pt_add_to_cart__cablevantage-hdmi-cable-30-feet-v1-4-ult__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "c1f72d0d6b4ea8ddfc01ff085725a0a29a048fc3e60d646269d0b3a405ed75f1"
+    },
+    {
+      "bytes": 15027,
+      "path": "data/raw/trajectories/pt_add_to_cart__cablevantage-premium-hdmi-cable-25ft-25f__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "081be4a4a68c463efa1892c4aee556853ea37ea7bb1f20b0873b2d94f3072bd5"
+    },
+    {
+      "bytes": 15422,
+      "path": "data/raw/trajectories/pt_add_to_cart__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716__run_20260716T035657209223Z-bbaa9745.jsonl",
+      "sha256": "4d95813a1ed58fd9ca90ef48ac7d0ed66ada7ebad4ea9362f1f556266836a2b9"
+    },
+    {
+      "bytes": 14820,
+      "path": "data/raw/trajectories/pt_add_to_cart__car-mount-phone-holder-sturdy-cup-holder__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "19082f5d6d54242845f28173747aab1f8fb1ef3972b564944d297009029c0561"
+    },
+    {
+      "bytes": 15700,
+      "path": "data/raw/trajectories/pt_add_to_cart__cell-phone-stand-doboli-phone-stand-for-__recapture-20260716__run_20260716T035657209223Z-bbaa9745.jsonl",
+      "sha256": "8903ff4db43cc9be8782081faf61c14f9afab9d06897aac7a19dc9362c740a99"
+    },
+    {
+      "bytes": 15110,
+      "path": "data/raw/trajectories/pt_add_to_cart__cell-phone-stand-doboli-phone-stand-for-__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "c9ba741e86fd6913c651acba6a1b166943bdbecf9a60165b48b1d1f5b6900cfe"
+    },
+    {
+      "bytes": 15604,
+      "path": "data/raw/trajectories/pt_add_to_cart__figatia-astronomy-telescope-phone-adapte__recapture-20260716__run_20260716T035657209223Z-bbaa9745.jsonl",
+      "sha256": "340348592daa5bb2649fb2c7caebe2fc0fc1fc017224ff767221505fc18a1be9"
+    },
+    {
+      "bytes": 15011,
+      "path": "data/raw/trajectories/pt_add_to_cart__figatia-astronomy-telescope-phone-adapte__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "7a5f1011589c8fafe61e9041d47142b22de3aba84f5643190a4a59b711a9743b"
+    },
+    {
+      "bytes": 14999,
+      "path": "data/raw/trajectories/pt_add_to_cart__rg6-coaxial-cable-bnc-male-to-male-coax-__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "fc0a0906994a70585f6f590bd13219ef5023fbfc08c8725336b174f6de475566"
+    },
+    {
+      "bytes": 15245,
+      "path": "data/raw/trajectories/pt_add_to_cart__vicseed-phone-cup-holder-for-car-militar__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "989ea431a8292146f0ee341930e9256df5d10f283705c221dc4a9048b4eb62de"
+    },
+    {
+      "bytes": 15038,
+      "path": "data/raw/trajectories/pt_compare_add__anpdasi-cell-phone-stand-fully-foldable-__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "43821d2800b6b629af783f077edcd76c29c28a9765fd0cfd2f52d92535724f5f"
+    },
+    {
+      "bytes": 14955,
+      "path": "data/raw/trajectories/pt_compare_add__asus-cm-16-docsis-3-0-cablelabs-certifie__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "09d6dff5100902eaa57a8641edabadd716dac47325c036490bef2db545985941"
+    },
+    {
+      "bytes": 14981,
+      "path": "data/raw/trajectories/pt_compare_add__banana-phone-bluetooth-handset-for-iphon__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "73f1124a16a510433c5155fee058e66e2d2ccf6b9a762efd19d45a63097f4440"
+    },
+    {
+      "bytes": 15422,
+      "path": "data/raw/trajectories/pt_compare_add__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716__run_20260716T035657209223Z-bbaa9745.jsonl",
+      "sha256": "b55d8c2cef828028d0320ab1fd497bedb8b1643be3468dae4535c4e77a083f45"
+    },
+    {
+      "bytes": 14820,
+      "path": "data/raw/trajectories/pt_compare_add__car-mount-phone-holder-sturdy-cup-holder__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "593e84e3863616df9ad922042124eece37cb8873ba68c69009fb5ec85cf4a068"
+    },
+    {
+      "bytes": 15700,
+      "path": "data/raw/trajectories/pt_compare_add__cell-phone-stand-doboli-phone-stand-for-__recapture-20260716__run_20260716T035657209223Z-bbaa9745.jsonl",
+      "sha256": "8004f5789eefe10f08d38ce35539d1c769c0b84e2ff06ee91b93a7ed69e1d50e"
+    },
+    {
+      "bytes": 15110,
+      "path": "data/raw/trajectories/pt_compare_add__cell-phone-stand-doboli-phone-stand-for-__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "3e21c105f223ea2da4b7b0f1e16c49531cca27f0df2750e5e7547ceba630356b"
+    },
+    {
+      "bytes": 15604,
+      "path": "data/raw/trajectories/pt_compare_add__figatia-astronomy-telescope-phone-adapte__recapture-20260716__run_20260716T035657209223Z-bbaa9745.jsonl",
+      "sha256": "d7dc7df43977a3d94410a8908078c2955013bc9b67a53536c6627a7c172fc006"
+    },
+    {
+      "bytes": 15011,
+      "path": "data/raw/trajectories/pt_compare_add__figatia-astronomy-telescope-phone-adapte__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "a3ce2213211884be05f785cc448ce40ac76a146bf838ae3453b222a5acbc26fc"
+    },
+    {
+      "bytes": 14999,
+      "path": "data/raw/trajectories/pt_compare_add__rg6-coaxial-cable-bnc-male-to-male-coax-__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "069ba5e03c113fb1d4bf9469063e1748dc9fbd84fa1a23c526bca43c877dc79b"
+    },
+    {
+      "bytes": 15245,
+      "path": "data/raw/trajectories/pt_compare_add__vicseed-phone-cup-holder-for-car-militar__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "fb994c5d8ed65a08f715a64224b5283bc711b85e37afdab58440e9cf2cb97019"
+    },
+    {
+      "bytes": 9578,
+      "path": "data/raw/trajectories/pt_reddit_subscribe__AskReddit__run_20260713T150653622160Z-075a8589.jsonl",
+      "sha256": "0ce60caafb8d231639fcfca89f7af67fb90f21b173d3beb0224ed7a6dd9b32cc"
+    },
+    {
+      "bytes": 9577,
+      "path": "data/raw/trajectories/pt_reddit_subscribe__books__run_20260713T150653622160Z-075a8589.jsonl",
+      "sha256": "9ecf53350fa6af34c8f6df5565b05c882fa9f18909252489cc8ed8234613f628"
+    },
+    {
+      "bytes": 9658,
+      "path": "data/raw/trajectories/pt_reddit_subscribe__technology__run_20260715T112745383440Z-4674bc4f.jsonl",
+      "sha256": "7603f696836a4f6d361ccd9f56c2f4e451189b9ef92466b5ac94a6145d272489"
+    },
+    {
+      "bytes": 9740,
+      "path": "data/raw/trajectories/pt_reddit_vote__103102__run_20260715T112745383440Z-4674bc4f.jsonl",
+      "sha256": "4f6c458de1d44d5d61de8e9656f1f6fab6b9e68694d38078eb378d064f2fd11a"
+    },
+    {
+      "bytes": 9564,
+      "path": "data/raw/trajectories/pt_reddit_vote__59421__run_20260713T150653622160Z-075a8589.jsonl",
+      "sha256": "87ae0aa3225cdf5c2242f2408ed50b0bc3a4980c84252d5af237bf8ef54267de"
+    },
+    {
+      "bytes": 9549,
+      "path": "data/raw/trajectories/pt_reddit_vote__59447__run_20260715T102709982138Z-90cdf7bc.jsonl",
+      "sha256": "bb14bda852a4c59674cf177014d158f356a7660a5cf82ee4aa1dad211a333d9e"
+    },
+    {
+      "bytes": 9658,
+      "path": "data/raw/trajectories/pt_reddit_vote__81371__run_20260713T150653622160Z-075a8589.jsonl",
+      "sha256": "3e32c9ec647c0c2a349cd1d73f8fd70ca92b3f61aeeb71b14a6650e755005d62"
+    },
+    {
+      "bytes": 15040,
+      "path": "data/raw/trajectories/pt_wishlist_add__anpdasi-cell-phone-stand-fully-foldable-__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "9aaf51fbba783e050a0d9533b407e538ee50a40682e767cb0b93600fc3b12d0c"
+    },
+    {
+      "bytes": 14957,
+      "path": "data/raw/trajectories/pt_wishlist_add__asus-cm-16-docsis-3-0-cablelabs-certifie__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "67085eff89da92307b2fb0b894f2e8b4d8bf21a7240979f36346aca37365a777"
+    },
+    {
+      "bytes": 14983,
+      "path": "data/raw/trajectories/pt_wishlist_add__banana-phone-bluetooth-handset-for-iphon__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "f53c5b7d72bfd5d61c91139887f767acdbd6674fdad31737b0419c26be6ff4dd"
+    },
+    {
+      "bytes": 15424,
+      "path": "data/raw/trajectories/pt_wishlist_add__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716__run_20260716T035657209223Z-bbaa9745.jsonl",
+      "sha256": "d1aaf30f783d0063229e5764c523fe26042ca7a18cb3f39ac077ad037137804c"
+    },
+    {
+      "bytes": 14822,
+      "path": "data/raw/trajectories/pt_wishlist_add__car-mount-phone-holder-sturdy-cup-holder__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "652b8d74569bd2fb4832aeceebaa10d75bb78bef0da5d8a038697e6339aa3162"
+    },
+    {
+      "bytes": 15702,
+      "path": "data/raw/trajectories/pt_wishlist_add__cell-phone-stand-doboli-phone-stand-for-__recapture-20260716__run_20260716T035657209223Z-bbaa9745.jsonl",
+      "sha256": "4a07a8cba810054ca70d9467f5aa132191d28d0a45b61fc0e7bddbb200dc3b2c"
+    },
+    {
+      "bytes": 15112,
+      "path": "data/raw/trajectories/pt_wishlist_add__cell-phone-stand-doboli-phone-stand-for-__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "aa752305642a500e54cda8387eda0ec52f2824c73f7bf0dbbbc92e40ce016f61"
+    },
+    {
+      "bytes": 15606,
+      "path": "data/raw/trajectories/pt_wishlist_add__figatia-astronomy-telescope-phone-adapte__recapture-20260716__run_20260716T035657209223Z-bbaa9745.jsonl",
+      "sha256": "536745fafed1961e409f0bda9b47870d7b9ed3e0f87b349104ffd8ac1c6aa5be"
+    },
+    {
+      "bytes": 15013,
+      "path": "data/raw/trajectories/pt_wishlist_add__figatia-astronomy-telescope-phone-adapte__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "65afb8ddb1f555f96886ba4668d0ac360bb636b7ad9279bf065a3b12ace75c03"
+    },
+    {
+      "bytes": 15001,
+      "path": "data/raw/trajectories/pt_wishlist_add__rg6-coaxial-cable-bnc-male-to-male-coax-__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "c2ecec1cdaa15cf1d9f43bef101d446f8baa88a1e538df0e0e11476d69978989"
+    },
+    {
+      "bytes": 15247,
+      "path": "data/raw/trajectories/pt_wishlist_add__vicseed-phone-cup-holder-for-car-militar__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "d874dd763e0ce199e07d924f05df3f5a305e5992220e9d785be640ead76a4e1f"
+    },
+    {
       "bytes": 52584,
       "path": "data/raw/trajectories/webarena.117_seed0.jsonl",
       "sha256": "8218ef91f8b83d853880c950659e383982a6fbfbd0e1ebecd4815a5c7edb940f"
+    },
+    {
+      "bytes": 37577,
+      "path": "data/raw/trajectories/webarena.117_seed0__run_20260714T083805275825Z-7dbe1be6.jsonl",
+      "sha256": "7a9577ac41b854812cb3fc176f23c1c0811739fe5d2e940bb1d2eb626822a977"
     },
     {
       "bytes": 37559,
@@ -171,9 +388,29 @@
       "sha256": "750f5678bb461198eaaead968219fb20cf88646b25e31f5f1bdea1fff2573717"
     },
     {
+      "bytes": 30183,
+      "path": "data/raw/trajectories/webarena.96_seed0__run_20260714T083439088734Z-888b2f81.jsonl",
+      "sha256": "ef2b4fbcd837bab28083e2986d62540b07da04e08c632063e035dc9823725cde"
+    },
+    {
+      "bytes": 30185,
+      "path": "data/raw/trajectories/webarena.96_seed1__run_20260714T083624900528Z-93f6efa6.jsonl",
+      "sha256": "9bb997898101498b9ce246bd88b6a04066a344a343c25852844b6d9595b8f08b"
+    },
+    {
+      "bytes": 1916289,
+      "path": "data/raw/state_bank/formal_point_reached_states.jsonl",
+      "sha256": "0963ab52ccd1e4eb0b9c8e6c0bd31b177fd3d0cbaa269ebc9f1ed8d61d1ccce4"
+    },
+    {
       "bytes": 182037,
       "path": "data/raw/state_bank/pilot_reached_states.jsonl",
       "sha256": "0b35c0eea4b2a2134ae7529121d351178c98a1579e0bf68e9ae62eb7e13be4a0"
+    },
+    {
+      "bytes": 1307353,
+      "path": "data/raw/state_bank/reddit_key_states.jsonl",
+      "sha256": "4b17c3f9c69d8ca831a52b4bdbd4807944c86608bd3635ca9355e16d7496e223"
     },
     {
       "bytes": 1353113,
@@ -181,9 +418,9 @@
       "sha256": "549e23cf862d290b148e8067f8d378dc82a2612d4ba20c59be219297d1798b0c"
     },
     {
-      "bytes": 11918245,
+      "bytes": 13507236,
       "path": "data/raw/state_bank/shopping_key_states.jsonl",
-      "sha256": "d79f02e00a4c162290e01e148f9c1e349986d3a464731357abb78d6958d89dbc"
+      "sha256": "f14cdc2b684c60382acd1692e781559f28e44e29abf92006c09510411459fe9b"
     }
   ]
 }

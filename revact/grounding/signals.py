@@ -75,8 +75,21 @@ def _count_links(view, name_subs) -> list:
 # --------------------------------------------------------------------------- #
 # Cart
 # --------------------------------------------------------------------------- #
-def cart_signal(renv, cart_url: str) -> dict:
-    _o, _r, _t, _tr, _i, view = renv.step(f"goto('{cart_url}')")
+def _view_at(renv, url: str, *, navigate: bool) -> dict:
+    """Return the current view, optionally navigating to ``url`` first.
+
+    Live point probes use ``navigate=False`` after explicitly recording the
+    navigation as an undo action.  Legacy probes keep the default behavior, so
+    instrumentation changes do not silently alter their traces.
+    """
+    if navigate:
+        _o, _r, _t, _tr, _i, view = renv.step(f"goto('{url}')")
+        return view
+    return renv._last_obs_view
+
+
+def cart_signal(renv, cart_url: str, *, navigate: bool = True) -> dict:
+    view = _view_at(renv, cart_url, navigate=navigate)
     low = (view.get("axtree_txt", "") or "").lower()
     empty_txt = ("no items in your shopping cart" in low
                  or "shopping cart is empty" in low)
@@ -91,9 +104,9 @@ def cart_signal(renv, cart_url: str) -> dict:
 # --------------------------------------------------------------------------- #
 # Orders
 # --------------------------------------------------------------------------- #
-def order_ids(renv, hist_url: str) -> set:
+def order_ids(renv, hist_url: str, *, navigate: bool = True) -> set:
     """Order numbers on the order-history page (quoted 9-digit grid/link names)."""
-    _o, _r, _t, _tr, _i, view = renv.step(f"goto('{hist_url}')")
+    view = _view_at(renv, hist_url, navigate=navigate)
     ids = set()
     for ln in (view.get("axtree_txt", "") or "").splitlines():
         for m in _ORDER_LINE_RE.finditer(ln):
@@ -104,8 +117,8 @@ def order_ids(renv, hist_url: str) -> set:
 # --------------------------------------------------------------------------- #
 # Wishlist
 # --------------------------------------------------------------------------- #
-def wishlist_signal(renv, wishlist_url: str) -> dict:
-    _o, _r, _t, _tr, _i, view = renv.step(f"goto('{wishlist_url}')")
+def wishlist_signal(renv, wishlist_url: str, *, navigate: bool = True) -> dict:
+    view = _view_at(renv, wishlist_url, navigate=navigate)
     # live Magento: 'Remove This Item' (icon-prefixed); mock: 'Remove item'
     remove_bids = _count_links(view, ["remove this item", "remove item"])
     count = len(remove_bids)
@@ -115,8 +128,8 @@ def wishlist_signal(renv, wishlist_url: str) -> dict:
 # --------------------------------------------------------------------------- #
 # Product compare list
 # --------------------------------------------------------------------------- #
-def compare_signal(renv, compare_url: str) -> dict:
-    _o, _r, _t, _tr, _i, view = renv.step(f"goto('{compare_url}')")
+def compare_signal(renv, compare_url: str, *, navigate: bool = True) -> dict:
+    view = _view_at(renv, compare_url, navigate=navigate)
     remove_bids = _count_links(view, ["remove product", "remove item"])
     count = len(remove_bids)
     return {"empty": count == 0, "count": count, "remove_bids": remove_bids}
@@ -135,9 +148,9 @@ def _checkbox_state(line_low: str) -> bool:
 # --------------------------------------------------------------------------- #
 # Newsletter subscription (checkbox state)
 # --------------------------------------------------------------------------- #
-def newsletter_signal(renv, manage_url: str) -> dict:
+def newsletter_signal(renv, manage_url: str, *, navigate: bool = True) -> dict:
     """Checkbox state of 'General Subscription' on /newsletter/manage/."""
-    _o, _r, _t, _tr, _i, view = renv.step(f"goto('{manage_url}')")
+    view = _view_at(renv, manage_url, navigate=navigate)
     for el in extract_interactive_bids(view.get("axtree_txt", "")):
         low = el["line"].lower()
         if "checkbox" in low and "subscription" in low:
@@ -149,13 +162,13 @@ def newsletter_signal(renv, manage_url: str) -> dict:
 # --------------------------------------------------------------------------- #
 # Address book
 # --------------------------------------------------------------------------- #
-def address_signal(renv, address_url: str) -> dict:
+def address_signal(renv, address_url: str, *, navigate: bool = True) -> dict:
     """Count of additional address entries = count of 'Delete Address' links.
 
     The default billing/shipping address has no delete affordance in Magento,
     so this counts exactly the entries a customer (or this probe) added.
     """
-    _o, _r, _t, _tr, _i, view = renv.step(f"goto('{address_url}')")
+    view = _view_at(renv, address_url, navigate=navigate)
     delete_bids = _count_links(view, "delete address")
     return {"count": len(delete_bids), "delete_bids": delete_bids}
 
@@ -177,7 +190,7 @@ _INT_RE = re.compile(r"(-?\d+)")
 
 
 def _submission_vote(lines: list[str]) -> tuple:
-    """Parse the submission's own vote widget -> (score, voted, up_line_index).
+    """Parse the submission's own widget -> (score, direction, up_idx, down_idx).
 
     The submission widget is the FIRST vote control on the page (comment widgets
     follow). Postmill renders the up-control as ``button 'Upvote'`` when the user
@@ -189,48 +202,109 @@ def _submission_vote(lines: list[str]) -> tuple:
     for i, ln in enumerate(lines):
         low = ln.lower()
         if "button" in low and "upvote'" in low:
-            voted = "retract" in low
+            direction = 1 if "retract" in low else 0
             score = None
-            for j in range(i + 1, min(i + 4, len(lines))):
+            down_index = -1
+            for j in range(i + 1, min(i + 6, len(lines))):
                 nxt = lines[j].lower()
                 if "downvote" in nxt:
+                    down_index = j
+                    if "retract" in nxt:
+                        direction = -1
                     break
-                if "statictext" in nxt:
+                if score is None and "statictext" in nxt:
                     m = _INT_RE.search(lines[j])
                     if m:
                         score = int(m.group(1))
-                        break
-            return score, voted, i
-    return None, False, -1
+            return score, direction, i, down_index
+    return None, 0, -1, -1
 
 
-def vote_score(renv, submission_url: str) -> dict:
+def _url_entity(url: str, kind: str) -> str:
+    if kind == "submission":
+        match = re.search(r"/f/[^/]+/(\d+)(?:/|$)", str(url))
+    else:
+        match = re.search(r"/f/([^/?#]+)(?:/|$)", str(url))
+    return match.group(1) if match else ""
+
+
+def vote_score(renv, submission_url: str, *, navigate: bool = True) -> dict:
     """Submission vote state: net score + whether the agent's vote is active.
 
     ``score=None`` when unparseable (honest UNKNOWN upstream). ``up_bid`` is the
     first up-control (its label is 'Upvote' or 'Retract upvote'); clicking it
     toggles the agent's own vote."""
-    _o, _r, _t, _tr, _i, view = renv.step(f"goto('{submission_url}')")
+    if navigate:
+        _o, _r, _t, _tr, _i, view = renv.step(f"goto('{submission_url}')")
+    else:
+        view = renv._last_obs_view
     lines = (view.get("axtree_txt", "") or "").splitlines()
-    score, voted, idx = _submission_vote(lines)
+    score, direction, idx, down_idx = _submission_vote(lines)
     up_bid = None
     if idx >= 0:
         bm = re.search(r"\[(\d+)\]", lines[idx])
         up_bid = bm.group(1) if bm else None
-    return {"score": score, "voted": voted, "up_bid": up_bid,
-            "up_line": lines[idx] if idx >= 0 else ""}
+    down_bid = None
+    if down_idx >= 0:
+        bm = re.search(r"\[(\d+)\]", lines[down_idx])
+        down_bid = bm.group(1) if bm else None
+    return {"score": score, "voted": direction == 1,
+            "vote_direction": direction,
+            "submission_id": _url_entity(submission_url, "submission"),
+            "up_bid": up_bid, "down_bid": down_bid,
+            "up_line": lines[idx] if idx >= 0 else "",
+            "down_line": lines[down_idx] if down_idx >= 0 else ""}
 
 
-def subscribe_signal(renv, forum_url: str) -> dict:
+def reddit_vote_canonical(renv, submission_url: str, *, navigate: bool = True
+                          ) -> dict:
+    """Agent-owned vote state; public score is telemetry, not equality truth."""
+    raw = vote_score(renv, submission_url, navigate=navigate)
+    return {
+        "signal": "reddit_own_vote_state",
+        "submission_id": raw["submission_id"],
+        "vote_direction": raw["vote_direction"],
+    }
+
+
+def subscribe_signal(renv, forum_url: str, *, navigate: bool = True) -> dict:
     """Subscription state of a forum: subscribed iff an 'Unsubscribe' control is
     shown (Postmill swaps the button label with state)."""
-    _o, _r, _t, _tr, _i, view = renv.step(f"goto('{forum_url}')")
-    unsub = find_action_by_text(view, ["unsubscribe"], roles=("button", "link"))
-    sub = find_action_by_text(view, ["subscribe"], roles=("button", "link"))
-    subscribed = unsub is not None
-    ctrl = unsub or sub
-    return {"found": ctrl is not None, "subscribed": subscribed,
-            "bid": (ctrl or {}).get("bid"), "line": (ctrl or {}).get("line", "")}
+    if navigate:
+        _o, _r, _t, _tr, _i, view = renv.step(f"goto('{forum_url}')")
+    else:
+        view = renv._last_obs_view
+    controls = []
+    for element in extract_interactive_bids(view.get("axtree_txt", "")):
+        low = element["line"].split("]", 1)[-1].strip().lower()
+        name = re.match(r"button\s+'([^']*)'", low)
+        # Live Postmill exposes the same entity-bound toggle as e.g.
+        # ``Subscribe No subscribers`` / ``Unsubscribe 1 subscriber``.
+        # Accept only that exact state+count grammar; controls such as
+        # ``Subscribe via RSS`` remain excluded.
+        if name and re.fullmatch(
+                r"(?:subscribe|unsubscribe)(?:\s+(?:no|[\d,]+)\s+subscribers?)?",
+                name.group(1).strip()):
+            controls.append(element)
+    ctrl = controls[0] if len(controls) == 1 else None
+    line = (ctrl or {}).get("line", "")
+    subscribed = "unsubscribe" in line.lower()
+    return {"found": ctrl is not None, "ambiguous": len(controls) > 1,
+            "subscribed": subscribed,
+            "forum": _url_entity(forum_url, "forum"),
+            "bid": (ctrl or {}).get("bid"), "line": line,
+            "matching_control_count": len(controls)}
+
+
+def reddit_subscribe_canonical(renv, forum_url: str, *, navigate: bool = True
+                               ) -> dict:
+    raw = subscribe_signal(renv, forum_url, navigate=navigate)
+    return {
+        "signal": "reddit_forum_subscription",
+        "forum": raw["forum"],
+        "found": raw["found"],
+        "subscribed": raw["subscribed"],
+    }
 
 
 def comment_marker_count(renv, submission_url: str, marker: str) -> dict:

@@ -1,0 +1,15 @@
+{
+  "schema_version": "iris.collection-run.v2",
+  "run_id": "20260716T060946333155Z-e5936464",
+  "status": "FAILED",
+  "started_at": "2026-07-16T06:09:46.333298+00:00",
+  "completed_at": "2026-07-16T06:10:00.093776+00:00",
+  "trajectories": [],
+  "code_version": "b67852828d6d9fb335114c2ceb1dc3a7002faca7+worktree:3a6ec2dfc02d24810ae4bbcfde827482aa6b31c16544212130ba08d5f85b6459",
+  "site": "shopping",
+  "failure": {
+    "stage": "point_reach",
+    "error_type": "TimeoutError",
+    "message": "Locator.fill: Timeout 10000ms exceeded. Call log: waiting for get_by_label(\"Email\", exact=True) "
+  }
+}

@@ -1,0 +1,84 @@
+{
+  "schema_version": "iris.collection-run.v2",
+  "run_id": "20260716T052704005695Z-9571c857",
+  "status": "COMPLETE",
+  "started_at": "2026-07-16T05:27:04.005797+00:00",
+  "completed_at": "2026-07-16T05:27:23.979324+00:00",
+  "code_version": "worktree:20260716-policy-attempt-v1",
+  "trajectories": [
+    {
+      "trajectory_id": "webarena.48_seed0__run_20260716T052704005695Z-9571c857",
+      "logical_trajectory_id": "webarena.48_seed0",
+      "run_id": "20260716T052704005695Z-9571c857",
+      "task_id": "webarena.48",
+      "seed": 0,
+      "n_steps": 0,
+      "terminated": false,
+      "truncated": false,
+      "max_reward": 0.0,
+      "success": false,
+      "collector_success": false,
+      "environment_origin": "webarena",
+      "site": "shopping",
+      "environment_family": "magento",
+      "is_mock": false,
+      "n_key_states": 1,
+      "final_model_response": "<observation>We are on the homepage of One Stop Market, logged in as Emma Lopez. The goal is to find out how many fulfilled orders the user has over the past three days and the total amount of money spent. To get this information, we need to navigate to the user's account page, likely to an order history or dashboard section where order details and totals are shown. The current page shows a \"My Account\" link at the top (node 227). Clicking that should take us to the account dashboard.</reasoning",
+      "final_finish_reason": "stop",
+      "read_only_guard_rejections": [],
+      "policy_provenance": {
+        "wrapper": "ReadOnlyPolicyGuard",
+        "implementation": "IrisPolicy",
+        "provider": "openrouter",
+        "model": "deepseek/deepseek-v3.2",
+        "base_url": "https://openrouter.ai/api/v1",
+        "api_key_env": "OPENROUTER_API_KEY",
+        "credential_value_stored": false,
+        "decode": {
+          "temperature": 0.0,
+          "top_p": "",
+          "max_tokens": 4096,
+          "max_history": 9
+        },
+        "read_only_guard": true
+      },
+      "judge_provenance": {
+        "mode": "off",
+        "provider": "",
+        "model": "deepseek-v4-flash",
+        "base_url": "",
+        "api_key_env": "",
+        "credential_value_stored": false
+      },
+      "goal": "Today is 6/12/2023. Tell me how many fulfilled orders I have over the past three days, and the total amount of money I spent.",
+      "code_version": "worktree:20260716-policy-attempt-v1",
+      "episode_source_capture": {
+        "schema_version": "iris.raw_episode_source.v1",
+        "n_action_steps": 0,
+        "n_exact_policy_calls": 0,
+        "counts_as_formal_supervision": false
+      },
+      "policy_attempt_source_capture": {
+        "schema_version": "iris.policy-attempt.v1",
+        "n_policy_attempts": 1,
+        "n_unexecuted_policy_attempts": 1,
+        "counts_as_environment_transitions": false,
+        "counts_as_formal_supervision": false
+      },
+      "prompts_fp": "532c10eaa54d",
+      "prompt_generation_fp": "b48733c076dc9275",
+      "message_topology": "stateless",
+      "policy_builder": "revact.prompts.build_policy_messages",
+      "raw_artifact": "raw/trajectories/webarena.48_seed0__run_20260716T052704005695Z-9571c857.jsonl",
+      "policy_attempt_artifact": "raw/policy_attempts/webarena.48_seed0__run_20260716T052704005695Z-9571c857.jsonl",
+      "state_bank_artifact": "raw/state_bank/shopping_key_states.jsonl",
+      "n_key_states_written": 0,
+      "key_state_ids": []
+    }
+  ],
+  "state_bank": "raw/state_bank/shopping_key_states.jsonl",
+  "state_banks": {
+    "shopping": "raw/state_bank/shopping_key_states.jsonl"
+  },
+  "meta": "raw/trajectories_meta.jsonl"
+}

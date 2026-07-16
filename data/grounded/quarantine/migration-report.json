@@ -8,12 +8,15 @@
   "legacy_place_order_policy": "Rows without point-level provenance are EXCLUDED/UNKNOWN for formal training; IRREVERSIBLE is not carried into the canonical ontology.",
   "legacy_quarantine_rows": 2,
   "migration_version": "legacy-grounding-to-point-v1",
+  "canonical_point_artifacts": {
+    "body": "/workspace/iris/data/grounded/probe_points.jsonl",
+    "manifest": "/workspace/iris/data/grounded/POINT_MANIFEST.jsonl",
+    "rollback_policy": "never delete or rewrite; this migration only ensured the append targets existed and created zero point rows"
+  },
   "rollback": [
     "/workspace/iris/data/grounded/quarantine/legacy_rows.jsonl",
     "/workspace/iris/data/grounded/quarantine/class_probe_smoke_index.jsonl",
-    "/workspace/iris/data/grounded/quarantine/migration-report.json",
-    "/workspace/iris/data/grounded/probe_points.jsonl",
-    "/workspace/iris/data/grounded/POINT_MANIFEST.jsonl"
+    "/workspace/iris/data/grounded/quarantine/migration-report.json"
   ],
   "source": "/workspace/iris/data/grounded/reversibility.jsonl",
   "source_rows": 32,

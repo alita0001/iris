@@ -1,0 +1,9 @@
+{
+  "body_name": "iris_dpo_on_policy_transition_v3_strict_openrouter_llama32_3b_20260716.jsonl",
+  "body_sha256": "64528412293c288aecb28e7660d3a74efa66f94fa7d75118dc68c4558b30b29d",
+  "n_rows": 9,
+  "pair_ids_sha256": "84714bc05fd3b2e443d9fa48208aa72146cd8342e634cca09f10de08e0996ded",
+  "release_id": "strict-openrouter-llama32-3b-shopping-constraint-20260716-v1",
+  "schema_version": "iris.formal_dpo_supplement_manifest.v1",
+  "source_sample_ids_sha256": "e75b641e1a5143bc34a2a0a73e95d6b6f089b8f850f9b930c47d5d42b45b3a99"
+}

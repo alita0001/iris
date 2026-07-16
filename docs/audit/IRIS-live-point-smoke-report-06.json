@@ -1,0 +1,17 @@
+{
+  "commit": false,
+  "failures": [],
+  "n_executed": 6,
+  "n_persisted": 6,
+  "n_specs": 6,
+  "persist_error": "",
+  "persisted_point_ids": [
+    "point-2dfc13d42bba13e05cb3",
+    "point-a8127f75994e3b08ac01",
+    "point-e7f92bdc88a2e7a2e4cf",
+    "point-208cb955a7e5316ae8b1",
+    "point-187930109f86179fc391",
+    "point-be723db90bacfbfcae3c"
+  ],
+  "spec": "data/grounded/specs/live-safe-smoke-20260713-06.jsonl"
+}

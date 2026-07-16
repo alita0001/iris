@@ -1,0 +1,19 @@
+{
+  "decode_config": {
+    "format": "iris.v3",
+    "message_topology": "stateless",
+    "policy_history_steps": 6,
+    "sampling": false,
+    "snapshot_max_chars": 6000,
+    "strategy": "deterministic"
+  },
+  "fingerprint": "8626d0541cb4f090",
+  "model": {
+    "name": "deterministic-template",
+    "provider": "local",
+    "revision": "iris-fields-v1"
+  },
+  "producer": "revact.data.multiturn",
+  "prompts_fp": "4a8dd16c65ef",
+  "schema_version": "iris.prompt-generation.v1"
+}

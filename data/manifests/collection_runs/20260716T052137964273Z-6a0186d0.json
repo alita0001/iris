@@ -1,0 +1,76 @@
+{
+  "schema_version": "iris.collection-run.v2",
+  "run_id": "20260716T052137964273Z-6a0186d0",
+  "status": "COMPLETE",
+  "started_at": "2026-07-16T05:21:37.964376+00:00",
+  "completed_at": "2026-07-16T05:22:05.923597+00:00",
+  "code_version": "worktree:22a075de3e9e9cb1+collector-site-family-v2",
+  "trajectories": [
+    {
+      "trajectory_id": "webarena.48_seed0__run_20260716T052137964273Z-6a0186d0",
+      "logical_trajectory_id": "webarena.48_seed0",
+      "run_id": "20260716T052137964273Z-6a0186d0",
+      "task_id": "webarena.48",
+      "seed": 0,
+      "n_steps": 0,
+      "terminated": false,
+      "truncated": false,
+      "max_reward": 0.0,
+      "success": false,
+      "collector_success": false,
+      "environment_origin": "webarena",
+      "site": "shopping",
+      "environment_family": "magento",
+      "is_mock": false,
+      "n_key_states": 1,
+      "final_model_response": "<observation>We are on the homepage of \"One Stop Market\". The user is logged in as \"Emma Lopez\". The goal is to find out how many fulfilled orders they have over the past three days and the total amount of money spent. This likely requires accessing order history, which is typically under \"My Account\".</observation>\n<reasoning>We need to navigate to the user's account page, then find order history or a similar section. The top banner has a \"My Account\" link. Clicking that should lead to a dashbo",
+      "final_finish_reason": "stop",
+      "read_only_guard_rejections": [],
+      "policy_provenance": {
+        "wrapper": "ReadOnlyPolicyGuard",
+        "implementation": "IrisPolicy",
+        "provider": "openrouter",
+        "model": "deepseek/deepseek-v3.2",
+        "base_url": "https://openrouter.ai/api/v1",
+        "api_key_env": "OPENROUTER_API_KEY",
+        "credential_value_stored": false,
+        "decode": {
+          "temperature": 0.0,
+          "top_p": "1",
+          "max_tokens": 1200,
+          "max_history": 9
+        },
+        "read_only_guard": true
+      },
+      "judge_provenance": {
+        "mode": "off",
+        "provider": "",
+        "model": "deepseek-v4-flash",
+        "base_url": "",
+        "api_key_env": "",
+        "credential_value_stored": false
+      },
+      "goal": "Today is 6/12/2023. Tell me how many fulfilled orders I have over the past three days, and the total amount of money I spent.",
+      "code_version": "worktree:22a075de3e9e9cb1+collector-site-family-v2",
+      "episode_source_capture": {
+        "schema_version": "iris.raw_episode_source.v1",
+        "n_action_steps": 0,
+        "n_exact_policy_calls": 0,
+        "counts_as_formal_supervision": false
+      },
+      "prompts_fp": "532c10eaa54d",
+      "prompt_generation_fp": "3e828ee7183990da",
+      "message_topology": "stateless",
+      "policy_builder": "revact.prompts.build_policy_messages",
+      "raw_artifact": "raw/trajectories/webarena.48_seed0__run_20260716T052137964273Z-6a0186d0.jsonl",
+      "state_bank_artifact": "raw/state_bank/shopping_key_states.jsonl",
+      "n_key_states_written": 0,
+      "key_state_ids": []
+    }
+  ],
+  "state_bank": "raw/state_bank/shopping_key_states.jsonl",
+  "state_banks": {
+    "shopping": "raw/state_bank/shopping_key_states.jsonl"
+  },
+  "meta": "raw/trajectories_meta.jsonl"
+}

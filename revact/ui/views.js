@@ -177,14 +177,15 @@ const ConfigView = {
     const s = cfg.settings, sum = health.summary || {};
     const model = (role, m) => `
       <div class="fcard" data-role="${role}">
-        <h4>${{ policy: '策略模型（collect rollout）', teacher: 'Teacher 模型（S7 蒸馏）', judge: 'Judge / Verifier（WA reward judge）' }[role]}
+        <h4>${{ policy: '策略模型（collect rollout）', teacher: 'Teacher 模型（S7 蒸馏）', judge: 'Judge / Verifier（WA reward judge）', opinion: '意见标注模型（非 ground truth）' }[role]}
           ${m.api_key_set ? badge('key 已在内存', 'accepted') : badge('key 未设置', 'plain')}</h4>
         <div class="frow"><label>provider</label>
           <select class="c-f" data-f="provider"><option${m.provider === 'deepseek' ? ' selected' : ''}>deepseek</option>
+            <option${m.provider === 'openrouter' ? ' selected' : ''}>openrouter</option>
             <option${m.provider === 'openai' ? ' selected' : ''}>openai</option>
             <option${m.provider === 'custom' ? ' selected' : ''}>custom</option></select></div>
-        <div class="frow"><label>base_url</label><input type="text" class="c-f" data-f="base_url" value="${esc(m.base_url || '')}" placeholder="默认 DeepSeek v1"></div>
-        <div class="frow"><label>model</label><input type="text" class="c-f" data-f="model" value="${esc(m.model || '')}" placeholder="deepseek-chat / deepseek-v4-pro"></div>
+        <div class="frow"><label>base_url</label><input type="text" class="c-f" data-f="base_url" value="${esc(m.base_url || '')}" placeholder="OpenAI-compatible /api/v1 endpoint"></div>
+        <div class="frow"><label>model</label><input type="text" class="c-f" data-f="model" value="${esc(m.model || '')}" placeholder="provider/model slug"></div>
         <div class="frow"><label>api_key_env</label><input type="text" class="c-f" data-f="api_key_env" value="${esc(m.api_key_env || '')}"></div>
         <div class="frow"><label>api_key</label><input type="password" class="c-f" data-f="api_key" placeholder="${m.api_key_set ? '已设置（留空保持）' : '只存内存，不落盘'}"></div>
         ${role !== 'judge' ? `
@@ -192,13 +193,13 @@ const ConfigView = {
         <div class="frow"><label>top_p</label><input type="number" step="0.05" min="0" max="1" class="c-f" data-f="top_p" value="${m.top_p ?? 1}"></div>
         <div class="frow"><label>max_tokens</label><input type="number" class="c-f" data-f="max_tokens" value="${m.max_tokens ?? 4096}"></div>` : `
         <div class="frow"><label>judge 模式</label><select class="c-f" data-f="mode">
-          ${['deepseek', 'openai', 'off'].map(o => `<option${m.mode === o ? ' selected' : ''}>${o}</option>`).join('')}</select></div>`}
+          ${['openrouter', 'route', 'deepseek', 'openai', 'off'].map(o => `<option${m.mode === o ? ' selected' : ''}>${o}</option>`).join('')}</select></div>`}
       </div>`;
     el.innerHTML = `
       <div class="tiles">
         <div class="tile"><b>${sum.n_traj ?? '—'}</b><span>轨迹（${sum.n_traj_success ?? 0} 成功）</span></div>
-        <div class="tile"><b>${sum.n_grounded_classes ?? '—'}</b><span>grounded 动作类</span></div>
-        <div class="tile"><b>${sum.n_sft ?? '—'} / ${sum.n_dpo ?? '—'}</b><span>SFT / DPO</span></div>
+        <div class="tile"><b>${sum.n_grounded_points ?? '—'} / ${sum.n_grounded_classes ?? '—'}</b><span>formal points / 动作类</span></div>
+        <div class="tile"><b>${sum.n_sft ?? '—'} / ${sum.n_dpo ?? '—'}</b><span>formal SFT / DPO</span></div>
         <div class="tile"><b>${health.live_ready ? 'LIVE' : 'OFFLINE'}</b><span>WebArena 环境</span></div>
         <div class="tile"><b>${health.n_running ?? 0}</b><span>运行中任务</span></div>
       </div>
@@ -209,7 +210,7 @@ const ConfigView = {
         <dt>本地配置文件</dt><dd>${esc(cfg.local_config)}${cfg.local_config_exists ? '' : '（尚未保存）'}</dd></dl>
       <p class="warn-note">安全约定：api_key 只存服务进程内存并注入子进程环境变量；「保存到本地」写入 configs/workbench.local.json（已 gitignore）且会剥离 key 值，只保留 env 变量名。</p>
       <div class="form-grid">
-        ${model('policy', s.models.policy)}${model('teacher', s.models.teacher)}${model('judge', s.models.judge)}
+        ${model('policy', s.models.policy)}${model('teacher', s.models.teacher)}${model('judge', s.models.judge)}${model('opinion', s.models.opinion)}
         <div class="fcard" data-role="run">
           <h4>运行参数</h4>
           <div class="frow"><label>task_file</label><input type="text" class="c-f" data-f="task_file" value="${esc(s.run.task_file || '')}"></div>
@@ -485,28 +486,39 @@ const ConstraintsView = {
 /* ---------------------------------------------------------- candidates -- */
 const CandidatesView = {
   state: '',
+  tier: 'formal',
   async render(el) {
-    const states = await API.get('/api/states');
+    const states = await API.get('/api/states?tier=' + encodeURIComponent(this.tier));
     if (!states.ok) { el.innerHTML = `<div class="empty">${esc(states.error)}</div>`; return; }
     const available = states.items;
-    if (!this.state && available.length) this.state = available[0].name;
+    if (!available.some(s => s.name === this.state)) {
+      this.state = available.length ? available[0].name : '';
+    }
     el.innerHTML = `
-      <div class="fl"><label>状态</label>
+      <div class="fl"><label>资产层级</label>
+        <select id="cd-tier"><option value="formal"${this.tier === 'formal' ? ' selected' : ''}>formal_candidates.v4（默认）</option>
+          <option value="legacy"${this.tier === 'legacy' ? ' selected' : ''}>legacy 实时预览（display-only）</option></select>
+        <label>状态</label>
         <select id="cd-state">${available.map(s => `<option${s.name === this.state ? ' selected' : ''}>${esc(s.name)}</option>`).join('')}</select>
-        <button class="btn primary sm" id="cd-materialize">枚举并物化 S4</button>
+        ${this.tier === 'legacy' ? '<button class="btn primary sm" id="cd-materialize">枚举并物化 legacy S4</button>' : ''}
         <button class="btn sm" id="cd-regen">刷新预览</button>
         <button class="btn sm" onclick="APP.go('grounded')">送去 undo 标注 →</button>
-        <span class="mini-note">共 ${available.length} 个 reached states；S4 不读取 grounded 标签</span></div>
+        <span class="mini-note">共 ${available.length} 个 ${esc(this.tier)} states；formal 视图只读且不读取 class-level 标签</span></div>
+      ${this.tier === 'legacy' ? '<p class="warn-note">Legacy 入口会重算 AXTree 候选及 class-smoke DPO flips，仅供历史调试；不会进入 formal export。</p>' : ''}
       <div id="cd-body" class="loading">加载中…</div>`;
+    $('#cd-tier').addEventListener('change', e => {
+      this.tier = e.target.value; this.state = ''; this.render(el);
+    });
     $('#cd-state').addEventListener('change', e => { this.state = e.target.value; this.render(el); });
     $('#cd-regen').addEventListener('click', () => this.render(el));
-    $('#cd-materialize').addEventListener('click', async () => {
-      const rr = await API.runStage('candidates', 'propose', {state: this.state});
-      toast(rr.ok ? `已物化 ${rr.result.n} 个合法候选` : rr.error,
-        rr.ok ? 'ok' : 'err');
-      if (rr.ok) this.render(el);
-    });
-    const r = await API.get('/api/candidates?state=' + encodeURIComponent(this.state));
+    if ($('#cd-materialize')) $('#cd-materialize').addEventListener('click', async () => {
+        const rr = await API.runStage('candidates', 'propose', {state: this.state});
+        toast(rr.ok ? `已物化 ${rr.result.n} 个 legacy 合法候选` : rr.error,
+          rr.ok ? 'ok' : 'err');
+        if (rr.ok) this.render(el);
+      });
+    const r = await API.get('/api/candidates?state=' + encodeURIComponent(this.state) +
+      '&tier=' + encodeURIComponent(this.tier));
     const body = $('#cd-body');
     body.classList.remove('loading');
     if (!r.ok || !r.candidates) { body.innerHTML = '<div class="empty">该状态无法生成候选</div>'; return; }
@@ -520,7 +532,7 @@ const CandidatesView = {
       <td style="font-family:var(--mono)">${esc(x.raw_action)}</td>
       <td>${esc(x.bid)}</td><td>${badge(x.legal_at_snapshot ? 'legal' : 'illegal', x.legal_at_snapshot ? 'accepted' : 'needs-review')}</td>
       <td>${esc(x.source)} · ${esc(x.proposer_version)}</td></tr>`).join('');
-    const cfRows = c.counterfactuals.map((x, i) => `<tr>
+    const cfRows = (c.counterfactuals || []).map((x, i) => `<tr>
       <td>${badge(x.pair_type, 'plain')}</td><td>${esc(x.variant)}</td>
       <td style="font-family:var(--mono)">${esc(x.raw_action)}</td>
       <td>${badge(x.reversibility_claimed)}</td><td>${badge(x.decision_claimed.split(' ')[0])}</td>
@@ -531,13 +543,13 @@ const CandidatesView = {
       <td>${esc(v.note || '')}</td>
       <td><button class="btn sm danger cd-del" data-k="${esc(k)}">删除</button></td></tr>`).join('');
     body.innerHTML = `
-      <h2>候选动作（pipeline 真实来源）</h2>
-      <p class="mini-note">类别是覆盖提案，不是安全/可逆性标签；每个 bid 均由当前 snapshot 精确校验，后续标签只能来自 execute–then–undo point probe。</p>
+      <h2>${c.asset_tier === 'formal' ? 'Formal 候选动作（formal_candidates.v4，不可变）' : 'Legacy 候选预览（display-only）'}</h2>
+      <p class="mini-note">来源：${esc(c.source_artifact || '')}。类别是覆盖提案，不是安全/可逆性标签；后续标签只能来自 execute–then–undo point probe。</p>
       <div class="tbl"><table><thead><tr><th>提案类别</th><th>text</th><th>action</th><th>bid</th><th>合法性</th><th>来源</th></tr></thead>
         <tbody>${candRows}</tbody></table></div>
-      <h2>反事实动作（DPO rejected builders，实时计算）</h2>
+      ${c.asset_tier === 'legacy' ? `<h2>Legacy 反事实动作（class-smoke DPO builders，实时计算）</h2>
       <div class="tbl"><table><thead><tr><th>pair type</th><th>variant</th><th>action</th><th>宣称可逆性</th><th>宣称决策</th><th></th></tr></thead>
-        <tbody>${cfRows}</tbody></table></div>
+        <tbody>${cfRows}</tbody></table></div>` : `<p class="note">${esc(c.counterfactuals_note || 'Formal DPO 是独立不可变资产；此处不生成 legacy label flips。')}</p>`}
       <div id="cd-seq"></div>
       <h2>人工添加候选（overlay，不进自动物化）</h2>
       <div class="tbl"><table><thead><tr><th></th><th>text</th><th>action</th><th>备注</th><th></th></tr></thead>
@@ -574,6 +586,7 @@ const GroundedView = {
     if (!r.ok) { el.innerHTML = `<div class="empty">${esc(r.error)}</div>`; return; }
     const anns = r.annotations || {};
     const formal = r.formal_point || {items: [], manifest: [], ok: false};
+    const legacy = r.legacy_class_smoke || {items: [], manifest: []};
     const canonical = r.canonical_schema || {};
     const bySite = {};
     (probes.items || []).forEach(p => { (bySite[p.site] = bySite[p.site] || []).push(p); });
@@ -615,6 +628,7 @@ const GroundedView = {
         ${siteBlocks}</details>
       <details><summary>Declarative probe authoring（${(authored.items || []).length} 个待审 spec）</summary>
         <p class="mini-note">这里只定义动作、signal、undo、预算和安全等级；不能填写最终 label。spec 必须通过 fixture、code review 和真实执行后才可产生 point evidence。</p>
+        <p class="mini-note">canonical artifact：${esc(authored.artifact || 'data/grounded/specs/authored_specs.jsonl')}</p>
         <div class="fl">
           <input id="pa-site" placeholder="site" value="shopping" style="width:100px">
           <input id="pa-type" placeholder="spec name / action type" style="width:150px">
@@ -633,7 +647,9 @@ const GroundedView = {
           ${(authored.items || []).map(s => `<tr><td>${esc(s.spec_id)}</td><td>${esc(s.site)} / ${esc(s.name)}</td><td>${esc(s.signal_channels.join(','))}</td><td>${s.budget_k}</td><td>${esc(s.safety_level)}</td><td>${esc(s.fixture_status)} / ${esc(s.code_review_status)}</td></tr>`).join('') || '<tr><td colspan="6" class="empty">暂无 spec</td></tr>'}
         </tbody></table></div>
       </details>
-      <div class="panes"><div class="list" id="gp-list"></div><div class="detail" id="gp-detail"></div></div>`;
+      <details><summary>Legacy class-smoke row browser（${(legacy.items || []).length} rows；默认不计入 formal 数字）</summary>
+        <div class="panes"><div class="list" id="gp-list"></div><div class="detail" id="gp-detail"></div></div>
+      </details>`;
     $('#pa-save').addEventListener('click', async () => {
       const proposal = {
         name: $('#pa-type').value.trim(), action_type: $('#pa-type').value.trim(),
@@ -663,7 +679,7 @@ const GroundedView = {
       const rr = await API.runStage('probe', 'probe_live_reddit', {});
       if (rr.ok && rr.job) { toast('reddit live 探针已启动', 'ok'); APP.showJob(rr.job.job_id); } else toast(rr.error, 'err');
     });
-    master($('#gp-list'), $('#gp-detail'), r.items.slice().reverse(),
+    master($('#gp-list'), $('#gp-detail'), (legacy.items || []).slice().reverse(),
       g => `${g.effective ? '●' : '○'} ${esc(g.action_type)} ${badge(g.label)}
         ${anns[g.probe_id] ? annBadge(anns[g.probe_id]) : ''}
         <span class="sub">${esc(g.timestamp || 'legacy row')}</span>`,
@@ -704,8 +720,8 @@ const GroundedView = {
 const DistillView = {
   async render(el) {
     const [tmplR, distR] = await Promise.all([
-      API.get('/api/sft?tier=formal'),
-      API.get('/api/sft?tier=formal&distilled=1')]);
+      API.get('/api/sft?tier=formal&family=all'),
+      API.get('/api/sft?tier=formal&family=all&distilled=1')]);
     if (!tmplR.ok) { el.innerHTML = `<div class="empty">${esc(tmplR.error)}</div>`; return; }
     const anns = distR.annotations || {};
     const byId = {}; tmplR.items.forEach(s => { byId[s.sample_id] = s; });
@@ -756,25 +772,30 @@ const QualityView = {
     const r = await API.get('/api/quality');
     if (!r.ok) { el.innerHTML = `<div class="empty">${esc(r.error)}</div>`; return; }
     const q = r.quality, v = q.volumes, d = q.distributions;
+    const pct = x => x == null ? '—' : `${(x * 100).toFixed(0)}%`;
+    const legacy = q.legacy_assets || {};
     const lowRows = q.low_quality.map(x =>
       `<tr><td style="font-family:var(--mono)">${esc(x.sample_id)}</td><td>${esc(x.reason)}</td></tr>`).join('');
     el.innerHTML = `
       <div class="tiles">
-        <div class="tile"><b>${v.sft_samples}</b><span>SFT 样本</span></div>
-        <div class="tile"><b>${v.dpo_pairs}</b><span>DPO 对</span></div>
+        <div class="tile"><b>${v.formal_probe_points}</b><span>formal points</span></div>
+        <div class="tile"><b>${v.sft_samples}</b><span>formal SFT 样本</span></div>
+        <div class="tile"><b>${v.dpo_pairs}</b><span>formal DPO 对</span></div>
         <div class="tile"><b>${v.trajectories_success}/${v.trajectories}</b><span>成功轨迹（率 ${(q.rates.traj_success_rate * 100).toFixed(0)}%）</span></div>
         <div class="tile"><b>${v.key_states} / ${v.reached_states}</b><span>key / 风险状态</span></div>
-        <div class="tile"><b>${v.grounded_action_classes}</b><span>grounded 动作类（${v.grounded_probe_runs} runs）</span></div>
-        <div class="tile"><b>${(q.rates.distill_coverage * 100).toFixed(0)}%</b><span>蒸馏覆盖</span></div>
-        <div class="tile"><b>${(q.teacher.pinned_label_agreement * 100).toFixed(0)}%</b><span>teacher-pinned 一致</span></div>
+        <div class="tile"><b>${v.grounded_action_classes}</b><span>formal grounded 动作类</span></div>
+        <div class="tile"><b>${pct(q.rates.distill_coverage)}</b><span>formal 蒸馏覆盖</span></div>
+        <div class="tile"><b>${pct(q.teacher.pinned_label_agreement)}</b><span>formal teacher-pinned 一致</span></div>
         <div class="tile"><b>${(q.counterfactual_coverage.coverage_rate * 100).toFixed(0)}%</b><span>反事实覆盖（均 ${q.counterfactual_coverage.avg_pairs_per_sample} 对/样本）</span></div>
         <div class="tile"><b>${q.n_low_quality}</b><span>低质量样本</span></div>
       </div>
+      <p class="warn-note">默认统计范围：formal tier。Legacy/class-smoke 资产独立列示，不参与上述 points、SFT、DPO 或 teacher 数字。</p>
       <div class="fl">
         <button class="btn sm" id="q-export">导出 JSONL/CSV（去数据集浏览器配置）</button>
         <button class="btn sm" id="q-viz">重建 HTML 报告（dataset_viz.html）</button>
         <button class="btn sm" id="q-refresh">重新计算</button></div>
-      <h2>可逆 / 不可逆（生效标签）</h2>${bars(d.reversibility_effective)}
+      <h2>Formal effect status</h2>${bars(d.effect_status)}
+      <h2>Formal recovery status</h2>${bars(d.recovery_status)}
       <h2>oracle 决策分布</h2>${bars(d.decision)}
       <h2>约束风格分布</h2>${bars(d.constraint_style, () => 'plain')}
       <h2>DPO pair 类型</h2>${bars(d.pair_type, () => 'plain')}
@@ -786,6 +807,8 @@ const QualityView = {
       <h2>低质量样本（${q.n_low_quality}）</h2>
       <div class="tbl"><table><thead><tr><th>sample</th><th>原因</th></tr></thead>
         <tbody>${lowRows || '<tr><td colspan=2 class="empty">无</td></tr>'}</tbody></table></div>
+      <details><summary>Legacy assets（独立审计，不进入默认统计）</summary>
+        <pre>${esc(JSON.stringify(legacy, null, 1))}</pre></details>
       <h2>人工标注摘要</h2><pre>${esc(JSON.stringify(q.annotations, null, 1))}</pre>`;
     $('#q-refresh').addEventListener('click', async () => {
       await API.runStage('qc', 'compute', {}); this.render(el);
@@ -800,7 +823,7 @@ const QualityView = {
 
 /* -------------------------------------------------------------- browser -- */
 const BrowserView = {
-  f: { tier: '', family: '', action_type: '', variant: '', style: '', decision: '', reversibility: '', split: '', status: '', q: '' },
+  f: { tier: 'formal', family: '', action_type: '', variant: '', style: '', decision: '', reversibility: '', split: '', status: '', q: '' },
   async render(el) {
     const [formalR, legacyR, annR, exps] = await Promise.all([
       API.get('/api/sft?family=all&tier=formal'),
@@ -839,7 +862,7 @@ const BrowserView = {
         <label>rev</label>${sel('reversibility', r.items.map(s => s.reversibility))}
         <label>split</label>${sel('split', r.items.map(s => s.split))}
         <label>覆核</label>${sel('status', ['unreviewed', 'accepted', 'rejected', 'needs-review', 'confirmed'])}
-        <span class="mini-note">${items.length} / ${r.items.length}</span></div>
+        <span class="mini-note">${items.length} / ${r.items.length}；默认 formal，选择 legacy 才显示历史资产</span></div>
       <details id="br-card"><summary>Dataset Card：样本完整形态与字段 schema（HF 风格）</summary>
         <div id="br-card-body" class="loading">加载中…</div></details>
       <details id="br-export"><summary>导出最终数据集（应用标注 overlay）</summary>
@@ -895,10 +918,13 @@ const BrowserView = {
     box.classList.remove('loading');
     if (!r.ok || !r.lineage) { box.innerHTML = `<div class="empty">${esc(r.error || '无 lineage')}</div>`; return; }
     const L = r.lineage, sm = L.sample;
-    const chainStr = ['task/traj', 'key state', 'risk state', 'constraint', 'candidates',
-      'undo label', 'teacher'].join(' → ');
+    const chainStr = ['state', 'candidate', 'transition', 'probe', 'label',
+      'teacher', 'split'].join(' → ');
+    const integrity = L.lineage_integrity || {};
     box.innerHTML = `
       <p class="mini-note">lineage: ${chainStr}</p>
+      ${L.asset_tier === 'legacy' ? `<p class="warn-note">${esc(L.legacy_notice || 'Legacy lineage is display-only and excluded from formal export.')}</p>` :
+        `<p class="mini-note">formal chain: ${Object.entries(integrity).filter(([k]) => k !== 'complete').map(([k, v]) => `${esc(k)}=${v ? '✓' : '✗'}`).join(' · ')}</p>`}
       <dl class="kv">
         <dt>① 来源状态</dt><dd>${L.state ? esc(L.state.name) + ' (' + esc(L.state.source) + ', ' + esc(L.state.url) + ')' : '—'}</dd>
         <dt>② 相关 key states</dt><dd>${L.related_key_states.map(k => esc(k.state_id)).join(', ') || '—（reach 直达，非轨迹挖掘）'}</dd>
@@ -910,7 +936,9 @@ const BrowserView = {
           ? badge(L.formal_grounding_point.recovery_status) + '（唯一 point join）'
           : badge(L.legacy_display_label || 'NONE') + '（legacy class-smoke，仅展示；' + L.grounded_runs.length + ' runs）'}</dd>
         <dt>⑥ DPO 反事实</dt><dd>${L.dpo_pairs.map(p => badge(p.pair_type, 'plain')).join(' ') || '—'}</dd>
-        <dt>⑦ teacher / split</dt><dd>${L.distilled ? badge('已蒸馏', 'accepted') : badge('模板', 'plain')} ${badge(L.split || 'unsplit', 'plain')}</dd></dl>
+        <dt>⑦ teacher / split</dt><dd>${L.teacher?.status === 'teacher' ? badge('teacher', 'accepted') :
+          L.teacher?.status === 'template_fallback' ? badge('template fallback', 'needs-review') : badge('missing', 'needs-review')}
+          ${badge(L.split || 'unsplit', 'plain')}</dd></dl>
       <div class="goal">${esc(sm.goal)}</div>
       <h2>assistant 目标序列（${L.distilled ? '蒸馏版' : '模板版'}）</h2>
       ${seq((L.distilled || sm).assistant)}
@@ -958,14 +986,18 @@ const BrowserView = {
     const mono = v => `<td style="font-family:var(--mono)">${esc(v)}</td>`;
     body.innerHTML = `
       <p class="note">${esc(c.granularity)}</p>
+      <p class="warn-note">Dataset Card headline tier=${esc(c.default_tier || 'formal')}；legacy 仅在独立 inventory 中展示，不混入默认统计。</p>
       <div class="tiles">
-        <div class="tile"><b>${sum.n_sft ?? '—'} / ${sum.n_sft_multiturn ?? 0}</b><span>SFT 单步 / 多轮</span></div>
-        <div class="tile"><b>${sum.n_dpo ?? '—'}</b><span>DPO 偏好对</span></div>
-        <div class="tile"><b>${Object.keys(sum.effective_labels || {}).length}</b><span>grounded 动作类</span></div>
+        <div class="tile"><b>${sum.n_formal_probe_points ?? 0}</b><span>formal points</span></div>
+        <div class="tile"><b>${sum.n_sft_single ?? 0} / ${sum.n_sft_multiturn ?? 0}</b><span>formal SFT 单步 / 多轮</span></div>
+        <div class="tile"><b>${sum.n_dpo ?? 0}</b><span>formal DPO 偏好对</span></div>
+        <div class="tile"><b>${sum.n_grounded_classes ?? 0}</b><span>formal grounded 动作类</span></div>
         <div class="tile"><b>${splits.formal?.sft_train ?? 0} / ${splits.formal?.sft_dev ?? 0} / ${splits.formal?.sft_test ?? 0}</b><span>formal train / dev / test</span></div>
         <div class="tile"><b>${splits.legacy?.sft_train ?? 0} / ${splits.legacy?.sft_dev ?? 0} / ${splits.legacy?.sft_test ?? 0}</b><span>legacy train / dev / test</span></div>
-        <div class="tile"><b>${sum.n_distilled ?? 0}</b><span>teacher 蒸馏样本</span></div>
+        <div class="tile"><b>${sum.n_distilled ?? 0}</b><span>formal teacher 蒸馏样本</span></div>
       </div>
+      <details><summary>Legacy inventory（独立、formal-excluded）</summary>
+        <pre>${esc(JSON.stringify(c.legacy_assets || {}, null, 1))}</pre></details>
       <h2>一条 SFT 样本的三段 messages</h2>
       ${(c.message_flow || []).map(m => `<div class="fcard"><h4>${badge(m.role, 'plain')}</h4>
         <p class="note">${esc(m.desc)}</p></div>`).join('')}

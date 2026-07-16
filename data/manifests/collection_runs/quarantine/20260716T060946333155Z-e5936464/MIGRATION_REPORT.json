@@ -1,0 +1,13 @@
+{
+  "schema_version": "iris.collection-run-quarantine.v1",
+  "run_id": "20260716T060946333155Z-e5936464",
+  "reason": "BrowserGym login reached the configured Magento origin through the process proxy and timed out before the first trajectory write; the direct Docker origin requires proxy variables to be unset.",
+  "source_path": "data/manifests/collection_runs/20260716T060946333155Z-e5936464.json",
+  "quarantine_path": "data/manifests/collection_runs/quarantine/20260716T060946333155Z-e5936464/FAILED_RUN.json",
+  "quarantined_sha256": "2a3f3e39b913968c2ebc0ecc3fb481943804deb073ca0b727d987bc4fdac7091",
+  "related_artifacts": [],
+  "counts_as_collection_run": false,
+  "counts_as_formal": false,
+  "rollback": "Move FAILED_RUN.json back to source_path only for forensic inspection; it remains status=FAILED and must never be admitted to formal lineage.",
+  "timestamp": "2026-07-16T06:10:27.323801Z"
+}

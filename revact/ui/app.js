@@ -33,7 +33,8 @@ const APP = {
       if (h.ok) {
         const s = h.summary;
         $('#health-meta').textContent =
-          `${s.site} · ${s.n_traj} 轨迹 / ${s.n_sft} SFT / ${s.n_dpo} DPO · ` +
+          `${s.site} · ${s.n_traj} 轨迹 / formal ${s.n_grounded_points} points / ` +
+          `${s.n_sft} SFT / ${s.n_dpo} DPO · ` +
           `${h.live_ready ? 'live 就绪' : 'offline'} · ${h.n_running} 任务运行中`;
         $('#jobs-dot').hidden = !h.n_running;
       } else {

@@ -66,16 +66,29 @@ def compute_release_quality(sft_rows: list[dict], dpo_rows: list[dict],
 
 def compute_quality(store: DataStore | None = None) -> dict:
     store = store or DataStore()
-    sft_single = store.sft()
-    sft_multi = store.sft(family="multiturn")
+    # The workbench quality page is a release-readiness view.  Historical
+    # assets are inventoried separately and never enter unqualified metrics.
+    sft_single = store.sft(tier="formal")
+    sft_multi = store.sft(family="multiturn", tier="formal")
     sft = sft_single + sft_multi
-    dpo_single = store.dpo()
-    dpo_multi = store.dpo(family="multiturn")
+    dpo_single = store.dpo(tier="formal")
+    dpo_multi = store.dpo(family="multiturn", tier="formal")
     dpo = dpo_single + dpo_multi
-    distilled = store.sft(distilled=True)
+    distilled = store.sft(distilled=True, family="all", tier="formal")
     trajs = store.trajectory_index()
-    grounded = store.grounded_runs()
-    labels = store.effective_labels()
+    formal_grounding = store.formal_grounding()
+    grounded = formal_grounding["items"]
+    grounded_action_types = {
+        str(point.get("action_type") or "") for point in grounded
+        if str(point.get("action_type") or "")}
+    legacy_grounded = store.grounded_runs()
+    legacy_labels = store.effective_labels()
+    legacy_sft_single = store.sft(tier="legacy")
+    legacy_sft_multi = store.sft(family="multiturn", tier="legacy")
+    legacy_dpo_single = store.dpo(tier="legacy")
+    legacy_dpo_multi = store.dpo(family="multiturn", tier="legacy")
+    legacy_distilled = store.sft(
+        distilled=True, family="all", tier="legacy")
     ann = annotations.all_effective(store.root)
 
     # -- volumes ------------------------------------------------------------ #
@@ -84,8 +97,12 @@ def compute_quality(store: DataStore | None = None) -> dict:
         "trajectories_success": sum(t["success"] for t in trajs),
         "key_states": len(store.key_states()),
         "reached_states": len(store.reached_states()),
+        "formal_probe_points": len(grounded),
+        "formal_point_manifest": formal_grounding["n_manifest"],
+        "formal_grounding_ok": formal_grounding["ok"],
+        # Compatibility field names now refer to the formal point tier.
         "grounded_probe_runs": len(grounded),
-        "grounded_action_classes": len(labels),
+        "grounded_action_classes": len(grounded_action_types),
         "sft_samples": len(sft), "sft_single": len(sft_single),
         "sft_multiturn": len(sft_multi),
         "dpo_pairs": len(dpo), "dpo_single": len(dpo_single),
@@ -96,19 +113,19 @@ def compute_quality(store: DataStore | None = None) -> dict:
     rates = {
         "traj_success_rate": round(volumes["trajectories_success"]
                                    / max(volumes["trajectories"], 1), 3),
-        "distill_coverage": round(len(distilled) / max(len(sft), 1), 3),
+        "distill_coverage": (
+            round(len(distilled) / len(sft), 3) if sft else None),
     }
 
     # -- distributions ------------------------------------------------------ #
-    rev_effective = _dist(labels.values())
-    n_rev = sum(v for k, v in rev_effective.items() if k.startswith("REVERSIBLE"))
-    n_irr = sum(v for k, v in rev_effective.items()
-                if k in ("IRREVERSIBLE", "PARTIALLY_RECOVERABLE"))
     distributions = {
-        "reversibility_effective": rev_effective,
-        "reversibility_runs": _dist(g["label"] for g in grounded),
-        "reversible_vs_irreversible": {"reversible": n_rev, "irreversible": n_irr,
-                                       "other": len(labels) - n_rev - n_irr},
+        "effect_status": _dist(point.get("effect_status", "")
+                               for point in grounded),
+        "recovery_status": _dist(point.get("recovery_status", "")
+                                 for point in grounded),
+        "grounding_action_type": _dist(point.get("action_type", "")
+                                       for point in grounded),
+        "grounding_site": _dist(point.get("site", "") for point in grounded),
         "decision": _dist(s["decision"] for s in sft),
         "constraint_style": _dist(s["constraint_style"] for s in sft),
         "goal_template": _dist(s["goal_template"] for s in sft),
@@ -157,7 +174,8 @@ def compute_quality(store: DataStore | None = None) -> dict:
             (t["observation"], t["reasoning"], t["prediction"], t.get("rev_check"))
     teacher = {
         "n_distilled": len(distilled),
-        "pinned_label_agreement": round(agree / max(len(distilled), 1), 3),
+        "pinned_label_agreement": (
+            round(agree / len(distilled), 3) if distilled else None),
         "pinned_label_drift": label_drift,
         "prose_changed": prose_changed,
     }
@@ -200,8 +218,25 @@ def compute_quality(store: DataStore | None = None) -> dict:
     human_overrides = sum(1 for v in grounded_ann.values()
                           if v.get("reversibility_override"))
 
-    return {"volumes": volumes, "rates": rates, "distributions": distributions,
+    legacy_assets = {
+        "asset_tier": "legacy",
+        "formal_supervision": False,
+        "grounded_class_smoke_rows": len(legacy_grounded),
+        "grounded_action_classes": len(legacy_labels),
+        "sft_samples": len(legacy_sft_single) + len(legacy_sft_multi),
+        "sft_single": len(legacy_sft_single),
+        "sft_multiturn": len(legacy_sft_multi),
+        "dpo_pairs": len(legacy_dpo_single) + len(legacy_dpo_multi),
+        "dpo_single": len(legacy_dpo_single),
+        "dpo_multiturn": len(legacy_dpo_multi),
+        "distilled_samples": len(legacy_distilled),
+        "reversibility_display": _dist(legacy_labels.values()),
+    }
+
+    return {"scope": "formal", "asset_tier": "formal",
+            "volumes": volumes, "rates": rates, "distributions": distributions,
             "counterfactual_coverage": coverage, "teacher": teacher,
+            "legacy_assets": legacy_assets,
             "low_quality": low_quality[:300],
             "n_low_quality": len(low_quality),
             "annotations": ann_summary,

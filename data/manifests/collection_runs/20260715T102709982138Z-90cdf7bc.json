@@ -1,0 +1,35 @@
+{
+  "schema_version": "iris.collection-run.v2",
+  "run_id": "20260715T102709982138Z-90cdf7bc",
+  "status": "COMPLETE",
+  "started_at": "2026-07-15T10:27:09.982248+00:00",
+  "completed_at": "2026-07-15T10:27:21.671263+00:00",
+  "trajectories": [
+    {
+      "trajectory_id": "pt_reddit_vote__59447__run_20260715T102709982138Z-90cdf7bc",
+      "logical_trajectory_id": "pt_reddit_vote__59447",
+      "run_id": "20260715T102709982138Z-90cdf7bc",
+      "task_id": "webarena.27",
+      "seed": 0,
+      "state_id": "pt_reddit_vote__59447",
+      "action_type": "reddit_vote",
+      "n_steps": 1,
+      "success": true,
+      "collector_success": true,
+      "traj_success": true,
+      "environment_origin": "webarena",
+      "environment_family": "webarena",
+      "environment_instance": "http://user2-dind:9999",
+      "site": "reddit",
+      "is_mock": false,
+      "n_key_states": 1,
+      "code_version": "b67852828d6d9fb335114c2ceb1dc3a7002faca7+worktree:bae196d4f4475882a94e97fe28916435014fedbda24454a22b246bffc94c208b",
+      "snapshot_compaction": "target_anchored.v1",
+      "raw_artifact": "raw/trajectories/pt_reddit_vote__59447__run_20260715T102709982138Z-90cdf7bc.jsonl"
+    }
+  ],
+  "code_version": "b67852828d6d9fb335114c2ceb1dc3a7002faca7+worktree:bae196d4f4475882a94e97fe28916435014fedbda24454a22b246bffc94c208b",
+  "site": "reddit",
+  "state_bank": "raw/state_bank/reddit_key_states.jsonl",
+  "meta": "raw/trajectories_meta.jsonl"
+}

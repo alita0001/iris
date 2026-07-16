@@ -1,0 +1,20 @@
+{
+  "decode_config": {
+    "max_history": 9,
+    "max_tokens": 4096,
+    "message_topology": "stateless",
+    "policy_builder": "revact.prompts.build_policy_messages",
+    "temperature": 0.0,
+    "top_p": ""
+  },
+  "fingerprint": "b48733c076dc9275",
+  "model": {
+    "implementation": "IrisPolicy",
+    "name": "deepseek/deepseek-v3.2",
+    "provider": "openrouter",
+    "wrapper": "ReadOnlyPolicyGuard"
+  },
+  "producer": "revact.data.collect",
+  "prompts_fp": "532c10eaa54d",
+  "schema_version": "iris.prompt-generation.v1"
+}

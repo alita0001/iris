@@ -1,0 +1,17 @@
+{
+  "commit": false,
+  "failures": [],
+  "n_executed": 2,
+  "n_persisted": 2,
+  "n_specs": 2,
+  "n_transitions_captured": 2,
+  "n_transitions_persisted": 2,
+  "persist_error": "",
+  "persisted_point_ids": [
+    "point-becb7efdf06a54c66edf",
+    "point-08e0821355b9728143ba"
+  ],
+  "spec": "data/grounded/specs/live-transition-batch2-20260715T1128Z.jsonl",
+  "transition_body": "/workspace/iris/data/grounded/transitions/probe_transitions.v1.jsonl",
+  "transition_manifest": "/workspace/iris/data/grounded/transitions/TRANSITION_MANIFEST.v1.jsonl"
+}

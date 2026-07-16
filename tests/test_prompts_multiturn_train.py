@@ -1,6 +1,7 @@
 """P0/P1 offline tests: shared prompt format, multi-turn assembly, trainer
 validation, and GRPO verifiable rewards. No torch, no network, no live env."""
 import json
+from dataclasses import replace
 
 import pytest
 
@@ -64,24 +65,33 @@ def test_state_history_plan_vs_canonical():
     assert any("checkout" in e["action"] for e in ents)
 
 
-def test_policy_and_assemble_share_format():
-    """Live policy and dataset code call one byte-identical serializer."""
+def test_train_and_deploy_messages_are_canonical_json_byte_equivalent():
+    """Materialized and deployed views of one trace must be identical bytes."""
     from revact.policies import LLMActionPolicy
 
-    pol = LLMActionPolicy.__new__(LLMActionPolicy)   # no key needed
-    pol.max_history = config.POLICY_HISTORY_STEPS
-    pol.system_prompt = prompts.SYSTEM_COLLECTOR
-    hist = [{"action": "click('1')", "obs": "o"}]
-    msgs = LLMActionPolicy._build_messages(
-        pol, {"axtree_txt": "RootWebArea 'X'"}, "G",
-        hist)
-    assert msgs == prompts.build_policy_messages(
-        "G", "RootWebArea 'X'", hist,
-        system_prompt=prompts.SYSTEM_COLLECTOR,
-        max_history=config.POLICY_HISTORY_STEPS)
-    p = prompts.parse_user(msgs[1]["content"])
-    assert p["goal"] == "G" and "click('1')" in p["history"]
+    steps = _steps()
+    history = trajectory_history(steps, 2)
+    assert history is not None
+    train_messages = build_conversation(
+        steps, 2, "G", max_history=config.POLICY_HISTORY_STEPS)
+    assert train_messages is not None
 
+    policy = LLMActionPolicy.__new__(LLMActionPolicy)  # no key needed
+    policy.max_history = config.POLICY_HISTORY_STEPS
+    policy.system_prompt = prompts.get("agent_system")
+    deploy_messages = LLMActionPolicy._build_messages(
+        policy, {"axtree_txt": steps[2]["obs_after_axtree"]}, "G", history)
+
+    def canonical_bytes(messages):
+        return json.dumps(
+            messages, ensure_ascii=False, sort_keys=True,
+            separators=(",", ":")).encode("utf-8")
+
+    assert canonical_bytes(train_messages) == canonical_bytes(deploy_messages)
+    parsed = prompts.parse_user(deploy_messages[1]["content"])
+    assert parsed["goal"] == "G"
+    assert "click('11')" in parsed["history"]
+    assert "click('20')" in parsed["history"]
 
 def test_action_anchored_pruning_keeps_tail_control_and_hard_gate():
     prefix = "\n".join(f"\t[{i}] StaticText 'filler {i} {'x' * 30}'"
@@ -98,11 +108,12 @@ def test_action_anchored_pruning_keeps_tail_control_and_hard_gate():
 
 def test_shared_history_budget_keeps_exact_last_k():
     hist = [{"action": f"click('{i}')", "flag": "nav", "delta": f"p{i}"}
-            for i in range(1, 10)]
+            for i in range(1, config.POLICY_HISTORY_STEPS + 4)]
     msgs = prompts.build_policy_messages("G", "RootWebArea 'X'", hist)
     parsed = prompts.parse_user(msgs[1]["content"])["history"]
     assert "click('3')" not in parsed
-    assert "click('4')" in parsed and "click('9')" in parsed
+    assert "click('4')" in parsed
+    assert f"click('{config.POLICY_HISTORY_STEPS + 3}')" in parsed
     assert len(parsed.splitlines()) == config.POLICY_HISTORY_STEPS
 
 
@@ -137,6 +148,32 @@ def _truth(point: GroundingPoint, variant: str) -> EvaluationTruthRecord:
         evidence={"rule": variant})
 
 
+def _formal_point(**updates) -> GroundingPoint:
+    point = GroundingPoint(
+        probe_point_id="point-1", probe_run_id="probe-run-1",
+        probe_name="shopping.add_to_cart", state_id="state-1",
+        candidate_id="candidate-1",
+        action_instance_id="action-1", action_type="add_to_cart",
+        raw_action="click('30')", canonical_action="click:add_to_cart:sku-1",
+        site="shopping", environment_family="webarena",
+        environment_instance="shopping:7770", environment_origin="webarena",
+        task_id="webarena.1",
+        trajectory_id="t1", run_id="run-1", seed=0, url="http://x/item",
+        account="user", privilege="customer", budget_k=12,
+        solver_set=["site_specific_deterministic"], controller_version="test",
+        pre_observation_hash="pre-hash", pre_signal={"cart": 0},
+        post_observation_hash="post-hash", post_signal={"cart": 1},
+        undo_actions=["click('remove')"],
+        undo_semantic_actions=["remove_cart_item(sku-1)"],
+        undo_observation_hashes=["undo-hash"], final_signal={"cart": 0},
+        effect_status=EFFECT_CHANGED, recovery_status=RECOVERY_RECOVERED,
+        undo_cost_steps=1, residual_diff={"cart": 0},
+        timestamp="2026-07-13T00:00:00+00:00", code_version="deadbeef",
+        evidence={"transition": "fixture",
+                  "candidate_snapshot_hash": "candidate-snapshot-hash"})
+    return replace(point, **updates)
+
+
 def test_build_conversation_shapes():
     msgs = build_conversation(_steps(), k=2, goal="G")
     roles = [m["role"] for m in msgs]
@@ -149,18 +186,19 @@ def test_build_conversation_shapes():
     assert build_conversation(_steps()[1:], k=2, goal="G") is None
 
 
-def test_k9_trajectory_history_fold_order():
+def test_long_trajectory_history_fold_order_uses_shared_k9_budget():
     steps = [{"step_id": 0, "action": None, "url_after": "http://x/0",
               "obs_after_axtree": "RootWebArea '0'"}]
-    for i in range(1, 10):
+    for i in range(1, 13):
         steps.append({"step_id": i, "action": f"click('{i}')",
                       "url_after": f"http://x/{i}",
                       "obs_after_axtree": f"RootWebArea '{i}'\n[{i + 1}] link 'next'"})
-    assert len(trajectory_history(steps, 9)) == 9
-    msgs = build_conversation(steps, 9, "G")
+    assert len(trajectory_history(steps, 12)) == 12
+    msgs = build_conversation(steps, 12, "G")
     hist = prompts.parse_user(msgs[1]["content"])["history"]
     assert "click('3')" not in hist
-    assert [f"click('{i}')" in hist for i in range(4, 10)] == [True] * 6
+    assert [f"click('{i}')" in hist for i in range(4, 13)] == [True] * 9
+    assert len(hist.splitlines()) == config.POLICY_HISTORY_STEPS == 9
 
 
 def test_assemble_multiturn_end_to_end(tmp_path):
@@ -242,54 +280,63 @@ def test_formal_multiturn_excludes_mock_and_failed_collectors(tmp_path):
     assert "probe_point_id" in " ".join(rep["skipped"])
 
 
-def test_formal_multiturn_exact_point_join(tmp_path):
+@pytest.mark.parametrize("explicit_point_id", [True, False])
+def test_formal_multiturn_hash_only_point_is_excluded(
+        tmp_path, explicit_point_id):
     traj_dir = tmp_path / "traj"
     traj_dir.mkdir()
     with (traj_dir / "t1.jsonl").open("w") as f:
         for step in _steps():
             f.write(json.dumps(step) + "\n")
     ks = tmp_path / "ks.jsonl"
-    ks.write_text(json.dumps({
+    key_state = {
         "trajectory_id": "t1", "step_id": 2, "site": "shopping",
         "task_id": "webarena.1", "traj_success": True,
-        "state_id": "state-1", "probe_point_id": "point-1",
+        "state_id": "state-1",
         "action_instance_id": "action-1",
         "canonical_action": "click:add_to_cart:sku-1",
         "pre_observation_hash": "pre-hash", "normative_risk": False,
-        "url": "http://x/item"}) + "\n")
-    point = GroundingPoint(
-        probe_point_id="point-1", probe_run_id="probe-run-1",
-        probe_name="shopping.add_to_cart", state_id="state-1",
-        candidate_id="candidate-1",
-        action_instance_id="action-1", action_type="add_to_cart",
-        raw_action="click('30')", canonical_action="click:add_to_cart:sku-1",
-        site="shopping", environment_family="webarena",
-        environment_instance="shopping:7770", environment_origin="webarena",
-        task_id="webarena.1",
-        trajectory_id="t1", run_id="run-1", seed=0, url="http://x/item",
-        account="user", privilege="customer", budget_k=12,
-        solver_set=["site_specific_deterministic"], controller_version="test",
-        pre_observation_hash="pre-hash", pre_signal={"cart": 0},
-        post_observation_hash="post-hash", post_signal={"cart": 1},
-        undo_actions=["click('remove')"],
-        undo_semantic_actions=["remove_cart_item(sku-1)"],
-        undo_observation_hashes=["undo-hash"], final_signal={"cart": 0},
-        effect_status=EFFECT_CHANGED, recovery_status=RECOVERY_RECOVERED,
-        undo_cost_steps=1, residual_diff={"cart": 0},
-        timestamp="2026-07-13T00:00:00+00:00", code_version="deadbeef",
-        evidence={"transition": "fixture",
-                  "candidate_snapshot_hash": "candidate-snapshot-hash"})
+        "url": "http://x/item"}
+    if explicit_point_id:
+        key_state["probe_point_id"] = "point-1"
+    ks.write_text(json.dumps(key_state) + "\n")
+    point = _formal_point()
     rep = assemble_multiturn(traj_dir, ks, {"point-1": point}, tmp_path,
                              formal=True,
                              truth_records={
                                  ("point-1", variant): _truth(point, variant)
                                  for variant in ("constraint", "request")})
-    assert rep["n_sft"] == 2 and rep["excluded"]["missing_point"] == 0
-    rows = [json.loads(line) for line in open(rep["sft_path"])]
-    assert all(r["meta"]["formal_dataset"] for r in rows)
-    assert {r["meta"]["probe_point_id"] for r in rows} == {"point-1"}
-    assert all(r["meta"]["prediction_source"] == "probe_transition" for r in rows)
-    assert sft_validate(rows)["n_problems"] == 0
+    assert rep["n_sft"] == 0 and rep["excluded"]["missing_point"] == 0
+    assert rep["excluded"]["missing_transition_body"] == 1
+
+
+def test_formal_multiturn_state_join_fails_closed_when_point_is_ambiguous(
+        tmp_path):
+    traj_dir = tmp_path / "traj"
+    traj_dir.mkdir()
+    with (traj_dir / "t1.jsonl").open("w") as handle:
+        for step in _steps():
+            handle.write(json.dumps(step) + "\n")
+    key_states = tmp_path / "ks.jsonl"
+    key_states.write_text(json.dumps({
+        "trajectory_id": "t1", "step_id": 2, "site": "shopping",
+        "task_id": "webarena.1", "traj_success": True,
+        "state_id": "state-1", "pre_observation_hash": "pre-hash",
+        "url": "http://x/item"}) + "\n")
+    first = _formal_point()
+    second = _formal_point(
+        probe_point_id="point-2", candidate_id="candidate-2",
+        action_instance_id="action-2")
+
+    report = assemble_multiturn(
+        traj_dir, key_states,
+        {first.probe_point_id: first, second.probe_point_id: second},
+        tmp_path, formal=True, truth_records={})
+
+    assert report["n_sft"] == 0
+    assert report["excluded"]["ambiguous_point"] == 1
+    assert report["excluded"]["missing_point"] == 0
+    assert "resolves to 2 formal points" in " ".join(report["skipped"])
 
 
 # ----------------------------------------------------------------- trainers -- #
@@ -387,6 +434,8 @@ def test_iris_policy_extracts_answer_and_fields():
                                "undo": "none available",
                                "decision": "AVOID risk=0.95"}
     assert pol._extract_action("plain text\nclick('7')") == "click('7')"
+    assert pol._extract_action(
+        "<answer> scroll(0, 300)<answer> scroll(0, 300)") is None
 
 
 def test_rollout_guard_covers_place_order():

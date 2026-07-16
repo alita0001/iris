@@ -1,0 +1,37 @@
+{
+  "schema_version": "iris.quarantine_migration.v1",
+  "migration_id": "dpo-naming-drafts-20260716",
+  "timestamp": "2026-07-16T05:45:00Z",
+  "reason": "The first materialization used basenames outside the fail-closed FORMAL_DPO_SUPPLEMENT_GLOB. Byte-identical bodies were rematerialized with the required strict_ basename and separately manifest-pinned. These drafts are retained, not deleted, and are excluded from active discovery.",
+  "counts_as_formal": false,
+  "records": [
+    {
+      "source_path": "data/train/formal/iris_dpo_on_policy_transition_v3_openrouter_llama32_3b_20260716.jsonl",
+      "quarantine_path": "data/train/quarantine/dpo_naming_drafts_20260716/iris_dpo_on_policy_transition_v3_openrouter_llama32_3b_20260716.jsonl",
+      "sha256": "64528412293c288aecb28e7660d3a74efa66f94fa7d75118dc68c4558b30b29d",
+      "active_replacement": "data/train/formal/iris_dpo_on_policy_transition_v3_strict_openrouter_llama32_3b_20260716.jsonl",
+      "replacement_body_byte_identical": true
+    },
+    {
+      "source_path": "data/train/formal/iris_dpo_on_policy_transition_v3_openrouter_llama32_3b_20260716.jsonl.manifest.json",
+      "quarantine_path": "data/train/quarantine/dpo_naming_drafts_20260716/iris_dpo_on_policy_transition_v3_openrouter_llama32_3b_20260716.jsonl.manifest.json",
+      "sha256": "ce2490836396c0a903beaad44da9e9195538891d72f161869cb4748f406142e6"
+    },
+    {
+      "source_path": "data/train/formal/iris_dpo_on_policy_transition_v3_openrouter_qwen3_8b_20260716.jsonl",
+      "quarantine_path": "data/train/quarantine/dpo_naming_drafts_20260716/iris_dpo_on_policy_transition_v3_openrouter_qwen3_8b_20260716.jsonl",
+      "sha256": "1b32c31155fbf6fa80561dab4f1543a70c579037fc93c4d0608c5244e6f8bff6",
+      "active_replacement": "data/train/formal/iris_dpo_on_policy_transition_v3_strict_openrouter_qwen3_8b_20260716.jsonl",
+      "replacement_body_byte_identical": true
+    },
+    {
+      "source_path": "data/train/formal/iris_dpo_on_policy_transition_v3_openrouter_qwen3_8b_20260716.jsonl.manifest.json",
+      "quarantine_path": "data/train/quarantine/dpo_naming_drafts_20260716/iris_dpo_on_policy_transition_v3_openrouter_qwen3_8b_20260716.jsonl.manifest.json",
+      "sha256": "2ba5b9d71c8138273a46912e9bed269a69b70236edbe0fb1325e3e3c639d78ea"
+    }
+  ],
+  "rollback": {
+    "safe_only_if_original_paths_are_absent": true,
+    "instruction": "Move each quarantine_path back to source_path; do not overwrite an existing path. Active strict_ replacements remain independent immutable assets."
+  }
+}

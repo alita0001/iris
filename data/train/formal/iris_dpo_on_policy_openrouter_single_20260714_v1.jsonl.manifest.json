@@ -1,0 +1,9 @@
+{
+  "body_name": "iris_dpo_on_policy_openrouter_single_20260714_v1.jsonl",
+  "body_sha256": "fe4f1a924002b412ff1e2d972b32d40c279124185e3b6ebad0acbe59a2736735",
+  "n_rows": 2,
+  "pair_ids_sha256": "6415dffbdf8f7a292180849089697c5b328f970a37c9f48bdf05d41e482e362d",
+  "release_id": "openrouter-onpolicy-exact-20260714-v1",
+  "schema_version": "iris.formal_dpo_supplement_manifest.v1",
+  "source_sample_ids_sha256": "e76ede7a106db4b88d686ec8927b9869be1cf7f2ac911db8188fc7281eb0d385"
+}

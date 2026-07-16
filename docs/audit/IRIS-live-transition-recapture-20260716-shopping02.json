@@ -1,0 +1,24 @@
+{
+  "commit": false,
+  "failures": [],
+  "n_executed": 9,
+  "n_persisted": 9,
+  "n_specs": 9,
+  "n_transitions_captured": 9,
+  "n_transitions_persisted": 9,
+  "persist_error": "",
+  "persisted_point_ids": [
+    "point-01172ce8e1aba9a1c7c4",
+    "point-855d61530e55666b0c17",
+    "point-afaf878e5e62df66d91a",
+    "point-83174a73e8b150f6d476",
+    "point-ec44c865a70a21420158",
+    "point-8a3f911291b5219e384e",
+    "point-acac084bf979f81eb1e9",
+    "point-f8686bcacf15ca1190be",
+    "point-11010e3d33a1be8b8686"
+  ],
+  "spec": "data/grounded/specs/live-transition-recapture-20260716-shopping02.jsonl",
+  "transition_body": "/workspace/iris/data/grounded/transitions/probe_transitions.v1.jsonl",
+  "transition_manifest": "/workspace/iris/data/grounded/transitions/TRANSITION_MANIFEST.v1.jsonl"
+}

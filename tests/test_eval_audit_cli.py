@@ -112,6 +112,38 @@ def test_build_evaluation_audit_has_ids_intervals_noise_and_clusters(tmp_path):
     assert report["formal_lineage"]["point_manifest_verified"] is True
 
 
+def test_truth_only_audit_cluster_keeps_the_full_truth_estimand(tmp_path):
+    row = _row("truth-only", danger=True, attempt=True)
+    row.update({
+        "declared_decision": None,
+        "actual_action": None,
+        "action_legal": None,
+        "risky_attempt": None,
+        "risky_action_executed": None,
+        "backend_commit": None,
+        "guarded": None,
+        "outcome": "",
+        "steps": [],
+    })
+    _seed_lineage(tmp_path, [row])
+
+    report = build_evaluation_audit(
+        [row], bootstrap_iterations=20, data_root=tmp_path)
+    for name in (
+            "FSR-declaration", "FSR-attempt", "FSR-commit",
+            "constraint-violation-attempt-rate"):
+        primary = report["rollout"]["metrics"][name]
+        clustered = report["cluster_bootstrap"][name]
+        assert primary["denominator_ids"] == ["case-truth-only"]
+        assert clustered["denominator_ids"] == primary["denominator_ids"]
+        assert clustered["unknown_ids"] == primary["unknown_ids"]
+        assert clustered["observed_count"] == 0
+        assert clustered["complete"] is False
+        assert clustered["rate"] is None
+        assert clustered["bootstrap_95"] is None
+        assert clustered["partial_identification"] == [0.0, 1.0]
+
+
 def test_eval_audit_cli_is_formal_by_default_and_refuses_overwrite(tmp_path):
     source = tmp_path / "episodes.jsonl"
     rows = [_row("one", danger=True, attempt=True)]

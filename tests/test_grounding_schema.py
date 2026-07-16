@@ -14,7 +14,9 @@ from revact.grounding.migration import migrate_legacy_grounding
 from revact.grounding.schema import (
     EFFECT_CHANGED,
     EFFECT_NO_EFFECT,
+    EFFECT_UNKNOWN,
     RECOVERY_NOT_WITHIN_BUDGET,
+    RECOVERY_PARTIAL,
     RECOVERY_RECOVERED,
     RECOVERY_UNKNOWN,
     GroundingPoint,
@@ -92,6 +94,99 @@ def test_grounding_schema_round_trip_and_manifest_1_to_1(tmp_path):
     assert body.read_text().count("\n") == manifest.read_text().count("\n") == 1
 
 
+def test_every_legal_effect_recovery_pair_round_trips(tmp_path):
+    """Exercise every ontology cell that the formal validator can admit.
+
+    The two axes are orthogonal, but NO_EFFECT/UNKNOWN effects intentionally
+    make recovery inapplicable. A single RECOVERED happy path would not catch
+    serialization drift in the partial, failed-search, or unknown branches.
+    """
+    solver_set = ["deterministic", "bfs", "llm-attacker"]
+    traces = [
+        {"solver_name": "deterministic",
+         "solver_kind": "site_specific_deterministic", "budget_k": 12,
+         "success": False, "undo_actions": [],
+         "termination_reason": "no_channel_found", "seeds": [],
+         "start_state_hash": "post-hash", "start_signal": {"cart_count": 1},
+         "reset_method": "fixture_state_clone", "reset_verified": True},
+        {"solver_name": "bfs", "solver_kind": "affordance_bfs",
+         "budget_k": 12, "success": False, "undo_actions": [],
+         "termination_reason": "budget_exhausted", "seeds": [],
+         "start_state_hash": "post-hash", "start_signal": {"cart_count": 1},
+         "reset_method": "fixture_state_clone", "reset_verified": True},
+        {"solver_name": "llm-attacker", "solver_kind": "llm_undo_attacker",
+         "budget_k": 12, "success": False, "undo_actions": [],
+         "termination_reason": "budget_exhausted", "seeds": [7, 11],
+         "start_state_hash": "post-hash", "start_signal": {"cart_count": 1},
+         "reset_method": "fixture_state_clone", "reset_verified": True},
+    ]
+    negative_evidence = {
+        "measurement": "fixture",
+        "candidate_snapshot_hash": "candidate-snapshot-hash",
+        "solver_union": {
+            "protocol": "solver_union.v2",
+            "recovery_status": RECOVERY_NOT_WITHIN_BUDGET,
+            "budget_k": 12,
+            "solver_set": solver_set,
+            "successful_solver": None,
+            "post_action_state_hash": "post-hash",
+            "post_signal": {"cart_count": 1},
+            "traces": traces,
+        },
+    }
+    points = [
+        _point(probe_point_id="point-recovered"),
+        _point(
+            probe_point_id="point-partial", recovery_status=RECOVERY_PARTIAL,
+            final_signal={"cart_count": 0.5},
+            residual_diff={"cart_count": [0, 0.5]}),
+        _point(
+            probe_point_id="point-not-recovered",
+            recovery_status=RECOVERY_NOT_WITHIN_BUDGET,
+            solver_set=solver_set, undo_actions=[], undo_semantic_actions=[],
+            undo_observation_hashes=[], undo_cost_steps=None,
+            final_signal={"cart_count": 1},
+            residual_diff={"cart_count": [0, 1]}, budget_exhausted=True,
+            evidence=negative_evidence),
+        _point(
+            probe_point_id="point-recovery-unknown",
+            recovery_status=RECOVERY_UNKNOWN, undo_actions=[],
+            undo_semantic_actions=[], undo_observation_hashes=[],
+            undo_cost_steps=None, final_signal={}, residual_diff={}),
+        _point(
+            probe_point_id="point-no-effect", effect_status=EFFECT_NO_EFFECT,
+            recovery_status=RECOVERY_UNKNOWN, post_signal={"cart_count": 0},
+            undo_actions=[], undo_semantic_actions=[],
+            undo_observation_hashes=[], undo_cost_steps=None,
+            final_signal={}, residual_diff={}),
+        _point(
+            probe_point_id="point-effect-unknown", effect_status=EFFECT_UNKNOWN,
+            recovery_status=RECOVERY_UNKNOWN, pre_signal={}, post_signal={},
+            undo_actions=[], undo_semantic_actions=[],
+            undo_observation_hashes=[], undo_cost_steps=None,
+            final_signal={}, residual_diff={}),
+    ]
+    body = tmp_path / "probe_points.jsonl"
+    manifest = tmp_path / "POINT_MANIFEST.jsonl"
+    save_probe_points(points, body, manifest, append=False)
+
+    loaded = load_probe_points(body)
+    assert {point_id: point.to_dict() for point_id, point in loaded.items()} == {
+        point.probe_point_id: point.to_dict() for point in points}
+    assert {
+        (point.effect_status, point.recovery_status) for point in loaded.values()
+    } == {
+        (EFFECT_CHANGED, RECOVERY_RECOVERED),
+        (EFFECT_CHANGED, RECOVERY_PARTIAL),
+        (EFFECT_CHANGED, RECOVERY_NOT_WITHIN_BUDGET),
+        (EFFECT_CHANGED, RECOVERY_UNKNOWN),
+        (EFFECT_NO_EFFECT, RECOVERY_UNKNOWN),
+        (EFFECT_UNKNOWN, RECOVERY_UNKNOWN),
+    }
+    assert_manifest_integrity(body, manifest)
+    assert body.read_text().count("\n") == manifest.read_text().count("\n") == 6
+
+
 @pytest.mark.parametrize("field", [
     "schema_version", "is_mock", "effect_status", "recovery_status",
     "budget_exhausted",
@@ -141,13 +236,19 @@ def test_budget_exhaustion_does_not_equal_irreversible():
     traces = [
         {"solver_name": "deterministic", "solver_kind": "site_specific_deterministic",
          "budget_k": 12, "success": False, "undo_actions": [],
-         "termination_reason": "no_channel_found", "seeds": []},
+         "termination_reason": "no_channel_found", "seeds": [],
+         "start_state_hash": "post-hash", "start_signal": {"cart_count": 1},
+         "reset_method": "fixture_state_clone", "reset_verified": True},
         {"solver_name": "bfs", "solver_kind": "affordance_bfs",
          "budget_k": 12, "success": False, "undo_actions": [],
-         "termination_reason": "budget_exhausted", "seeds": []},
+         "termination_reason": "budget_exhausted", "seeds": [],
+         "start_state_hash": "post-hash", "start_signal": {"cart_count": 1},
+         "reset_method": "fixture_state_clone", "reset_verified": True},
         {"solver_name": "llm-attacker", "solver_kind": "llm_undo_attacker",
          "budget_k": 12, "success": False, "undo_actions": [],
-         "termination_reason": "budget_exhausted", "seeds": [7, 11]},
+         "termination_reason": "budget_exhausted", "seeds": [7, 11],
+         "start_state_hash": "post-hash", "start_signal": {"cart_count": 1},
+         "reset_method": "fixture_state_clone", "reset_verified": True},
     ]
     point = _point(
         recovery_status=RECOVERY_NOT_WITHIN_BUDGET,
@@ -160,11 +261,13 @@ def test_budget_exhaustion_does_not_equal_irreversible():
         solver_set=["deterministic", "bfs", "llm-attacker"],
         evidence={"candidate_snapshot_hash": "candidate-snapshot-hash",
                   "solver_union": {
-            "protocol": "solver_union.v1",
+            "protocol": "solver_union.v2",
             "recovery_status": RECOVERY_NOT_WITHIN_BUDGET,
             "budget_k": 12,
             "solver_set": ["deterministic", "bfs", "llm-attacker"],
             "successful_solver": None,
+            "post_action_state_hash": "post-hash",
+            "post_signal": {"cart_count": 1},
             "traces": traces}},
     )
     point.validate(formal=True)
@@ -179,22 +282,33 @@ def test_negative_rejects_successful_solver_and_partial_rejects_full_restore():
         solver_set=["deterministic", "bfs", "llm-attacker"],
         evidence={"candidate_snapshot_hash": "candidate-snapshot-hash",
                   "solver_union": {
-            "protocol": "solver_union.v1",
+            "protocol": "solver_union.v2",
             "recovery_status": RECOVERY_NOT_WITHIN_BUDGET,
             "budget_k": 12,
             "solver_set": ["deterministic", "bfs", "llm-attacker"],
             "successful_solver": "bfs",
+            "post_action_state_hash": "post-hash",
+            "post_signal": {"cart_count": 1},
             "traces": [
                 {"solver_name": "deterministic",
                  "solver_kind": "site_specific_deterministic", "budget_k": 12,
                  "success": False, "undo_actions": [],
-                 "termination_reason": "no_channel_found", "seeds": []},
+                 "termination_reason": "no_channel_found", "seeds": [],
+                 "start_state_hash": "post-hash",
+                 "start_signal": {"cart_count": 1},
+                 "reset_method": "fixture_state_clone", "reset_verified": True},
                 {"solver_name": "bfs", "solver_kind": "affordance_bfs",
                  "budget_k": 12, "success": True, "undo_actions": ["remove"],
-                 "termination_reason": "recovered", "seeds": []},
+                 "termination_reason": "recovered", "seeds": [],
+                 "start_state_hash": "post-hash",
+                 "start_signal": {"cart_count": 1},
+                 "reset_method": "fixture_state_clone", "reset_verified": True},
                 {"solver_name": "llm-attacker", "solver_kind": "llm_undo_attacker",
                  "budget_k": 12, "success": False, "undo_actions": [],
-                 "termination_reason": "budget_exhausted", "seeds": [7, 11]},
+                 "termination_reason": "budget_exhausted", "seeds": [7, 11],
+                 "start_state_hash": "post-hash",
+                 "start_signal": {"cart_count": 1},
+                 "reset_method": "fixture_state_clone", "reset_verified": True},
             ]}})
     errors = negative.validation_errors(formal=True)
     assert any("successful_solver" in error for error in errors)
@@ -224,6 +338,10 @@ def test_legacy_migration_is_non_destructive_and_creates_zero_formal_points(tmp_
     assert report["legacy_quarantine_rows"] == 1
     assert report["class_probe_smoke_rows"] == 1
     assert report["formal_points_created"] == 0
+    assert str(grounded / "probe_points.jsonl") not in report["rollback"]
+    assert str(grounded / "POINT_MANIFEST.jsonl") not in report["rollback"]
+    assert report["canonical_point_artifacts"]["rollback_policy"].startswith(
+        "never delete or rewrite")
     assert (grounded / "probe_points.jsonl").read_text() == ""
     assert (grounded / "POINT_MANIFEST.jsonl").read_text() == ""
     quarantined = json.loads(

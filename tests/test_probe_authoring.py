@@ -1,4 +1,5 @@
 import json
+from dataclasses import replace
 
 import pytest
 
@@ -6,6 +7,7 @@ from revact.cli import _load_formal_probe_specs
 from revact.grounding.authoring import (
     ProbeAuthoringError,
     load_authored_specs,
+    load_probe_execution_specs,
     promote_authored_spec,
     save_authored_spec,
     spec_from_workbench,
@@ -107,3 +109,32 @@ def test_pending_draft_cannot_be_promoted_to_execution():
             "account": "u", "privilege": "customer", "code_version": "v",
         }, {"fixture_status": "PENDING", "code_review_status": "APPROVED",
             "reviewer": "r", "review_timestamp": "now"})
+
+
+def test_execution_spec_loader_accepts_multiline_jsonl(tmp_path):
+    draft = make(proposal(
+        name="shopping.add_to_cart", action_type="add_to_cart",
+        raw_action="click('3')", canonical_action="click:button:add-to-cart"))
+    first = promote_authored_spec(draft, {
+        "probe_point_id": "point-1", "probe_run_id": "probe-run-1",
+        "candidate_snapshot_hash": "snapshot-hash",
+        "environment_family": "webarena", "environment_instance": "shop",
+        "environment_origin": "webarena", "is_mock": False,
+        "task_id": "webarena.1", "trajectory_id": "trajectory-1",
+        "run_id": "run-1", "seed": 0, "url": "http://shop/item/1",
+        "account": "user", "privilege": "customer", "code_version": "v",
+    }, {"fixture_status": "PASSED", "code_review_status": "APPROVED",
+        "reviewer": "r", "review_timestamp": "now"})
+    second = replace(
+        first, probe_name="shopping.add_to_cart.second",
+        probe_point_id="point-2")
+    path = tmp_path / "batch.jsonl"
+    path.write_text("".join(json.dumps(spec.to_dict()) + "\n"
+                            for spec in (first, second)))
+    assert [spec.probe_point_id for spec in load_probe_execution_specs(path)] == [
+        "point-1", "point-2"]
+
+    path.write_text("".join(json.dumps(spec.to_dict()) + "\n" for spec in (
+        first, replace(second, probe_run_id="different-run"))))
+    with pytest.raises(ProbeAuthoringError, match="share exactly one"):
+        load_probe_execution_specs(path)

@@ -1,0 +1,18 @@
+{
+  "schema_version": "iris.execution_code_snapshot.v1",
+  "execution_id": "openrouter-transition-v2-live-fixed-20260715",
+  "base_head": "b67852828d6d9fb335114c2ceb1dc3a7002faca7",
+  "aggregate_sha256": "1998fd9c5d368cb37fb4464bd31c43892f2a1ca53f5317fe3cc2a2d6a8981f55",
+  "aggregate_input": "base_head followed by sha256sum lines in listed order",
+  "entries": [
+    {"path": "revact/eval/rollout.py", "sha256": "2c3cd13b9e30c88be8fbc94c1a1d883dc99b998ad1b0ffbe473cefd40981a840"},
+    {"path": "revact/policies.py", "sha256": "30d7c6ae88fbfe68ce343ba1e13075b8de323fe0f7c1a283e5071db1598dd787"},
+    {"path": "revact/prompts.py", "sha256": "3cb299c217de1baa1c5ec7fa8856be9a8a2da1d45687203628bcb693743dc0b4"},
+    {"path": "revact/config.py", "sha256": "811071e4fbb04001972cc80936207795c85348bd0e6d7521822aae3eb18aa47d"},
+    {"path": "revact/data/assemble.py", "sha256": "055d14d8819afc55c2305f5fa14560da37cc8219e1c78ef9eb626e57dffbe39b"},
+    {"path": "revact/grounding/transitions.py", "sha256": "e3c85f1e20345848b961226820a20da68a9a1916244f1f0dc940d3e53156b99e"},
+    {"path": "data/train/formal/iris_sft_transition_v2.jsonl", "sha256": "5fd81be5c99708ea85cbf27e895809cdd3fcab3de807995165a8617c817e4df0"}
+  ],
+  "credential_value_stored": false,
+  "post_execution_fix": "revact/policies.py was subsequently tightened to reject duplicate/trailing answer payloads; this snapshot intentionally preserves the exact code that produced the immutable trace."
+}

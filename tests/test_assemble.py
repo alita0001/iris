@@ -1,6 +1,7 @@
 """Oracle rules, goal diversification, end-to-end assembly, DPO pair types."""
 import collections
 import json
+from dataclasses import replace
 
 import pytest
 
@@ -13,6 +14,9 @@ from revact.eval.truth import (EVALUATION_TRUTH_SCHEMA_VERSION,
                                EvaluationTruthRecord, save_truth_records)
 from revact.grounding.schema import (EFFECT_CHANGED, RECOVERY_RECOVERED,
                                      GroundingPoint, save_probe_points)
+from revact.grounding.transitions import (
+    TRANSITION_SCHEMA_VERSION, ExecutedTransitionStep, ObservationBody,
+    ProbeTransition, save_probe_transitions, transition_manifest_row)
 
 
 def test_oracle_rules():
@@ -135,7 +139,7 @@ def _formal_truth(variant: str) -> EvaluationTruthRecord:
         evidence={"rule": variant})
 
 
-def test_formal_assemble_exact_point_join_and_real_transition_sources(tmp_path):
+def test_hash_only_point_is_not_mislabeled_as_transition_supervision(tmp_path):
     point_path = tmp_path / "points.jsonl"
     manifest_path = tmp_path / "manifest.jsonl"
     save_probe_points([_formal_point()], point_path, manifest_path)
@@ -157,21 +161,93 @@ def test_formal_assemble_exact_point_join_and_real_transition_sources(tmp_path):
     })
     reached.write_text(json.dumps(state) + "\n")
     result = assemble(reached, point_path, tmp_path)
-    assert result["n_sft"] == 2 and result["n_blocked_states"] == 0
+    assert result["n_sft"] == 0 and result["n_blocked_states"] == 1
+    assert "hash-only grounding" in result["blocked"][0]["reason"]
+
+
+def test_exact_transition_body_enables_forward_supervision(tmp_path):
+    pre = ObservationBody.capture(
+        {"url": "http://shopping/product/1",
+         "axtree_txt": "[12] button 'Add to Cart'"},
+        stage="pre_action", anchor_bids=["12"])
+    post = ObservationBody.capture(
+        {"url": "http://shopping/product/1",
+         "axtree_txt": "[12] button 'Add to Cart'\nStaticText 'Added to cart'"},
+        stage="post_action_immediate", anchor_bids=["12"])
+    signal = ObservationBody.capture(
+        {"url": "http://shopping/cart",
+         "axtree_txt": "[51] link 'Remove item'"},
+        stage="post_signal_measurement", anchor_bids=["51"])
+    restored = ObservationBody.capture(
+        {"url": "http://shopping/cart",
+         "axtree_txt": "RootWebArea 'Empty cart'"},
+        stage="recovery_after_0")
+    transition = ProbeTransition(
+        schema_version=TRANSITION_SCHEMA_VERSION,
+        transition_id="transition::point-1", probe_point_id="point-1",
+        probe_run_id="probe-run-1", state_id="state-1",
+        candidate_id="candidate-1", action_instance_id="action-1",
+        action_type="add_to_cart", raw_action="click('12')",
+        canonical_action="click:add_to_cart:sku-1",
+        candidate_snapshot_hash="candidate-snapshot-hash",
+        pre_observation=pre, post_observation=post,
+        post_signal_observation=signal,
+        recovery_steps=[ExecutedTransitionStep(
+            0, "click('51')", "remove_cart_item(sku-1)", restored)],
+        pre_signal={"cart_count": 0}, post_signal={"cart_count": 1},
+        final_signal={"cart_count": 0}, effect_status="CHANGED",
+        recovery_status="RECOVERED", undo_cost_steps=1, budget_k=12,
+        replay_verification="exact_snapshot", replay_target_contract={},
+        timestamp="2026-07-13T00:00:00+00:00", code_version="deadbeef")
+    manifest_row = transition_manifest_row(transition)
+    point = replace(
+        _formal_point(), pre_observation_hash=pre.policy_axtree_sha256,
+        post_observation_hash=post.policy_axtree_sha256,
+        undo_actions=["click('51')"],
+        undo_observation_hashes=[restored.policy_axtree_sha256],
+        evidence={
+            "candidate_snapshot_hash": "candidate-snapshot-hash",
+            "transition_ref": {
+                "schema_version": transition.schema_version,
+                "transition_id": transition.transition_id,
+                "probe_point_id": transition.probe_point_id,
+                "record_sha256": manifest_row["record_sha256"],
+            },
+        })
+    point_path = tmp_path / "points.jsonl"
+    save_probe_points([point], point_path, tmp_path / "manifest.jsonl")
+    save_probe_transitions(
+        [transition], tmp_path / "transitions" /
+        "probe_transitions.v1.jsonl", tmp_path / "transitions" /
+        "TRANSITION_MANIFEST.v1.jsonl")
+    save_truth_records(
+        [_formal_truth("constraint"), _formal_truth("request")],
+        tmp_path / "eval" / "truth.jsonl",
+        tmp_path / "eval" / "TRUTH_MANIFEST.jsonl")
+    state = _mk_state("formal-state", "button 'Add to Cart'")
+    state.update({
+        "state_id": "state-1", "probe_point_id": "point-1",
+        "action_instance_id": "action-1",
+        "pre_observation_hash": pre.policy_axtree_sha256,
+        "axtree_snapshot": pre.policy_axtree,
+        "collector_success": True, "history_source": "trajectory",
+        "history": [],
+    })
+    state["risky_action"].update({
+        "action_instance_id": "action-1",
+        "canonical_action": "click:add_to_cart:sku-1",
+    })
+    reached = tmp_path / "reached.jsonl"
+    reached.write_text(json.dumps(state) + "\n")
+    result = assemble(reached, point_path, tmp_path)
     from revact.train.sft import validate_rows
     assert validate_rows(result["samples"])["n_problems"] == 0
-    for sample in result["samples"]:
-        meta = sample["meta"]
-        assert meta["formal_dataset"] is True
-        assert meta["probe_point_id"] == "point-1"
-        assert meta["prediction_source"] == "probe_transition"
-        assert meta["undo_source"] == "probe_point_id"
-        assert meta["undo_source_probe_point_id"] == "point-1"
-        assert meta["undo_cost_steps"] == 1
-        assistant = sample["messages"][-1]["content"]
-        assert '"cart_count": 0' in assistant and '"cart_count": 1' in assistant
-        assert "remove_cart_item(sku-1)" in assistant
-        assert "not a safety claim" in assistant
+    assert all(row["meta"]["prediction_source"] == "probe_transition"
+               for row in result["samples"])
+    assert all(row["meta"]["transition_body_verified"] is True
+               for row in result["samples"])
+    assert all("immediate post URL=http://shopping/product/1" in
+               row["messages"][-1]["content"] for row in result["samples"])
 
 
 def test_formal_assemble_missing_point_is_blocked_not_class_bound(tmp_path):

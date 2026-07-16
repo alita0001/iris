@@ -1,0 +1,135 @@
+{
+  "artifact_version": "formal_candidates.v2",
+  "body": "data/raw/candidates/formal_candidates.v2.jsonl",
+  "category": {
+    "constraint_trigger_action": 5,
+    "expert_action": 14,
+    "ordinary_interactive_action": 65
+  },
+  "code_version": "b67852828d6d9fb335114c2ceb1dc3a7002faca7+worktree:a75fc2f7a04dc0f09f2b62a15a5ccadcfbc7de40d1b641a14122ebea54059f13",
+  "evidence_dependent_role_count": 0,
+  "exact_input_sft": {
+    "eligible_count": 13,
+    "eligible_probe_point_ids": [
+      "point-074184630008bef3d416",
+      "point-109f0be9a9e8287759b8",
+      "point-187930109f86179fc391",
+      "point-208cb955a7e5316ae8b1",
+      "point-2dfc13d42bba13e05cb3",
+      "point-3632c37a158b2fce341d",
+      "point-63dedbde95a63c277e2e",
+      "point-a3cc348686dad59674d0",
+      "point-a8127f75994e3b08ac01",
+      "point-b9902a3352bd6319232f",
+      "point-be723db90bacfbfcae3c",
+      "point-e628b5e8b8026277980e",
+      "point-e7f92bdc88a2e7a2e4cf"
+    ],
+    "excluded": [
+      {
+        "candidate_snapshot_hash": "59d6f94430308cfd5a7e4871cc79f7c1d52b9662e9ee6a2bcf9fb74975e00a15",
+        "pre_observation_hash": "6800f6f22b3ba327eb58da58671aa81c980aa68181edfe1293389f88391a37ff",
+        "probe_point_id": "point-faecb74ebfe8edb06654",
+        "reason": "pre_observation_hash_differs_from_candidate_snapshot",
+        "state_id": "pt_reddit_subscribe__books"
+      }
+    ],
+    "excluded_count": 1
+  },
+  "expert_point_join_complete": true,
+  "legacy_v3": {
+    "exists": true,
+    "formal_consumer": false,
+    "path": "data/raw/candidates/iris_candidates.v3.jsonl",
+    "sha256_after": "2a5592b15f93bdce2781532d0c612526cab4932d1489f15bc23275a89869a3af",
+    "sha256_before": "2a5592b15f93bdce2781532d0c612526cab4932d1489f15bc23275a89869a3af",
+    "unchanged": true
+  },
+  "manifest": "data/raw/candidates/FORMAL_CANDIDATE_MANIFEST.v2.jsonl",
+  "n_candidates": 84,
+  "n_points": 14,
+  "n_states": 14,
+  "per_state_sizes": {
+    "6": 14
+  },
+  "point_expert_candidates": {
+    "point-074184630008bef3d416": "cand-c7decfe77904145250a8",
+    "point-109f0be9a9e8287759b8": "cand-4c50a6a54d817ced2d44",
+    "point-187930109f86179fc391": "cand-ec6a45cbc0d65f386907",
+    "point-208cb955a7e5316ae8b1": "cand-1ed4de01b832cbf1aa27",
+    "point-2dfc13d42bba13e05cb3": "cand-cf333c017cf28048705c",
+    "point-3632c37a158b2fce341d": "cand-dcef9f4c1b1c39334fe8",
+    "point-63dedbde95a63c277e2e": "cand-300e3f5eebf2db628204",
+    "point-a3cc348686dad59674d0": "cand-4bb69c9bfb38e47715f2",
+    "point-a8127f75994e3b08ac01": "cand-1581891026f35c4dfd3f",
+    "point-b9902a3352bd6319232f": "cand-b8be7398dec1ec8a6d0a",
+    "point-be723db90bacfbfcae3c": "cand-17bd4381d67445ad3b80",
+    "point-e628b5e8b8026277980e": "cand-5e6395f543bc5c80cdee",
+    "point-e7f92bdc88a2e7a2e4cf": "cand-23d4c52def7cb918eac1",
+    "point-faecb74ebfe8edb06654": "cand-22c392cbad3639b4497f"
+  },
+  "schema_version": "iris.formal_candidate_asset_report.v1",
+  "selector_version": "a11y-rule-v2-boundary-locality-fix1",
+  "snapshot_sources": {
+    "point-074184630008bef3d416": [
+      "data/raw/state_bank/formal_point_reached_states.jsonl:1",
+      "data/raw/state_bank/shopping_key_states.jsonl:260"
+    ],
+    "point-109f0be9a9e8287759b8": [
+      "data/raw/state_bank/formal_point_reached_states.jsonl:2",
+      "data/raw/state_bank/reddit_key_states.jsonl:4"
+    ],
+    "point-187930109f86179fc391": [
+      "data/raw/state_bank/formal_point_reached_states.jsonl:3",
+      "data/raw/state_bank/shopping_key_states.jsonl:254"
+    ],
+    "point-208cb955a7e5316ae8b1": [
+      "data/raw/state_bank/formal_point_reached_states.jsonl:4",
+      "data/raw/state_bank/shopping_key_states.jsonl:244"
+    ],
+    "point-2dfc13d42bba13e05cb3": [
+      "data/raw/state_bank/formal_point_reached_states.jsonl:5",
+      "data/raw/state_bank/shopping_key_states.jsonl:243"
+    ],
+    "point-3632c37a158b2fce341d": [
+      "data/raw/state_bank/formal_point_reached_states.jsonl:6",
+      "data/raw/state_bank/shopping_key_states.jsonl:242"
+    ],
+    "point-63dedbde95a63c277e2e": [
+      "data/raw/state_bank/formal_point_reached_states.jsonl:7",
+      "data/raw/state_bank/shopping_key_states.jsonl:252"
+    ],
+    "point-a3cc348686dad59674d0": [
+      "data/raw/state_bank/formal_point_reached_states.jsonl:8",
+      "data/raw/state_bank/reddit_key_states.jsonl:1"
+    ],
+    "point-a8127f75994e3b08ac01": [
+      "data/raw/state_bank/formal_point_reached_states.jsonl:9",
+      "data/raw/state_bank/shopping_key_states.jsonl:253"
+    ],
+    "point-b9902a3352bd6319232f": [
+      "data/raw/state_bank/reddit_key_states.jsonl:5"
+    ],
+    "point-be723db90bacfbfcae3c": [
+      "data/raw/state_bank/formal_point_reached_states.jsonl:10",
+      "data/raw/state_bank/shopping_key_states.jsonl:262"
+    ],
+    "point-e628b5e8b8026277980e": [
+      "data/raw/state_bank/formal_point_reached_states.jsonl:11",
+      "data/raw/state_bank/reddit_key_states.jsonl:2"
+    ],
+    "point-e7f92bdc88a2e7a2e4cf": [
+      "data/raw/state_bank/formal_point_reached_states.jsonl:12",
+      "data/raw/state_bank/shopping_key_states.jsonl:261"
+    ],
+    "point-faecb74ebfe8edb06654": [
+      "data/raw/state_bank/reddit_key_states.jsonl:3"
+    ]
+  },
+  "source": {
+    "a11y_enumeration": 70,
+    "expert": 14
+  },
+  "state_scope_exact": true,
+  "status": "created"
+}

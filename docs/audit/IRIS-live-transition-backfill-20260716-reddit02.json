@@ -1,0 +1,18 @@
+{
+  "commit": false,
+  "failures": [],
+  "n_executed": 3,
+  "n_persisted": 3,
+  "n_specs": 3,
+  "n_transitions_captured": 3,
+  "n_transitions_persisted": 3,
+  "persist_error": "",
+  "persisted_point_ids": [
+    "point-938bf921350b80c5e1e1",
+    "point-92b86822851c2f36e650",
+    "point-865965f6496570cda87d"
+  ],
+  "spec": "data/grounded/specs/live-transition-backfill-20260716-reddit02.jsonl",
+  "transition_body": "/workspace/iris/data/grounded/transitions/probe_transitions.v1.jsonl",
+  "transition_manifest": "/workspace/iris/data/grounded/transitions/TRANSITION_MANIFEST.v1.jsonl"
+}

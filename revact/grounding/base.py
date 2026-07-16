@@ -324,8 +324,14 @@ def grounding_point_from_result(result: ReversibilityResult,
 
 def save_formal_probe_results(results_with_context: list[
         tuple[ReversibilityResult, ProbeContext]],
-        out_dir: Optional[Path] = None) -> tuple[Path, Path]:
-    """Persist formal point-level data after all provenance gates pass."""
+        out_dir: Optional[Path] = None, *,
+        transitions: Optional[list[Any]] = None) -> tuple[Path, Path]:
+    """Persist formal point-level data after all provenance gates pass.
+
+    New ``point_runner.v2`` results are fail-closed unless their exact AXTree
+    transition bodies are supplied.  Legacy/class formal callers retain the
+    old signature, but they cannot claim observation-body supervision.
+    """
     base = Path(out_dir) if out_dir else config.DATA_ROOT
     points_path = base / "grounded" / "probe_points.jsonl"
     manifest_path = base / "grounded" / "POINT_MANIFEST.jsonl"
@@ -352,6 +358,77 @@ def save_formal_probe_results(results_with_context: list[
         raise GroundingValidationError(
             "formal point/candidate join failed: " +
             " | ".join(join_problems[:10]))
+    v2_ids = {
+        ctx.probe_point_id for result, ctx in results_with_context
+        if (result.evidence or {}).get("protocol") == "point_runner.v2"
+    }
+    if v2_ids:
+        from .transitions import (
+            TRANSITION_BODY_RELATIVE, TRANSITION_MANIFEST_RELATIVE,
+            ProbeTransition, TransitionValidationError,
+            assert_point_transition_integrity, load_probe_transitions,
+            save_probe_transitions, transition_manifest_row)
+        supplied = list(transitions or [])
+        if not all(isinstance(row, ProbeTransition) for row in supplied):
+            raise GroundingValidationError(
+                "point_runner.v2 requires typed ProbeTransition bodies")
+        supplied_by_point = {row.probe_point_id: row for row in supplied}
+        if set(supplied_by_point) != v2_ids or len(supplied_by_point) != len(supplied):
+            raise GroundingValidationError(
+                "point_runner.v2 point/transition batch mismatch: "
+                f"point_only={sorted(v2_ids - set(supplied_by_point))}, "
+                f"transition_only={sorted(set(supplied_by_point) - v2_ids)}")
+        try:
+            assert_point_transition_integrity(
+                {point.probe_point_id: point for point in points
+                 if point.probe_point_id in v2_ids},
+                {row.transition_id: row for row in supplied}, require_all=True)
+            for point in points:
+                if point.probe_point_id not in v2_ids:
+                    continue
+                ref = (point.evidence or {}).get("transition_ref") or {}
+                transition = supplied_by_point[point.probe_point_id]
+                expected_manifest = transition_manifest_row(transition)
+                if ref != {
+                    "schema_version": transition.schema_version,
+                    "transition_id": transition.transition_id,
+                    "probe_point_id": transition.probe_point_id,
+                    "record_sha256": expected_manifest["record_sha256"],
+                }:
+                    raise TransitionValidationError(
+                        f"{point.probe_point_id}: transition_ref is stale or forged")
+            # Preflight immutable collision checks before touching either asset.
+            existing = load_probe_transitions(
+                base / TRANSITION_BODY_RELATIVE, validate=True)
+            collisions = sorted(
+                row.transition_id for row in supplied
+                if row.transition_id in existing or any(
+                    old.probe_point_id == row.probe_point_id
+                    for old in existing.values()))
+            if collisions:
+                raise TransitionValidationError(
+                    f"immutable transition collisions: {collisions}")
+            from .schema import assert_manifest_integrity, load_probe_points
+            if points_path.exists() or manifest_path.exists():
+                assert_manifest_integrity(points_path, manifest_path)
+            existing_points = load_probe_points(points_path, validate=True)
+            point_collisions = sorted(
+                point.probe_point_id for point in points
+                if point.probe_point_id in existing_points)
+            if point_collisions:
+                raise TransitionValidationError(
+                    f"immutable point collisions: {point_collisions}")
+        except TransitionValidationError as exc:
+            raise GroundingValidationError(
+                f"formal transition artifact invalid: {exc}") from exc
+
+        # Persist the body evidence first.  A process crash between the two
+        # atomic writes can create a visible orphan transition, never a point
+        # that falsely claims a missing transition.  Cross-asset integrity
+        # gates reject orphans until the append is retried/audited.
+        save_probe_transitions(
+            supplied, base / TRANSITION_BODY_RELATIVE,
+            base / TRANSITION_MANIFEST_RELATIVE, append=True)
     return save_probe_points(points, points_path, manifest_path, append=True)
 
 

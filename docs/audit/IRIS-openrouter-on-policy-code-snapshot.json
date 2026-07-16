@@ -1,0 +1,1365 @@
+{
+  "base_head": "b67852828d6d9fb335114c2ceb1dc3a7002faca7",
+  "dirty": true,
+  "entries": [
+    {
+      "exists": true,
+      "path": "DATASET_CARD.md",
+      "sha256": "0760e26b2f6667e58fd8d3ca80406ce841dbc9be71a6a854bb23732ce321ddd3",
+      "size_bytes": 22015,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "README.md",
+      "sha256": "fe572182b7f3af10f51a314099f405ad603ff2aec80666ed62271deb48dcbd1c",
+      "size_bytes": 13735,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "configs/default.yaml",
+      "sha256": "028e5800e6bbbf75d3684afc4358cca9b72487c7de881311b6bec022dd911764",
+      "size_bytes": 1393,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "data/eval/TRUTH_MANIFEST.jsonl",
+      "sha256": "891c3582980c7fee6000da77499aa6e3b02ab306a892248a223854f30208509d",
+      "size_bytes": 10417,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/eval/authoring/live-reddit-safe-policy-v1.json",
+      "sha256": "892f675c86f0437b0c49a8bb634ae8fbef9ac3659c88911faa5dda225dc78602",
+      "size_bytes": 1947,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/eval/authoring/live-reddit-safe-truth-v1.jsonl",
+      "sha256": "af06831082138a9cde2caf971f1e829fe45b42ca4676da2b62112576c718666c",
+      "size_bytes": 10284,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/eval/authoring/live-safe-smoke-policy-v1-batch06.json",
+      "sha256": "44ef96ea40baf77eda482013eb77f517d957a14221ac0b4440579f116db6d4ee",
+      "size_bytes": 2484,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/eval/authoring/live-safe-smoke-policy-v1.json",
+      "sha256": "54fea4b0511d420caed1d076d24d71a8fde47bae1bef10c3b673779af1e36595",
+      "size_bytes": 1451,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/eval/authoring/live-safe-smoke-truth-v1-batch06.jsonl",
+      "sha256": "8d24665787fa27877058c55602d638374ef9365c9363e834a2aeb1abf543d9b6",
+      "size_bytes": 15218,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/eval/authoring/live-safe-smoke-truth-v1.jsonl",
+      "sha256": "2b554fe4bad5738674dc15243ebc055c01a8632bc8cf1df0713ddae4d917ce52",
+      "size_bytes": 7609,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/eval/truth.jsonl",
+      "sha256": "95d2bf7e8a33a7e12b5c45683b9e5f29e2b75215fdb985071ba6ee89652e5863",
+      "size_bytes": 33111,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/grounded/POINT_MANIFEST.jsonl",
+      "sha256": "996a5f0e3a781204f1755fa5c5ff7f060ba001eef29feb906c1b0fdf0f1e2a36",
+      "size_bytes": 8443,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "data/grounded/probe_points.jsonl",
+      "sha256": "7875148d588992d8680559f6e6a5a788063caae273120f74010b1f414d878281",
+      "size_bytes": 45416,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "data/grounded/recovery_journal/point-109f0be9a9e8287759b8.json",
+      "sha256": "19f463f57477852428e295c3a997553c960c54622ee3a97d44b1bf23d3e91fa4",
+      "size_bytes": 727,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/grounded/recovery_journal/point-a3cc348686dad59674d0.json",
+      "sha256": "fa869b7d2ac44727c4a16e6d8f50d8c7dcb7f354490472cb3fba280dedd16049",
+      "size_bytes": 694,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/grounded/recovery_journal/point-e628b5e8b8026277980e.json",
+      "sha256": "e4cfa2f87c8b32e28ba1b621d27ba13845f72c5ad4bdd2787f811157049039cf",
+      "size_bytes": 694,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/grounded/recovery_journal/point-faecb74ebfe8edb06654.json",
+      "sha256": "87f791d9b7497ecd713b5be3175f3ad332d79dece3b57dd095dd351d041a030b",
+      "size_bytes": 711,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/grounded/recovery_journal/reddit__customer.lock",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/grounded/smoke/MANIFEST.jsonl",
+      "sha256": "a840276f4e8b1a7b9b7795857a028fe37f48c1e17eb9243516e44b6b94f0684b",
+      "size_bytes": 1558,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/grounded/smoke/reversibility.jsonl",
+      "sha256": "c175e9ab28715ce04a4bf666aeccd96f556b687fc2f2396f3028a831af6350af",
+      "size_bytes": 3078,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/grounded/specs/authored_specs.jsonl",
+      "sha256": "b1bd970e865470960708300d94719e417458a1c9da8340ed57654d3bc97ad681",
+      "size_bytes": 12602,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/grounded/specs/live-reddit-safe-20260713-01.jsonl",
+      "sha256": "aa72942d2eaef07e3a71aa2407d48939b7a06bba1143a952a1f3d4bb1d775b4c",
+      "size_bytes": 6530,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/grounded/specs/live-reddit-safe-20260713-02.jsonl",
+      "sha256": "ba3b58910118b2bfaf3a4337f31bf27c5c916bee4cbef0ccfef0f5a61749b46a",
+      "size_bytes": 4924,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/grounded/specs/live-reddit-safe-20260713-03.jsonl",
+      "sha256": "6bf883be02d74963e013beca4748ca3f7fae7cb07677d7370b19840833253476",
+      "size_bytes": 4921,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/grounded/specs/live-reddit-safe-20260713-04.jsonl",
+      "sha256": "4ad513e73168982363173250e43541b5de56768f677bdd832e13bd098395fdc7",
+      "size_bytes": 1647,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/grounded/specs/live-reddit-safe-20260713-05.jsonl",
+      "sha256": "901af7223c889ea1d46fbfb48a995451e2adc5ce8a315542c8c67984a0ef713f",
+      "size_bytes": 1646,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/grounded/specs/live-safe-smoke-20260713-01.jsonl",
+      "sha256": "5abd75fcab0a98abe876c2651b85f4eb3fc6ec9068c3d9094e83afa107ef0bb2",
+      "size_bytes": 6338,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/grounded/specs/live-safe-smoke-20260713-02.jsonl",
+      "sha256": "da817d298396adfa9d1dd22ffd64aa60f7c0392aa468fe071c69d68fa6e0cabe",
+      "size_bytes": 6338,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/grounded/specs/live-safe-smoke-20260713-03.jsonl",
+      "sha256": "517f2cf434e70715ff54fa022c28dfc89519e4916f6e04d96d9fddb0d1ab1b13",
+      "size_bytes": 6338,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/grounded/specs/live-safe-smoke-20260713-04.jsonl",
+      "sha256": "54d3a345230b925f2e44ba96d36d3aea20589eaa33620407aaa28aa6a0aa7e61",
+      "size_bytes": 6338,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/grounded/specs/live-safe-smoke-20260713-05.jsonl",
+      "sha256": "8075001b436c77ea71935f5308da32be228fdb1656e2423ec2993df5f6e12474",
+      "size_bytes": 6338,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/grounded/specs/live-safe-smoke-20260713-06.jsonl",
+      "sha256": "52c153cc737595684f812c693cf71c35ae00ae3988a368a94af12a73c24cebb8",
+      "size_bytes": 12190,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/manifests/collection_runs/20260713T114934746916Z-0f7a123c.json",
+      "sha256": "6a42eb15b1bb50cd4772dbb8284139dbb7ca424680bc4c4ae74668c1f4a3273d",
+      "size_bytes": 21503,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "data/manifests/collection_runs/20260713T150653622160Z-075a8589.json",
+      "sha256": "a1babe5ca426a98b781672a990f495ab1e00be32d167c02e22e5dc063287a423",
+      "size_bytes": 3659,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/manifests/collection_runs/20260714T083439088734Z-888b2f81.json",
+      "sha256": "1e851cc3eaa2caa3c144ba255dfb60ef49991b544103a5e464a18c450085e224",
+      "size_bytes": 1660,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/manifests/collection_runs/20260714T083624900528Z-93f6efa6.json",
+      "sha256": "60eac6adc1f0a69528e77e3ff6129d0b2977e28113d5c48b921e9d8d860b52b8",
+      "size_bytes": 1656,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/manifests/collection_runs/20260714T083805275825Z-7dbe1be6.json",
+      "sha256": "4d32d4e33a9a2e887c22dd753619669224e4ce12e5c509d4227a4c5c793fa1ac",
+      "size_bytes": 1679,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/manifests/prompt_generations/4b078b8112bd0937.json",
+      "sha256": "834fd8c5536a83d340dedef8750c3f0cb8432f043be45d4ab9a531cf8a54e8ac",
+      "size_bytes": 427,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/manifests/prompt_generations/6b0054b6f541733e.json",
+      "sha256": "af8c67ff0e645dbf3d5bd1fcbd9a14f4f49a9fa98b963532a1f823411ba88b83",
+      "size_bytes": 424,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/manifests/prompt_generations/8626d0541cb4f090.json",
+      "sha256": "618b8c2d55352090fe5db8f0ca0225e598af498aac893addf7e785f719761d6c",
+      "size_bytes": 480,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/manifests/prompt_generations/bf5b6eff06357523.json",
+      "sha256": "a7a2606331af4c852694763d99883a1bc6476062223487b95a8914cc84637879",
+      "size_bytes": 479,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/manifests/prompts/4a8dd16c65ef.json",
+      "sha256": "192311f45c23ddf721fca9395c161fee972339d1de770213467771bfff8949db",
+      "size_bytes": 5691,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/candidates/CANDIDATE_MANIFEST.jsonl",
+      "sha256": "d11fac59e37fec2e0710d966ca972009827547bc4317caceb13d943cabde7ab1",
+      "size_bytes": 121224,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/candidates/FORMAL_CANDIDATE_MANIFEST.v1.jsonl",
+      "sha256": "a515e6f3f84d6942bcd65d65681b3b11c31aa5a5e0e9361761eb8fc152348029",
+      "size_bytes": 24768,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/candidates/formal_candidates.v1.jsonl",
+      "sha256": "33d9a774d5c033af00b6f0e09045931e6571a671fff5ba0e58e47d1a3f68eafd",
+      "size_bytes": 39203,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/candidates/iris_candidates.v3.jsonl",
+      "sha256": "659c2ae3e32b7c0b9c0d72c3fdba854b36127238a3d60068122c03658d464150",
+      "size_bytes": 180415,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/quarantine/legacy_lineage_manifest.json",
+      "sha256": "ad0b95d0a219753fb0064e8254c40ec9917e83073718d002e714700d76965686",
+      "size_bytes": 13892,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/state_bank/formal_point_reached_states.jsonl",
+      "sha256": "03f6fc7191eb660046968377c4bc016a01dc9c2faf7f1ab6f46fd4cd0c06d4e5",
+      "size_bytes": 803368,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/state_bank/reddit_key_states.jsonl",
+      "sha256": "d78417630f79f8c7e89a8c8e6fcccc0939547ab25f1b41954f61746005b8dfc7",
+      "size_bytes": 1027252,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/state_bank/shopping_key_states.jsonl",
+      "sha256": "ef3215fb73bbe3d3d98cf89450bf4dfc9dd6d3515cda5fc2b5084f0745bb801e",
+      "size_bytes": 13209861,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/trajectories/pt_add_to_cart__cablevantage-hdmi-cable-30-feet-v1-4-ult__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "c1f72d0d6b4ea8ddfc01ff085725a0a29a048fc3e60d646269d0b3a405ed75f1",
+      "size_bytes": 15010,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/trajectories/pt_add_to_cart__cablevantage-premium-hdmi-cable-25ft-25f__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "081be4a4a68c463efa1892c4aee556853ea37ea7bb1f20b0873b2d94f3072bd5",
+      "size_bytes": 15027,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/trajectories/pt_compare_add__anpdasi-cell-phone-stand-fully-foldable-__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "43821d2800b6b629af783f077edcd76c29c28a9765fd0cfd2f52d92535724f5f",
+      "size_bytes": 15038,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/trajectories/pt_compare_add__asus-cm-16-docsis-3-0-cablelabs-certifie__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "09d6dff5100902eaa57a8641edabadd716dac47325c036490bef2db545985941",
+      "size_bytes": 14955,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/trajectories/pt_compare_add__banana-phone-bluetooth-handset-for-iphon__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "73f1124a16a510433c5155fee058e66e2d2ccf6b9a762efd19d45a63097f4440",
+      "size_bytes": 14981,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/trajectories/pt_compare_add__car-mount-phone-holder-sturdy-cup-holder__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "593e84e3863616df9ad922042124eece37cb8873ba68c69009fb5ec85cf4a068",
+      "size_bytes": 14820,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/trajectories/pt_compare_add__cell-phone-stand-doboli-phone-stand-for-__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "3e21c105f223ea2da4b7b0f1e16c49531cca27f0df2750e5e7547ceba630356b",
+      "size_bytes": 15110,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/trajectories/pt_compare_add__figatia-astronomy-telescope-phone-adapte__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "a3ce2213211884be05f785cc448ce40ac76a146bf838ae3453b222a5acbc26fc",
+      "size_bytes": 15011,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/trajectories/pt_compare_add__rg6-coaxial-cable-bnc-male-to-male-coax-__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "069ba5e03c113fb1d4bf9469063e1748dc9fbd84fa1a23c526bca43c877dc79b",
+      "size_bytes": 14999,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/trajectories/pt_compare_add__vicseed-phone-cup-holder-for-car-militar__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "fb994c5d8ed65a08f715a64224b5283bc711b85e37afdab58440e9cf2cb97019",
+      "size_bytes": 15245,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/trajectories/pt_reddit_subscribe__AskReddit__run_20260713T150653622160Z-075a8589.jsonl",
+      "sha256": "0ce60caafb8d231639fcfca89f7af67fb90f21b173d3beb0224ed7a6dd9b32cc",
+      "size_bytes": 9578,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/trajectories/pt_reddit_subscribe__books__run_20260713T150653622160Z-075a8589.jsonl",
+      "sha256": "9ecf53350fa6af34c8f6df5565b05c882fa9f18909252489cc8ed8234613f628",
+      "size_bytes": 9577,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/trajectories/pt_reddit_vote__59421__run_20260713T150653622160Z-075a8589.jsonl",
+      "sha256": "87ae0aa3225cdf5c2242f2408ed50b0bc3a4980c84252d5af237bf8ef54267de",
+      "size_bytes": 9564,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/trajectories/pt_reddit_vote__81371__run_20260713T150653622160Z-075a8589.jsonl",
+      "sha256": "3e32c9ec647c0c2a349cd1d73f8fd70ca92b3f61aeeb71b14a6650e755005d62",
+      "size_bytes": 9658,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/trajectories/pt_wishlist_add__anpdasi-cell-phone-stand-fully-foldable-__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "9aaf51fbba783e050a0d9533b407e538ee50a40682e767cb0b93600fc3b12d0c",
+      "size_bytes": 15040,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/trajectories/pt_wishlist_add__asus-cm-16-docsis-3-0-cablelabs-certifie__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "67085eff89da92307b2fb0b894f2e8b4d8bf21a7240979f36346aca37365a777",
+      "size_bytes": 14957,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/trajectories/pt_wishlist_add__banana-phone-bluetooth-handset-for-iphon__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "f53c5b7d72bfd5d61c91139887f767acdbd6674fdad31737b0419c26be6ff4dd",
+      "size_bytes": 14983,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/trajectories/pt_wishlist_add__car-mount-phone-holder-sturdy-cup-holder__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "652b8d74569bd2fb4832aeceebaa10d75bb78bef0da5d8a038697e6339aa3162",
+      "size_bytes": 14822,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/trajectories/pt_wishlist_add__cell-phone-stand-doboli-phone-stand-for-__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "aa752305642a500e54cda8387eda0ec52f2824c73f7bf0dbbbc92e40ce016f61",
+      "size_bytes": 15112,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/trajectories/pt_wishlist_add__figatia-astronomy-telescope-phone-adapte__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "65afb8ddb1f555f96886ba4668d0ac360bb636b7ad9279bf065a3b12ace75c03",
+      "size_bytes": 15013,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/trajectories/pt_wishlist_add__rg6-coaxial-cable-bnc-male-to-male-coax-__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "c2ecec1cdaa15cf1d9f43bef101d446f8baa88a1e538df0e0e11476d69978989",
+      "size_bytes": 15001,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/trajectories/pt_wishlist_add__vicseed-phone-cup-holder-for-car-militar__run_20260713T114934746916Z-0f7a123c.jsonl",
+      "sha256": "d874dd763e0ce199e07d924f05df3f5a305e5992220e9d785be640ead76a4e1f",
+      "size_bytes": 15247,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/trajectories/webarena.117_seed0__run_20260714T083805275825Z-7dbe1be6.jsonl",
+      "sha256": "7a9577ac41b854812cb3fc176f23c1c0811739fe5d2e940bb1d2eb626822a977",
+      "size_bytes": 37577,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/trajectories/webarena.96_seed0__run_20260714T083439088734Z-888b2f81.jsonl",
+      "sha256": "ef2b4fbcd837bab28083e2986d62540b07da04e08c632063e035dc9823725cde",
+      "size_bytes": 30183,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/trajectories/webarena.96_seed1__run_20260714T083624900528Z-93f6efa6.jsonl",
+      "sha256": "9bb997898101498b9ce246bd88b6a04066a344a343c25852844b6d9595b8f08b",
+      "size_bytes": 30185,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/raw/trajectories_meta.jsonl",
+      "sha256": "72a3c93753a7de8ded06d84268188f177f007178ffd53d32f78a2ab4bebead0b",
+      "size_bytes": 64632,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "data/train/ablation/iris_dpo_multiturn_synthetic_v1.jsonl",
+      "sha256": "834f8baf817c8feea96fd5d07ad6c28ec829013c8091a65c0921ca53434527f6",
+      "size_bytes": 701134,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "data/train/ablation/iris_dpo_synthetic_point_v1.jsonl",
+      "sha256": "420e585c9b8853b506105212d2cf24b94549823dc5f146051aed704d7a0bf09f",
+      "size_bytes": 929468,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "data/train/authoring/formal_legal_counterfactuals_multiturn_v1.jsonl",
+      "sha256": "00736ae8c41b762afc191e0129bdfbd0b2e43ca16e7584427c01cbb0565ed4a1",
+      "size_bytes": 28816,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/train/authoring/formal_legal_counterfactuals_single_v1.jsonl",
+      "sha256": "b6315573bc7032332f4fdd15db4f706987d91fbb8aebe1d17b336bbc345ae893",
+      "size_bytes": 28037,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/assembly_report.json",
+      "sha256": "da4a0029da235ba6a7843736796648df7eafd88edce01b6834c7c0dcc90c43a7",
+      "size_bytes": 409,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/iris_dpo_multiturn_point_v1.jsonl",
+      "sha256": "07becf4b1ef5f1ae916aa0fb7a1678515a3c2a30bcdbe8168722b0e826d33a5d",
+      "size_bytes": 207744,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/iris_dpo_point_v1.jsonl",
+      "sha256": "0551eaf7fd06a983a1e2f20dd9689b893e29b9e17479fcb92c92c7cec0d8de42",
+      "size_bytes": 205239,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/iris_sft_distilled_point_v1.jsonl",
+      "sha256": "50719d4dcf8b392262be168f265cfd1f0b09a61a8da67ade38420919a1c0205a",
+      "size_bytes": 348891,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/iris_sft_multiturn_distilled_point_v1.jsonl",
+      "sha256": "fbca465980f040d2d8929bcf45ae0e5268cee1256283a6a0089dbe5807601499",
+      "size_bytes": 337644,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/iris_sft_multiturn_distilled_point_v1.template_fallback.jsonl",
+      "sha256": "6eb948163fd640e8623599eb95ef90234710594247073792ec5a0f889811a447",
+      "size_bytes": 15130,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/iris_sft_multiturn_point_v1.jsonl",
+      "sha256": "d78fa3456b43d59656e87ac19976b99da41438610b46288d65eea1e32768dc2e",
+      "size_bytes": 351710,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/iris_sft_point_v1.jsonl",
+      "sha256": "e4d81f0f7bbe26977c0fea096434ce5158ca0b1ba67c90116e9f0da482cb7bec",
+      "size_bytes": 348348,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/splits/SPLIT_REPORT.json",
+      "sha256": "1c3495d19c346710aae877a0a41589c0a03b5e433d6e3599aa9623009c5e6b8a",
+      "size_bytes": 10426,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/splits/dpo_train_cross_action.jsonl",
+      "sha256": "31caea94888720cca2f952e32c15a947a35d627b0fdf60733ee650ae69f64fdc",
+      "size_bytes": 34046,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/splits/dpo_train_cross_action_multiturn.jsonl",
+      "sha256": "08f36accd88ec4503943105529a8c437369551984426cf843249e49839419924",
+      "size_bytes": 34369,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/splits/dpo_train_cross_site.jsonl",
+      "sha256": "31caea94888720cca2f952e32c15a947a35d627b0fdf60733ee650ae69f64fdc",
+      "size_bytes": 34046,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/splits/dpo_train_cross_site_multiturn.jsonl",
+      "sha256": "08f36accd88ec4503943105529a8c437369551984426cf843249e49839419924",
+      "size_bytes": 34369,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/splits/sft_test_cross_action.jsonl",
+      "sha256": "e0ee597bd41cf158541e198d5be0dbe36a063490aee32c85d09d745e788f1256",
+      "size_bytes": 29423,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/splits/sft_test_cross_action_multiturn.jsonl",
+      "sha256": "c465f5b27e6ae7af443b4b16f9ea75dbd453d46b091a10b068954598a2876937",
+      "size_bytes": 29767,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/splits/sft_test_cross_site.jsonl",
+      "sha256": "1716110b276d3fd58ca180295e0eaffa2f5bffb2b25c4eb37d411028a4c324b5",
+      "size_bytes": 87747,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/splits/sft_test_cross_site_multiturn.jsonl",
+      "sha256": "4331956252432da00ffac511673a5b53c9122dba37a4a3123c8ab3ecaf639d8a",
+      "size_bytes": 88619,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/splits/sft_train_cross_action.jsonl",
+      "sha256": "0c213174b7da1cb4311e7bfaef9cf8451f96ba8df84616722a01f1897b3ad2af",
+      "size_bytes": 57630,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/splits/sft_train_cross_action_multiturn.jsonl",
+      "sha256": "5ce24902131fde388694448abb7b90f25913a13a52b6c03ab81d17220244c702",
+      "size_bytes": 58104,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/splits/sft_train_cross_site.jsonl",
+      "sha256": "0c213174b7da1cb4311e7bfaef9cf8451f96ba8df84616722a01f1897b3ad2af",
+      "size_bytes": 57630,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "data/train/formal/splits/sft_train_cross_site_multiturn.jsonl",
+      "sha256": "5ce24902131fde388694448abb7b90f25913a13a52b6c03ab81d17220244c702",
+      "size_bytes": 58104,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "data/train/quarantine/migration-report.json",
+      "sha256": "58721b3d1a0bf968af44081c60295d78fa534697d4950cb1fb75234401bc2295",
+      "size_bytes": 1668,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "data/train/smoke/openrouter_teacher_multiturn_20260714.jsonl",
+      "sha256": "1a88ef73fc9c61cd245cec6b862cc9a81a4f93d1f821538a5299b65b9486b6e1",
+      "size_bytes": 28840,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "data/train/smoke/openrouter_teacher_single_20260714.jsonl",
+      "sha256": "59ba28be67629b1cdc0577ada58271ca6a0ad6bc41ad417ffc4717a98fd279da",
+      "size_bytes": 30003,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "docs/Limitations.md",
+      "sha256": "17f5171ac0d5173ebbe2e293f5d4129620cd13f3dc25ca7aadbf3f64b77ac308",
+      "size_bytes": 15233,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "docs/audit/IRIS-formal-candidates-v1-report.json",
+      "sha256": "4e6b88e148323b84cd943533302ad169948ab3a517d2e078eac35f03ea17c8bf",
+      "size_bytes": 5068,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "docs/audit/IRIS-formal-readiness.json",
+      "sha256": "0e4423dea3f2e5c6c481fb0161312ffa49d1379198bbaadb9aa5d4686765046f",
+      "size_bytes": 30151,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "docs/audit/IRIS-live-point-code-snapshot-02.json",
+      "sha256": "7300bc017c37722b405266bfc986b24f116ff62601ea3a00ef989f3fe59cf13e",
+      "size_bytes": 13366,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "docs/audit/IRIS-live-point-code-snapshot-03.json",
+      "sha256": "de1534a0d340eb0913824c0802f7024a737e1903dc1d2922071d13402d09483e",
+      "size_bytes": 13836,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "docs/audit/IRIS-live-point-code-snapshot-04.json",
+      "sha256": "44f59e4ef338444086ad85a9493012d561b64fdba2157d1ef468eeb071bada39",
+      "size_bytes": 14306,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "docs/audit/IRIS-live-point-code-snapshot-05.json",
+      "sha256": "50c2bd5fbb33eda5d66bad21bc4952331b639d8c2a61126218b2e2d3c660ee23",
+      "size_bytes": 14776,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "docs/audit/IRIS-live-point-code-snapshot-06.json",
+      "sha256": "78cdc0e699304c2f335c1798745060c94b3830921e4caddd9eaa8b7f659a0f18",
+      "size_bytes": 18379,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "docs/audit/IRIS-live-point-code-snapshot-07.json",
+      "sha256": "6f1c2b53f669c588ab44253405ee701edf8425a8904a9be34a22b9422a30bcc7",
+      "size_bytes": 25253,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "docs/audit/IRIS-live-point-code-snapshot-08.json",
+      "sha256": "0baeba61963ccaf3c61d9a4313e2de2f5aba428cc55a724eb46904ae9a4d33e1",
+      "size_bytes": 28010,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "docs/audit/IRIS-live-point-code-snapshot-09.json",
+      "sha256": "e92fe0c7706709e5a68633b7dcdcaba5f5402c1edd10f8d52b9caab0f0907947",
+      "size_bytes": 29440,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "docs/audit/IRIS-live-point-code-snapshot.json",
+      "sha256": "9493a4a3f91bb6799b710be82ee56be0258b8f3b04121a23d5cf32f282e5d023",
+      "size_bytes": 11785,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "docs/audit/IRIS-live-point-smoke-report-05.json",
+      "sha256": "22763dba1674a8048768c4203de341058bbf9c4711f62e923ae6c22cca4127fe",
+      "size_bytes": 318,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "docs/audit/IRIS-live-point-smoke-report-06.json",
+      "sha256": "37b5f3c62ed83e79540db5bc45a4ce9092b3359bc5e3df12bedc4a25a8123732",
+      "size_bytes": 420,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "docs/audit/IRIS-live-reddit-point-report-01.json",
+      "sha256": "aefa7e7cc8864b0392cfb38937b58ca169d09042d78d5c3b3dabf8c1d86d2459",
+      "size_bytes": 2028,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "docs/audit/IRIS-live-reddit-point-report-03.json",
+      "sha256": "abf5a7a3f009a8c86dfda48d0a3e60a904db5be062ab3da444d953eef5ec8575",
+      "size_bytes": 858,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "docs/audit/IRIS-live-reddit-point-report-05.json",
+      "sha256": "b342518f8c9fdbeff52c2cc61bed559ef4401818e880bb1dc7737e110ebb5923",
+      "size_bytes": 251,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "docs/audit/IRIS-openrouter-live-flow-report.md",
+      "sha256": "3d2660336d9aa23166e55b3faa87473feaf7d786c90fbebb34938e8255cd2bb9",
+      "size_bytes": 6654,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "docs/audit/IRIS-openrouter-live-formal-reddit-metrics.json",
+      "sha256": "a87bcb157daf0c4dbed508adf083a087877e016d7976fd5e626037190dbeee8f",
+      "size_bytes": 27309,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "docs/audit/IRIS-remediation-report.md",
+      "sha256": "3f208e5f0e3e4a80de6c2c516795b395b4f96ffcadefcd12a1110200156f2eba",
+      "size_bytes": 20403,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "docs/audit/IRIS-truth-authoring-code-snapshot.json",
+      "sha256": "4d9180599fe5576f602cc863be5fd7612dead8db944ff091febfadbc9006ac1e",
+      "size_bytes": 16795,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "docs/audit/IRIS-worktree-manifest.json",
+      "sha256": "1efcc715e2a97fe29f05dc0655ae846ccc7e00001a762b18e50a13cb367895c6",
+      "size_bytes": 44177,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "docs/findings-multisite.md",
+      "sha256": "7250ac7b2c1c0c48170cab27c934fe6842bcdeb67884e4cee82c708ae3200fab",
+      "size_bytes": 9241,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "docs/plan/07-撞车文献汇总与改向依据.md",
+      "sha256": "3000f53544028a3bd2aafd3e9523f032dd324c56220b53300eef43b6a35b34fc",
+      "size_bytes": 8069,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "docs/plan/IRIS项目计划书.md",
+      "sha256": "78cf56b85133832862f0d6c9cbc7a4750d73de4691c8eafe5dc9d281ecfa7447",
+      "size_bytes": 22418,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "docs/plan/S1-S8完整流程文档.md",
+      "sha256": "d99f3947c00682fbc56b9ffe743fbb4c3e2323f46f451909875afee3cb98b033",
+      "size_bytes": 18323,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "docs/tutorial.md",
+      "sha256": "2f513be552151d7f21ed137034a3d72505b25a51d926a3ffeea21b1a8c0ad85a",
+      "size_bytes": 39423,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "docs/workbench.md",
+      "sha256": "ccbb4abb2a77a3442699df33aeec680cb44add398f26345c4dc81117ef44b23f",
+      "size_bytes": 10960,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/cli.py",
+      "sha256": "b296b47005de2d80a536a94de31f8bce0a243f62db0c3ea87f5d5274b76c8b8d",
+      "size_bytes": 59899,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/config.py",
+      "sha256": "cf2797c13694aae0d1d93be168c6b682c6029965f7c2623ddaa817e935340a84",
+      "size_bytes": 11447,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/data/assemble.py",
+      "sha256": "74ca95ac9aac23731afba5e7d91f48fd1b5147e3169881a30605a6309288127b",
+      "size_bytes": 48467,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/data/candidates.py",
+      "sha256": "5b682de40457988e8841ccc40f15843e44230a3d83c5b0ce7d624a284cb62d86",
+      "size_bytes": 26639,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/data/collect.py",
+      "sha256": "76cfc22ce6cc995a45bdd7b7e1d674895141e3f1fa1d13f2933ddba291c7fcb9",
+      "size_bytes": 16207,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/data/formal_candidates.py",
+      "sha256": "d13030864aa203f0453a4668efb2e999bd25afe29f6653bea3b3122255330105",
+      "size_bytes": 13664,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "revact/data/governance.py",
+      "sha256": "55ce7d3073a4f2cca8f31eb2768ad921878dd6195528841c80b6168189bb0fb3",
+      "size_bytes": 31035,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/data/multiturn.py",
+      "sha256": "c139caaf634ec33b46514e63e397b657e077ee2e8984573c07ad72cf03847150",
+      "size_bytes": 31193,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/data/opinions.py",
+      "sha256": "b4104d0d359ef321f7fa2ebf0cc4919f4f83978e131b95dab74705a5316ceda7",
+      "size_bytes": 35547,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "revact/data/point_collect.py",
+      "sha256": "c5742e98fb8cafdb13857efc9b816ac2418fbcebb9a45ff0928a514343fe3e7f",
+      "size_bytes": 14000,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/data/preferences.py",
+      "sha256": "0ee41bbed457aef122037f8761ca112147d00d2d2412fc3d5289b6a4a597eb6f",
+      "size_bytes": 32927,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/data/splits.py",
+      "sha256": "3f2c6136b2ea8d3956e1255b6a0aed0f75bf6b07f9a462d840fb6370da9a297e",
+      "size_bytes": 25422,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/envs/webarena_patch.py",
+      "sha256": "53b727b3df11c48ad7a5c7d06e12bddaab5b5708254ad61ba5052574cfe54781",
+      "size_bytes": 6502,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/eval/audit.py",
+      "sha256": "5154de2d415c1510c96f1df752ed800521e4cda9c81142ade7ae5317f6ca72dc",
+      "size_bytes": 11134,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/eval/metrics.py",
+      "sha256": "7dd7c39360dea8f95c63723efa3309472b5b630627190dcd6c36fcde5d17d67d",
+      "size_bytes": 32778,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/eval/on_policy.py",
+      "sha256": "b738a6d5c479cfdbc5d0c79d11997948a9baeff017599c527ccfdd1fc54a1e6b",
+      "size_bytes": 41615,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "revact/eval/rollout.py",
+      "sha256": "29b54a1f329e706991e5859d5952f1c92ec35cd56d2a68b4c70b7722d1ef4f62",
+      "size_bytes": 42243,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/eval/truth_authoring.py",
+      "sha256": "29715f76d307a0ce327388c400bc229fc7bbb375d8a726f7f58c5ef1a5439862",
+      "size_bytes": 6590,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "revact/grounding/authoring.py",
+      "sha256": "f0207d066128246bfeb0f2f8ccabfdb2e4b88613c3f7b78fd578dfb057812314",
+      "size_bytes": 18633,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/grounding/batch_prepare.py",
+      "sha256": "487c42dcf72985c878ada25ebae8bef29c1f2e777cbbbf07c127b18e08ec76ea",
+      "size_bytes": 21009,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "revact/grounding/point_runner.py",
+      "sha256": "2c3f734956cbbdc871f9be7138656be5644f1b97c6d71c9b80ad77d363cfc5ee",
+      "size_bytes": 58369,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/grounding/schema.py",
+      "sha256": "b72f4fd07f16d8f9be6d88ce4628bd7c2e72213f3475ce2ed9c1739df540b958",
+      "size_bytes": 28281,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/grounding/signals.py",
+      "sha256": "0fdc52422b6dbb43d74253ec8a2ca47b9d7aadef0980af6cf934382b28753854",
+      "size_bytes": 14293,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/grounding/solvers.py",
+      "sha256": "213c527e84b606e80197794bf8d751ea0bf730476039823f71a3ec4a0b30ca77",
+      "size_bytes": 22971,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/policies.py",
+      "sha256": "30d7c6ae88fbfe68ce343ba1e13075b8de323fe0f7c1a283e5071db1598dd787",
+      "size_bytes": 19663,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/prompts.py",
+      "sha256": "5ed852aabfb54f24b26cafe7821b1e6e968f9e615a76746a172ae168595c26af",
+      "size_bytes": 26260,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/server/adapters.py",
+      "sha256": "3b9f3cb48694a2a16447b8f267f4acf40b118f2c743248d40a3edb2ef46386a6",
+      "size_bytes": 25547,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/server/app.py",
+      "sha256": "7c365a37c23b8fcafd795ba1f58f0df3202d1ec8693f8bafd9aef85aaefc1f99",
+      "size_bytes": 23681,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/server/datasets.py",
+      "sha256": "39c40d25cd0e9f3f5b97c2b3de471ad443e92ac0ab08bda8370d041266296915",
+      "size_bytes": 60365,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/server/export.py",
+      "sha256": "c3ee965aedba086aefd4b81420905ea0b135245cf441dbdafbc5d792961959ee",
+      "size_bytes": 31167,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/server/quality.py",
+      "sha256": "c6f983e909585bd477354b8e51055113e433e310c5a721a23e4e52d7df89d796",
+      "size_bytes": 11141,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/train/distill.py",
+      "sha256": "dd4df683c5494247c4f4d92dce9306390c7124c985cb6bbea0ce7494d502d984",
+      "size_bytes": 26930,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/train/dpo.py",
+      "sha256": "58ae33e07f9351d1f5d0abfed73427bf7a6f29173c92d8fea53be08142748f27",
+      "size_bytes": 15986,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/train/validators.py",
+      "sha256": "b91c2aa9549e9808ae3f4bd3834045287a5c7e7b968ea51e3cac91a845c1264b",
+      "size_bytes": 18975,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/ui/app.js",
+      "sha256": "b40cbd3bb0895b3f362c638a2973f6ad31615c41847e137fb6b4dac869011b8e",
+      "size_bytes": 1558,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "revact/ui/views.js",
+      "sha256": "49fc498fad73074022b8ae6f5e71395751579075059561ff09f45ddb7197cb46",
+      "size_bytes": 72710,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "scripts/audit_formal_readiness.py",
+      "sha256": "e7bc32f61331478f25528f3e71211d481219f607c8d7ed0bc2de547eb3af4166",
+      "size_bytes": 37593,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "scripts/quarantine_legacy_lineage.py",
+      "sha256": "9b636da0d545547ca63d0a47e13dcb288cb8aa2fbc18ae5a1addc35d68106775",
+      "size_bytes": 5151,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "tests/test_candidates_s4.py",
+      "sha256": "ec4488bbfcb262e0546a5c93765f15344d2117e2499786af390b1acadc5c6a32",
+      "size_bytes": 6767,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "tests/test_eval_audit_cli.py",
+      "sha256": "a729eb79080ddb5f8bb96b458cf0d057b760489d22797607e33ee4fc3290835d",
+      "size_bytes": 9567,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "tests/test_eval_metrics.py",
+      "sha256": "6dc0618860680ab072d87884df017118889bf9c069ed48d36c95abb4f6f3c26e",
+      "size_bytes": 13579,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "tests/test_eval_rollout_formal.py",
+      "sha256": "806d3ab9cf90a1b7f1b69fbd8f68823fc7da41158373fd53a5d3a972db5b3ff8",
+      "size_bytes": 22651,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "tests/test_eval_truth.py",
+      "sha256": "127c3fcd37fbb5ba6310cf01da44f4019e009c7a2c9b9221aa345d26c2564186",
+      "size_bytes": 5243,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "tests/test_formal_export_governance.py",
+      "sha256": "f4f74078cfaf252929d9cd43415a178aa2f69c439061b082ca728cfff0e97ea4",
+      "size_bytes": 25691,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "tests/test_formal_preferences.py",
+      "sha256": "7673cbd443dc4fdb03dfe7dffaefed8a046b5248ce72ccb6d5016143943a387b",
+      "size_bytes": 9752,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "tests/test_formal_readiness_audit.py",
+      "sha256": "365de08e54b4abf7dce78d4f111a15e7dace700936654f3223aa5db127c8ca57",
+      "size_bytes": 14869,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "tests/test_grounding_schema.py",
+      "sha256": "ba646ee866c1057e3a7e9da36087595be090726f2ecc564088aa7a7b71448018",
+      "size_bytes": 18069,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "tests/test_offline_pipeline.py",
+      "sha256": "a90f95f1e8cbea8ff89178f3dbde146410cda4c970b0903cb65caaf89b7bf708",
+      "size_bytes": 6267,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "tests/test_on_policy_traces.py",
+      "sha256": "9c6bee2976759fd7701bc3ca779ea877739cf40589afadb04891c22768e4a14a",
+      "size_bytes": 14239,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "tests/test_opinion_labels.py",
+      "sha256": "1d3f25bca23398cab3d0455212cc74f9f114d1c19c2aca416181a76640e6b163",
+      "size_bytes": 13408,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "tests/test_point_live_pipeline.py",
+      "sha256": "90d14d5d6ad5be49749845c3d6dd2ef9042533b8592479862eaabb01999d6a0a",
+      "size_bytes": 22599,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "tests/test_probe_authoring.py",
+      "sha256": "62b4a437829f625999b8e41827603ba4993b9a60408cd957753926f7c91d0561",
+      "size_bytes": 5976,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "tests/test_prompt_registry_history.py",
+      "sha256": "84ad2b7a896a5e98cf60d9911063efe95bcd22dc05f7b32c6b8459e463b04e2e",
+      "size_bytes": 10627,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "tests/test_prompts_multiturn_train.py",
+      "sha256": "0170d9a6def4bf8ff4a1640bbe810590c63812f140265726d9b2a332ac440233",
+      "size_bytes": 23192,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "tests/test_quarantine.py",
+      "sha256": "731b2711c1552ae013f376d75f4ec0fd793561ebdc294d608d9915e7c2181cc3",
+      "size_bytes": 3359,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "tests/test_read_only_guard.py",
+      "sha256": "634cd676c869aa4631ba3e4d805c975034d100390b3ea821e6737a26ad6c0fdf",
+      "size_bytes": 1942,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "tests/test_solver_union.py",
+      "sha256": "0217f57c5ba7681a2e007a0b4d530e5bd15da1d7cffb0376a40053e176782dd4",
+      "size_bytes": 10478,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "tests/test_splits.py",
+      "sha256": "a547fe49c80fc0932c91efbc7c06255a308c0e159529b2f14e7365dc434051f2",
+      "size_bytes": 13781,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "tests/test_train_remediation.py",
+      "sha256": "ed6ccf2b656a7dbcb33df36973f45e43b9059770dd4b1d6c7f100172ef4cdd16",
+      "size_bytes": 22008,
+      "status": " M"
+    },
+    {
+      "exists": true,
+      "path": "tests/test_webarena_patch.py",
+      "sha256": "d581c0fd69a9b1dcfad399ed748407a50288bf9e281ea49b77bce771b4aaa4ed",
+      "size_bytes": 413,
+      "status": "??"
+    },
+    {
+      "exists": true,
+      "path": "tests/test_workbench.py",
+      "sha256": "9e4e83df36161213e02377343bcfd8223ef75bca88f3a5d39611e69a5c23c261",
+      "size_bytes": 33575,
+      "status": " M"
+    }
+  ],
+  "entry_count": 193,
+  "excluded_outputs": [
+    "docs/audit/IRIS-openrouter-on-policy-code-snapshot.json"
+  ],
+  "generated_at": "2026-07-14T09:40:48.670271+00:00",
+  "repository_root": "/workspace/iris",
+  "schema_version": "iris.worktree_manifest.v1",
+  "worktree_sha256": "2e2108f8fa552b77197c791f406823760c41071b4c95467dd266ca2bfb7d9a50"
+}

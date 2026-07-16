@@ -24,7 +24,8 @@ from ..data.assemble import (
     build_fields,
     build_goal,
 )
-from ..data.candidates import (CandidateValidationError,
+from ..data.candidates import (FORMAL_CANDIDATE_BODY_NAME,
+                               CandidateValidationError,
                                build_a11y_candidate_set, interactive_elements,
                                save_candidate_set)
 from ..data.governance import formal_release_context
@@ -201,13 +202,31 @@ class DataStore:
         return {"trajectory_id": tid, "meta": meta, "steps": steps,
                 "key_states": key_states, "n_meta_attempts": len(matches)}
 
+    def _key_state_rows(self) -> list[tuple[Path, dict]]:
+        """Load every site key-state bank, not only ``config.SITE``.
+
+        A workbench is a dataset browser rather than a single live-env client:
+        filtering this join through the currently selected runtime site made a
+        valid Reddit formal point lose its state provenance when the UI happened
+        to be configured for shopping.  The filename is retained as provenance
+        and deterministic ordering keeps the API stable.
+        """
+        bank = self.root / "raw" / "state_bank"
+        if not bank.exists():
+            return []
+        return [(path, row)
+                for path in sorted(bank.glob("*_key_states.jsonl"))
+                for row in _jsonl(path)]
+
     def key_states(self) -> list[dict]:
-        rows = _jsonl(self.root / "raw" / "state_bank" / f"{config.SITE}_key_states.jsonl")
         out = []
-        for r in rows:
+        for path, r in self._key_state_rows():
+            filename_site = path.name.removesuffix("_key_states.jsonl")
             out.append({
                 "state_id": r.get("state_id"), "task_id": r.get("task_id"),
                 "trajectory_id": r.get("trajectory_id"), "step_id": r.get("step_id"),
+                "site": r.get("site", filename_site),
+                "source_asset": str(path.relative_to(self.root)),
                 "run_id": r.get("run_id", ""),
                 "logical_trajectory_id": r.get("logical_trajectory_id", r.get("trajectory_id")),
                 "environment_origin": r.get("environment_origin", "unknown"),
@@ -221,8 +240,25 @@ class DataStore:
             })
         return out
 
-    def reached_states(self) -> list[dict]:
-        """Risk-affording states (S3 pilot + scale), deduped latest-per-name."""
+    def reached_states(self, tier: str = "legacy") -> list[dict]:
+        """Risk-affording states from one explicitly selected asset tier.
+
+        ``formal`` is backed by ``formal_point_reached_states.jsonl``.  A state
+        which has a formal candidate/probe but was omitted from that derived
+        view is represented from its cross-site key-state record and is marked
+        ``formal_key_state_fallback``; no label is inferred in either case.
+
+        The Python default remains ``legacy`` for the old proposal/materialize
+        adapters.  HTTP and UI routes pass ``tier=formal`` explicitly.
+        """
+        if tier not in ("formal", "legacy", "all"):
+            raise ValueError("tier must be formal, legacy, or all")
+        if tier == "all":
+            return (self.reached_states(tier="formal") +
+                    self.reached_states(tier="legacy"))
+        if tier == "formal":
+            return self._formal_reached_states()
+
         latest: dict[str, dict] = {}
         for fname, source in [("pilot_reached_states.jsonl", "pilot"),
                               ("scaled_reached_states.jsonl", "scaled")]:
@@ -237,6 +273,9 @@ class DataStore:
             out.append({
                 "name": name, "state_id": r.get("state_id", ""),
                 "action_type": r.get("action_type", ""), "source": r["_source"],
+                "asset_tier": "legacy",
+                "source_asset": f"raw/state_bank/{r['_source']}_reached_states.jsonl",
+                "site": r.get("site", config.SITE),
                 "url": r.get("url", ""), "constraint_goal": r.get("constraint_goal", ""),
                 "risky_text": risky.get("text", ""),
                 "risky_raw_action": risky.get("raw_action", ""),
@@ -245,6 +284,92 @@ class DataStore:
                 "axtree": _clip(r.get("axtree_snapshot", ""), 3000),
             })
         return out
+
+    def _formal_reached_states(self) -> list[dict]:
+        path = (self.root / "raw" / "state_bank" /
+                "formal_point_reached_states.jsonl")
+        rows = _jsonl(path)
+        by_state = {str(row.get("state_id") or ""): dict(row)
+                    for row in rows if str(row.get("state_id") or "")}
+
+        # A candidate artifact can legitimately include a measured NO_EFFECT /
+        # excluded point which is absent from the trainable reached-state view.
+        # Keep it browsable using real key-state + point provenance.
+        candidate_state_ids = {
+            str(row.get("state_id") or "") for row in self.formal_candidates()
+            if str(row.get("state_id") or "")}
+        key_by_state = {
+            str(row.get("state_id") or ""): {
+                **row, "_key_state_source_asset": str(source.relative_to(self.root))}
+            for source, row in self._key_state_rows()
+            if str(row.get("state_id") or "")}
+        point_by_state = {
+            str(row.get("state_id") or ""): row
+            for row in _jsonl(self.root / "grounded" / "probe_points.jsonl")
+            if str(row.get("state_id") or "")}
+        for state_id in sorted(candidate_state_ids - set(by_state)):
+            key_state = key_by_state.get(state_id, {})
+            point = point_by_state.get(state_id, {})
+            if not key_state and not point:
+                continue
+            by_state[state_id] = {
+                **key_state,
+                "name": state_id,
+                "state_id": state_id,
+                "reached": True,
+                "action_type": point.get("action_type", ""),
+                "candidate_id": point.get("candidate_id", ""),
+                "probe_point_id": point.get("probe_point_id", ""),
+                "probe_run_id": point.get("probe_run_id", ""),
+                "site": point.get("site", key_state.get("site", "")),
+                "trajectory_id": point.get(
+                    "trajectory_id", key_state.get("trajectory_id", "")),
+                "run_id": point.get("run_id", key_state.get("run_id", "")),
+                "risky_action": {
+                    "raw_action": point.get("raw_action", ""),
+                    "candidate_id": point.get("candidate_id", ""),
+                    "probe_point_id": point.get("probe_point_id", ""),
+                },
+                "_formal_fallback": True,
+            }
+
+        counts: dict[str, int] = {}
+        for candidate in self.formal_candidates():
+            state_id = str(candidate.get("state_id") or "")
+            counts[state_id] = counts.get(state_id, 0) + 1
+        out = []
+        for state_id, row in by_state.items():
+            if not row.get("reached", True):
+                continue
+            risky = row.get("risky_action") or {}
+            action_type = str(row.get("action_type") or "")
+            out.append({
+                "name": str(row.get("name") or state_id),
+                "state_id": state_id,
+                "action_type": action_type,
+                "grounded_action_type": action_type or None,
+                "source": ("formal_key_state_fallback" if row.get("_formal_fallback")
+                           else "formal_point_reached"),
+                "asset_tier": "formal",
+                "source_asset": (row.get("_key_state_source_asset")
+                                 if row.get("_formal_fallback") else
+                                 str(path.relative_to(self.root))),
+                "site": row.get("site", ""),
+                "probe_point_id": row.get("probe_point_id", ""),
+                "probe_run_id": row.get("probe_run_id", ""),
+                "candidate_id": row.get("candidate_id", risky.get("candidate_id", "")),
+                "formal_candidate_count": counts.get(state_id, 0),
+                "trajectory_id": row.get("trajectory_id", ""),
+                "run_id": row.get("run_id", ""),
+                "url": row.get("url", ""),
+                "constraint_goal": row.get("constraint_goal", ""),
+                "risky_text": risky.get("text", ""),
+                "risky_raw_action": risky.get("raw_action", ""),
+                "safe_answer": row.get("safe_answer", ""),
+                "axtree": _clip(row.get("axtree_snapshot", ""), 3000),
+            })
+        return sorted(out, key=lambda row: (
+            str(row.get("site") or ""), str(row.get("name") or "")))
 
     def _bind_action_type(self, risky_text: str) -> str | None:
         """Same keyword binding assemble() uses to attach a grounded label."""
@@ -335,7 +460,7 @@ class DataStore:
 
     # -------------------------------------------------------------- train -- #
     def sft(self, distilled: bool = False, family: str = "single",
-            tier: str = "legacy") -> list[dict]:
+            tier: str = "formal") -> list[dict]:
         """Workbench view over one explicitly selected dataset tier.
 
         ``formal`` and ``legacy`` are never merged implicitly.  This keeps an
@@ -346,18 +471,17 @@ class DataStore:
             raise ValueError("family must be single, multiturn, or all")
         if tier not in ("formal", "legacy"):
             raise ValueError("tier must be formal or legacy")
-        if distilled and family != "single":
-            return []  # no multi-turn teacher artifact exists yet
         specs = []
         if tier == "formal":
             base = self.root / "train" / "formal"
             if family in ("single", "all"):
                 specs.append(("single", base / (
-                    "iris_sft_distilled_point_v1.jsonl" if distilled else
-                    "iris_sft_point_v1.jsonl")))
-            if family in ("multiturn", "all") and not distilled:
-                specs.append(("multiturn", base /
-                              "iris_sft_multiturn_point_v1.jsonl"))
+                    config.FORMAL_DISTILLED_SFT_PATH.name if distilled else
+                    config.FORMAL_SFT_PATH.name)))
+            if family in ("multiturn", "all"):
+                specs.append(("multiturn", base / (
+                    config.FORMAL_MULTITURN_DISTILLED_SFT_PATH.name
+                    if distilled else config.FORMAL_MULTITURN_SFT_PATH.name)))
             split_dir = base / "splits"
         else:
             base = self.root / "train" / "sft"
@@ -437,7 +561,7 @@ class DataStore:
             })
         return out
 
-    def dpo(self, family: str = "single", tier: str = "legacy") -> list[dict]:
+    def dpo(self, family: str = "single", tier: str = "formal") -> list[dict]:
         if family not in ("single", "multiturn", "all"):
             raise ValueError("family must be single, multiturn, or all")
         if tier not in ("formal", "legacy"):
@@ -446,10 +570,15 @@ class DataStore:
         if tier == "formal":
             base = self.root / "train" / "formal"
             if family in ("single", "all"):
-                names.append(("single", base / "iris_dpo_point_v1.jsonl"))
+                names.append(("single", base / config.FORMAL_DPO_PATH.name))
             if family in ("multiturn", "all"):
                 names.append(("multiturn", base /
-                              "iris_dpo_multiturn_point_v1.jsonl"))
+                              config.FORMAL_MULTITURN_DPO_PATH.name))
+            for path in sorted(base.glob(config.FORMAL_DPO_SUPPLEMENT_GLOB)):
+                inferred = ("multiturn" if "multiturn" in path.name
+                            else "single")
+                if family in (inferred, "all"):
+                    names.append((inferred, path))
             split_dir = base / "splits"
         else:
             base = self.root / "train" / "dpo"
@@ -528,8 +657,8 @@ class DataStore:
                 family = candidate_family
                 base = self.root / "train" / (
                     "formal" if selected == "formal" else "sft")
-                name = (("iris_sft_point_v1.jsonl" if family == "single" else
-                         "iris_sft_multiturn_point_v1.jsonl") if selected == "formal"
+                name = ((config.FORMAL_SFT_PATH.name if family == "single" else
+                         config.FORMAL_MULTITURN_SFT_PATH.name) if selected == "formal"
                         else ("revact_sft.jsonl" if family == "single" else
                               "revact_sft_multiturn.jsonl"))
                 row = next((r for r in _jsonl(base / name)
@@ -540,22 +669,30 @@ class DataStore:
         if row is None:
             return None
         distilled = None
-        if family == "single":
-            distill_path = self.root / "train" / (
-                "formal/iris_sft_distilled_point_v1.jsonl"
-                if selected == "formal" else
-                "sft/revact_sft_distilled.jsonl")
+        if family == "single" or selected == "formal":
+            distill_path = ((self.root / "train" / "formal" /
+                             (config.FORMAL_DISTILLED_SFT_PATH.name
+                              if family == "single" else
+                              config.FORMAL_MULTITURN_DISTILLED_SFT_PATH.name))
+                            if selected == "formal" else
+                            self.root / "train" / "sft" /
+                            "revact_sft_distilled.jsonl")
             distilled = next((r for r in _jsonl(distill_path)
                               if r.get("sample_id") == sample_id), None)
         if selected == "formal":
             dpo_path = self.root / "train" / "formal" / (
-                "iris_dpo_point_v1.jsonl" if family == "single" else
-                "iris_dpo_multiturn_point_v1.jsonl")
+                config.FORMAL_DPO_PATH.name if family == "single" else
+                config.FORMAL_MULTITURN_DPO_PATH.name)
+            dpo_paths = [dpo_path] + [
+                path for path in sorted(dpo_path.parent.glob(
+                    config.FORMAL_DPO_SUPPLEMENT_GLOB))
+                if ("multiturn" in path.name) == (family == "multiturn")]
         else:
             dpo_path = self.root / "train" / "dpo" / (
                 "revact_dpo.jsonl" if family == "single" else
                 "revact_dpo_multiturn.jsonl")
-        dpo = [r for r in _jsonl(dpo_path)
+            dpo_paths = [dpo_path]
+        dpo = [r for path in dpo_paths for r in _jsonl(path)
                if r.get("pair_id", "").startswith(sample_id + "__")]
         split_dir = self.root / "train" / (
             "formal/splits" if selected == "formal" else "splits")
@@ -580,11 +717,19 @@ class DataStore:
 
     def dataset_card(self) -> dict:
         """HF-dataset-card-style structured description of the training files:
-        sample anatomy, field schema, and live counts/length stats."""
+        sample anatomy, field schema, and formal-tier counts/length stats.
+
+        Legacy files remain discoverable under an explicit inventory, but they
+        never contribute to the unqualified headline numbers.
+        """
         lens: dict[str, list[int]] = {}
-        for family, name in (("single", "revact_sft.jsonl"),
-                             ("multiturn", "revact_sft_multiturn.jsonl")):
-            for r in _jsonl(self.root / "train" / "sft" / name):
+        formal_dir = self.root / "train" / "formal"
+        formal_specs = (
+            ("single", config.FORMAL_SFT_PATH.name),
+            ("multiturn", config.FORMAL_MULTITURN_SFT_PATH.name),
+        )
+        for family, name in formal_specs:
+            for r in _jsonl(formal_dir / name):
                 for m in r.get("messages", []):
                     if m.get("role") in ("user", "assistant"):
                         lens.setdefault(f"{family}.{m['role']}", []).append(
@@ -599,9 +744,8 @@ class DataStore:
             length_stats[role] = ({"n": len(values), "min": min(values),
                                    "avg": round(sum(values) / len(values)),
                                    "max": max(values)} if values else {"n": 0})
-        raw_sft = [r for name in ("revact_sft.jsonl",
-                                  "revact_sft_multiturn.jsonl")
-                   for r in _jsonl(self.root / "train" / "sft" / name)]
+        raw_sft = [r for _, name in formal_specs
+                   for r in _jsonl(formal_dir / name)]
         prompt_fps = sorted({str((r.get("meta") or {}).get("prompts_fp"))
                              for r in raw_sft
                              if (r.get("meta") or {}).get("prompts_fp")})
@@ -611,8 +755,22 @@ class DataStore:
             for fp in prompt_fps}
         formal_grounding = self.formal_grounding()
         legacy_smoke = self.grounded_runs()
+        legacy_inventory = {
+            "asset_tier": "legacy",
+            "formal_supervision": False,
+            "sft_single": len(self.sft(tier="legacy")),
+            "sft_multiturn": len(self.sft(
+                family="multiturn", tier="legacy")),
+            "dpo_single": len(self.dpo(tier="legacy")),
+            "dpo_multiturn": len(self.dpo(
+                family="multiturn", tier="legacy")),
+            "teacher": len(self.sft(
+                distilled=True, family="all", tier="legacy")),
+        }
         return {
+            "default_tier": "formal",
             "summary": self.summary(),
+            "legacy_assets": legacy_inventory,
             "granularity": CARD_GRANULARITY,
             "system_prompt": prompts.get("agent_system"),
             "prompts_fingerprint": prompts.fingerprint(),
@@ -643,6 +801,16 @@ class DataStore:
         }
 
     # ---------------------------------------------- constraint / candidate -- #
+    def formal_candidates(self) -> list[dict]:
+        """Immutable S4 body used by formal point-level supervision.
+
+        Deliberately return the body as recorded: this loader never rebuilds
+        candidates from a current AXTree and never consults a class-level
+        reversibility label.
+        """
+        return _jsonl(self.root / "raw" / "candidates" /
+                      FORMAL_CANDIDATE_BODY_NAME)
+
     def constraint_templates(self) -> dict:
         return {"explicit": prompts.get_list("explicit_constraint_templates"),
                 "implicit": prompts.get_list("implicit_constraint_templates"),
@@ -660,8 +828,96 @@ class DataStore:
                 "variants": {v: build_goal(at, v, state_name)
                              for v in ("constraint", "request")}}
 
-    def candidates_for(self, state_name: str) -> dict | None:
-        """S4 legal candidates plus separately marked legacy counterfactuals.
+    def candidates_for(self, state_name: str,
+                       tier: str = "legacy") -> dict | None:
+        """Candidates for one explicit tier.
+
+        Formal browsing is a read-only view of the configured immutable
+        candidate artifact (currently ``formal_candidates.v4``).
+        Legacy browsing retains the old AXTree proposal + class-label-derived
+        counterfactual preview, but is unmistakably marked non-formal.
+        """
+        if tier == "formal":
+            return self._formal_candidates_for(state_name)
+        if tier == "legacy":
+            return self._legacy_candidates_for(state_name)
+        raise ValueError("tier must be formal or legacy")
+
+    def _formal_state_raw(self, state_name: str) -> dict | None:
+        rows = _jsonl(self.root / "raw" / "state_bank" /
+                      "formal_point_reached_states.jsonl")
+        state = next((row for row in rows
+                      if row.get("name") == state_name or
+                      row.get("state_id") == state_name), None)
+        if state is not None:
+            return state
+        # NO_EFFECT/excluded points may be absent from the derived reached view;
+        # their immutable candidate set is still inspectable against the real
+        # cross-site key-state snapshot.
+        for _, row in self._key_state_rows():
+            if row.get("state_id") == state_name:
+                return row
+        return None
+
+    def _formal_candidates_for(self, state_name: str) -> dict | None:
+        states = self.reached_states(tier="formal")
+        state = next((row for row in states
+                      if row.get("name") == state_name or
+                      row.get("state_id") == state_name), None)
+        if state is None:
+            return None
+        state_id = str(state.get("state_id") or "")
+        body = [dict(row) for row in self.formal_candidates()
+                if str(row.get("state_id") or "") == state_id]
+        if not body:
+            return None
+        raw_state = self._formal_state_raw(state_id) or {}
+        snapshot = str(raw_state.get("axtree_snapshot") or "")
+        lines = {row["bid"]: row["line"]
+                 for row in interactive_elements(snapshot)} if snapshot else {}
+        points = {str(row.get("candidate_id") or ""): row
+                  for row in _jsonl(
+                      self.root / "grounded" / "probe_points.jsonl")}
+        candidates = []
+        for row in body:
+            candidate_id = str(row.get("candidate_id") or "")
+            point = points.get(candidate_id, {})
+            primitive = str(row.get("canonical_action") or "click").split(":", 1)[0]
+            bid = str(row.get("bid") or "")
+            candidates.append({
+                **row,
+                "kind": row.get("category", ""),
+                "text": lines.get(bid, ""),
+                "raw_action": (point.get("raw_action") or
+                               (f"{primitive}('{bid}')" if bid else "")),
+                "grounded": bool(point),
+                "probe_point_id": point.get("probe_point_id", ""),
+                "action_type": point.get("action_type", state.get("action_type", "")),
+                "site": point.get("site", state.get("site", "")),
+                "asset_tier": "formal",
+                "category_is_proposal": True,
+            })
+        return {
+            "state": state.get("name") or state_id,
+            "state_id": state_id,
+            "action_type": state.get("action_type", ""),
+            "site": state.get("site", ""),
+            "asset_tier": "formal",
+            "source_artifact": f"raw/candidates/{FORMAL_CANDIDATE_BODY_NAME}",
+            "immutable": True,
+            "uses_class_level_label": False,
+            "s4_status": "ready",
+            "s4_error": "",
+            "snapshot_hash": str(body[0].get("snapshot_hash") or ""),
+            "candidates": candidates,
+            "counterfactuals": [],
+            "counterfactuals_note": (
+                "Formal DPO pairs are separate immutable assets; no legacy "
+                "class-label flip is generated in this view."),
+        }
+
+    def _legacy_candidates_for(self, state_name: str) -> dict | None:
+        """Legacy AXTree proposals plus class-smoke counterfactual previews.
 
         S4 depends only on the current snapshot and expert bid.  It never reads
         a recovery/safety label.  DPO template flips are retained in a separate
@@ -711,14 +967,17 @@ class DataStore:
                         "rendered": rejected,
                     })
         return {"state": state_name, "state_id": raw.get("state_id") or state_name,
+                "asset_tier": "legacy", "immutable": False,
+                "uses_class_level_label": True,
+                "source_artifact": "legacy live preview / iris_candidates.v3",
                 "action_type": at, "s4_status": "ready" if cands else "blocked",
                 "s4_error": s4_error, "snapshot_hash": (
                     cands[0]["snapshot_hash"] if cands else ""),
                 "candidates": cands, "counterfactuals": counterfactuals}
 
     def materialize_candidates(self, state_name: str) -> dict:
-        """Persist the pure S4 set; idempotent for the same state/snapshot."""
-        result = self.candidates_for(state_name)
+        """Persist the legacy proposal set; formal v1 is immutable/read-only."""
+        result = self.candidates_for(state_name, tier="legacy")
         if result is None:
             raise CandidateValidationError(f"unknown reached state {state_name!r}")
         if result["s4_status"] != "ready":
@@ -759,7 +1018,8 @@ class DataStore:
         formal = self.formal_grounding()
         formal_point = next((p for p in formal["items"]
                              if p["probe_point_id"] == point_id), None)
-        state = next((s for s in self.reached_states()
+        state_tier = "formal" if tier == "formal" else "legacy"
+        state = next((s for s in self.reached_states(tier=state_tier)
                       if ((formal_point and s.get("state_id") ==
                            formal_point.get("state_id")) or
                           (not formal_point and s["name"] == state_name))), None)
@@ -767,8 +1027,10 @@ class DataStore:
         transition = None
         if formal_point:
             candidate_id = str(formal_point.get("candidate_id") or "")
-            candidate = next((row for row in _jsonl(
-                self.root / "raw" / "candidates" / "iris_candidates.v3.jsonl")
+            formal_candidate_view = self.candidates_for(
+                str(formal_point.get("state_id") or ""), tier="formal")
+            candidate = next((row for row in (
+                (formal_candidate_view or {}).get("candidates") or [])
                               if row.get("candidate_id") == candidate_id), None)
             transition = {
                 key: formal_point.get(key) for key in (
@@ -779,63 +1041,149 @@ class DataStore:
                     "undo_observation_hashes", "final_signal", "residual_diff")}
         pairs = [p for p in self.dpo(family="all", tier=tier)
                  if p["pair_id"].startswith(sample_id + "__")]
-        distilled = next((d for d in self.sft(distilled=True, tier=tier)
+        distilled = next((d for d in self.sft(
+            distilled=True, family=sample.get("family", "single"), tier=tier)
                           if d["sample_id"] == sample_id), None)
+        teacher_stage = None
+        if distilled is not None:
+            teacher_stage = {
+                "status": "teacher",
+                "sample": distilled,
+                "source_asset": (
+                    f"train/formal/{config.FORMAL_DISTILLED_SFT_PATH.name}"
+                    if sample.get("family", "single") == "single" else
+                    f"train/formal/{config.FORMAL_MULTITURN_DISTILLED_SFT_PATH.name}")
+                if tier == "formal" else
+                "train/sft/revact_sft_distilled.jsonl",
+            }
+        elif tier == "formal":
+            active_distilled_name = (
+                config.FORMAL_DISTILLED_SFT_PATH.name
+                if sample.get("family", "single") == "single" else
+                config.FORMAL_MULTITURN_DISTILLED_SFT_PATH.name)
+            fallback_name = (
+                f"{Path(active_distilled_name).stem}.template_fallback.jsonl")
+            fallback = next((row for row in _jsonl(
+                self.root / "train" / "formal" / fallback_name)
+                             if row.get("sample_id") == sample_id), None)
+            if fallback is not None:
+                teacher_stage = {
+                    "status": "template_fallback",
+                    "sample": fallback,
+                    "source_asset": f"train/formal/{fallback_name}",
+                    "teacher_qc_status": (fallback.get("meta") or {}).get(
+                        "teacher_qc_status", "failed"),
+                }
         trajectory_id = (sample.get("trajectory_id") or "")
         related_ks = [k for k in self.key_states()
                       if (trajectory_id and k.get("trajectory_id") == trajectory_id)
                       or (not trajectory_id and at in k.get("afforded_action_types", []))][:8]
+        label = ({
+            "probe_point_id": formal_point.get("probe_point_id"),
+            "effect_status": formal_point.get("effect_status"),
+            "recovery_status": formal_point.get("recovery_status"),
+            "undo_cost_steps": formal_point.get("undo_cost_steps"),
+            "display_label": formal_point.get("display_label"),
+            "source": "formal_point",
+        } if formal_point else None)
+        legacy_label = self.effective_labels().get(at)
+        effective_label = (label.get("display_label") if label is not None
+                           else legacy_label)
+        integrity = {
+            "state": state is not None,
+            "candidate": candidate is not None if tier == "formal" else None,
+            "transition": transition is not None if tier == "formal" else None,
+            "probe": formal_point is not None if tier == "formal" else None,
+            "label": label is not None if tier == "formal" else None,
+            "teacher": teacher_stage is not None if tier == "formal" else None,
+            "split": bool(sample.get("split")),
+        }
         return {"sample": sample, "asset_tier": tier,
                 "split": sample.get("split"), "state": state,
                 "candidate": candidate, "transition": transition,
+                "probe": formal_point, "label": label,
+                "teacher": teacher_stage,
+                "lineage_integrity": {
+                    **integrity,
+                    "complete": all(value for value in integrity.values()
+                                    if value is not None),
+                    "split_assigned": sample.get("split") in {
+                        "train", "dev", "test"},
+                },
                 "formal_grounding_point": formal_point,
                 "formal_grounding_integrity": {
                     key: formal[key] for key in ("ok", "error", "one_to_one")},
                 "grounded_runs": grounded,
-                "legacy_display_label": self.effective_labels().get(at),
+                "legacy_display_label": legacy_label,
                 "legacy_display_label_tier": "legacy_class_smoke",
-                # Backward-compatible UI alias, explicitly tiered below.
-                "effective_label": self.effective_labels().get(at),
-                "effective_label_tier": "legacy_class_smoke",
+                # Backward-compatible alias, now sourced from the selected tier.
+                "effective_label": effective_label,
+                "effective_label_tier": (
+                    "formal_point" if formal_point else "legacy_class_smoke"),
+                "legacy_notice": (
+                    "Legacy lineage is display-only and may use the class-level "
+                    "latest non-UNKNOWN label; it is excluded from formal export."
+                    if tier == "legacy" else ""),
                 "dpo_pairs": pairs, "distilled": distilled,
                 "related_key_states": related_ks}
 
     # ------------------------------------------------------------ summary -- #
     def summary(self) -> dict:
         trajs = self.trajectory_index()
-        sft = self.sft(tier="legacy")
-        sft_multi = self.sft(family="multiturn", tier="legacy")
         formal_sft = self.sft(tier="formal")
         formal_sft_multi = self.sft(family="multiturn", tier="formal")
-        labels = self.effective_labels()
+        formal_dpo = self.dpo(tier="formal")
+        formal_dpo_multi = self.dpo(family="multiturn", tier="formal")
+        formal_distilled = self.sft(
+            distilled=True, family="all", tier="formal")
         formal = self.formal_grounding()
+        formal_action_types = {
+            str(point.get("action_type") or "") for point in formal["items"]
+            if str(point.get("action_type") or "")}
+        legacy_sft = self.sft(tier="legacy")
+        legacy_sft_multi = self.sft(family="multiturn", tier="legacy")
+        legacy_dpo = self.dpo(tier="legacy")
+        legacy_dpo_multi = self.dpo(family="multiturn", tier="legacy")
+        legacy_distilled = self.sft(
+            distilled=True, family="all", tier="legacy")
+        legacy_labels = self.effective_labels()
         return {
+            "default_tier": "formal",
             "site": config.SITE, "data_root": str(self.root),
             "n_traj": len(trajs), "n_traj_success": sum(t["success"] for t in trajs),
             "n_trajectory_meta_rows": len(self.trajectories_meta()),
             "n_key_states": len(self.key_states()),
             "n_reached_states": len(self.reached_states()),
-            # Backward-compatible names are explicitly identified as legacy.
-            "n_grounded_runs": len(self.grounded_runs()),
-            "n_grounded_classes": len(labels),
-            "effective_labels": labels,
+            # Unqualified headline counts always describe the formal tier.
+            "n_grounded_points": formal["n_points"],
+            "n_grounded_runs": formal["n_points"],
+            "n_grounded_classes": len(formal_action_types),
+            "n_sft": len(formal_sft) + len(formal_sft_multi),
+            "n_sft_single": len(formal_sft),
+            "n_sft_multiturn": len(formal_sft_multi),
+            "n_sft_total": len(formal_sft) + len(formal_sft_multi),
+            "n_dpo": len(formal_dpo) + len(formal_dpo_multi),
+            "n_dpo_single": len(formal_dpo),
+            "n_dpo_multiturn": len(formal_dpo_multi),
+            "n_distilled": len(formal_distilled),
             "n_legacy_class_smoke_rows": len(self.grounded_runs()),
+            "legacy_effective_labels": legacy_labels,
+            "n_legacy_sft": len(legacy_sft),
+            "n_legacy_sft_multiturn": len(legacy_sft_multi),
+            "n_legacy_sft_total": len(legacy_sft) + len(legacy_sft_multi),
+            "n_legacy_dpo": len(legacy_dpo),
+            "n_legacy_dpo_multiturn": len(legacy_dpo_multi),
+            "n_legacy_distilled": len(legacy_distilled),
             "n_formal_probe_points": formal["n_points"],
             "n_formal_point_manifest": formal["n_manifest"],
             "formal_grounding_ok": formal["ok"],
             "formal_grounding_error": formal["error"],
-            "n_sft": len(sft), "n_sft_multiturn": len(sft_multi),
-            "n_sft_total": len(sft) + len(sft_multi),
-            "n_dpo": len(self.dpo(tier="legacy")),
-            "n_dpo_multiturn": len(self.dpo(
-                family="multiturn", tier="legacy")),
-            "n_distilled": len(self.sft(distilled=True, tier="legacy")),
             "n_formal_sft": len(formal_sft),
             "n_formal_sft_multiturn": len(formal_sft_multi),
-            "n_formal_dpo": len(self.dpo(tier="formal")),
-            "n_formal_dpo_multiturn": len(self.dpo(
-                family="multiturn", tier="formal")),
-            "n_formal_distilled": len(self.sft(
-                distilled=True, tier="formal")),
+            "n_formal_sft_total": len(formal_sft) + len(formal_sft_multi),
+            "n_formal_dpo": len(formal_dpo),
+            "n_formal_dpo_multiturn": len(formal_dpo_multi),
+            "n_formal_dpo_total": len(formal_dpo) + len(formal_dpo_multi),
+            "n_formal_distilled": len(formal_distilled),
             "splits": self.splits_report(),
         }

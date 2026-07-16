@@ -1,0 +1,9 @@
+{
+  "body_name": "iris_dpo_on_policy_transition_v2_openrouter_20260715.jsonl",
+  "body_sha256": "5b5c8e3ef461f873b3cb2dbaec32dfcad521e93d95ae59f0c515c1861e598339",
+  "n_rows": 2,
+  "pair_ids_sha256": "734e00c2420cbedff27366cef2721d75dc912c4503eabe913d279b1ea0f18bfa",
+  "release_id": "transition-v2-openrouter-live-20260715",
+  "schema_version": "iris.formal_dpo_supplement_manifest.v1",
+  "source_sample_ids_sha256": "d05f026d0694fc8f493278188af55f8544f0e99d0c56d0997deaf3a4255665a1"
+}

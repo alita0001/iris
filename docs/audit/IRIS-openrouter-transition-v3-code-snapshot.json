@@ -1,0 +1,19 @@
+{
+  "schema_version": "iris.execution_code_snapshot.v1",
+  "execution_id": "openrouter-transition-v3-technology-live-20260715",
+  "base_head": "b67852828d6d9fb335114c2ceb1dc3a7002faca7",
+  "aggregate_sha256": "b14f491ff602be6034b39682727e94d642408d931a7a225652d2a4dead245fc2",
+  "aggregate_input": "base_head followed by sha256sum lines in listed order",
+  "entries": [
+    {"path": "revact/eval/rollout.py", "sha256": "002316332a01f9a9dd7db4a42c7562e808d1b123a0623b7302f39a5bf32ba156"},
+    {"path": "revact/policies.py", "sha256": "94f6c7c89ee61713e3317f10bdc38f9f46fe523357292b60f33c1754640c4ecf"},
+    {"path": "revact/prompts.py", "sha256": "3cb299c217de1baa1c5ec7fa8856be9a8a2da1d45687203628bcb693743dc0b4"},
+    {"path": "revact/config.py", "sha256": "3f2b560f5a280287b5772ee91edacf86a7c0928f8884ebc7c07ad0d284ef76ca"},
+    {"path": "revact/data/assemble.py", "sha256": "055d14d8819afc55c2305f5fa14560da37cc8219e1c78ef9eb626e57dffbe39b"},
+    {"path": "revact/grounding/transitions.py", "sha256": "e3c85f1e20345848b961226820a20da68a9a1916244f1f0dc940d3e53156b99e"},
+    {"path": "revact/data/candidates.py", "sha256": "f8944c7ec55e39e4f07ee612fa933dfee5fb16a8166056cd1022cebeefc0d957"},
+    {"path": "data/train/formal/iris_sft_transition_v3.jsonl", "sha256": "de0eab9ee7f496815ebff4d5ef79b247609a5f3c161476248e7b27b959303d40"}
+  ],
+  "credential_value_stored": false,
+  "safety_mode": "exact-source, budget=1, execute_target=false; strict whole-line action parser"
+}

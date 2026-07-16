@@ -102,11 +102,18 @@ def validate_rows(rows: list[dict], *, formal: bool | None = None,
                            meta.get("collector_success") is not True):
             problems.append(f"{rid}: formal pair requires is_mock=false and "
                             "collector_success=true")
+        source = str(meta.get("negative_source") or "legacy_unspecified")
         risky = meta.get("risky_raw_action", "")
         supervised_bids = {action_bid(risky)} if action_bid(risky) else set()
-        for completion in (r.get("chosen", ""), r.get("rejected", "")):
+        completions = [("chosen", r.get("chosen", "")),
+                       ("rejected", r.get("rejected", ""))]
+        for side, completion in completions:
             answer = re.search(r"<answer>\s*([^\n]+)", completion)
-            if answer and action_bid(answer.group(1)):
+            allow_absent_on_policy_bid = (
+                side == "rejected" and source == SOURCE_ON_POLICY and
+                meta.get("on_policy_action_legal") is False)
+            if (answer and action_bid(answer.group(1)) and
+                    not allow_absent_on_policy_bid):
                 supervised_bids.add(action_bid(answer.group(1)))
         current_obs = prompts.parse_observation_message(
             msgs[-1].get("content", ""))
@@ -116,7 +123,6 @@ def validate_rows(rows: list[dict], *, formal: bool | None = None,
                     f"{rid}: supervised click bid absent from input: [{bid}]")
         pt = meta.get("pair_type", "?")
         pair_types[pt] = pair_types.get(pt, 0) + 1
-        source = str(meta.get("negative_source") or "legacy_unspecified")
         source_dist[source] = source_dist.get(source, 0) + 1
         if row_formal:
             problems.extend(f"{rid}: {reason}"
@@ -139,9 +145,14 @@ def validate_rows(rows: list[dict], *, formal: bool | None = None,
                 problems.append(f"{rid}: invalid/missing canonical effect_status")
             if meta.get("recovery_status") not in RECOVERY_STATUSES:
                 problems.append(f"{rid}: invalid/missing canonical recovery_status")
-            for side in ("chosen", "rejected"):
-                for error in iris_tag_errors(r.get(side, "")):
-                    problems.append(f"{rid}: formal {side} {error}")
+            for error in iris_tag_errors(r.get("chosen", "")):
+                problems.append(f"{rid}: formal chosen {error}")
+            # Raw on-policy model output is allowed to be malformed: a format
+            # failure is itself an observed error.  Legal counterfactual prose
+            # remains fully schema-validated because it is authored data.
+            if source != SOURCE_ON_POLICY:
+                for error in iris_tag_errors(r.get("rejected", "")):
+                    problems.append(f"{rid}: formal rejected {error}")
             if parse_decision(r["chosen"]) != meta.get("decision"):
                 problems.append(f"{rid}: chosen decision does not match pinned metadata")
             risky_action = meta.get("risky_action") or meta.get("risky_raw_action")
@@ -167,6 +178,9 @@ def validate_rows(rows: list[dict], *, formal: bool | None = None,
                     meta.get("policy_model_version") or
                     meta.get("proposer_model_version")):
                 problems.append(f"{rid}: {source} lacks policy model/version provenance")
+            if source == SOURCE_ON_POLICY and meta.get(
+                    "on_policy_trace_verified") is not True:
+                problems.append(f"{rid}: on_policy lacks verified trace join")
             if source in _DEPLOYMENT_NEGATIVE_SOURCES:
                 n_deployment += 1
     ratio = n_deployment / n_formal if n_formal else None

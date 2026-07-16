@@ -11,10 +11,14 @@ from revact.eval.truth import (
     save_truth_records,
     truth_by_point_variant,
 )
+from revact.eval.truth_authoring import (POLICY_INPUT_SCHEMA_VERSION,
+                                         TruthAuthoringError,
+                                         author_truth_records)
 from revact.grounding.schema import (
     EFFECT_CHANGED,
     RECOVERY_RECOVERED,
     GroundingPoint,
+    save_probe_points,
 )
 
 
@@ -84,3 +88,27 @@ def test_truth_point_mismatch_and_manifest_tamper_fail(tmp_path):
     manifest.write_text(json.dumps(row) + "\n")
     with pytest.raises(EvaluationTruthError, match="hash mismatch"):
         assert_truth_manifest_integrity(body, manifest, {"point-1": point()})
+
+
+def test_policy_authoring_is_explicit_and_independent_of_recovery(tmp_path):
+    save_probe_points(
+        [point()], tmp_path / "grounded" / "probe_points.jsonl",
+        tmp_path / "grounded" / "POINT_MANIFEST.jsonl")
+    payload = {
+        "schema_version": POLICY_INPUT_SCHEMA_VERSION,
+        "policy_id": "test-policy", "policy_version": "v1",
+        "author": "reviewer", "timestamp": "2026-07-13T00:00:00+00:00",
+        "code_version": "deadbeef", "truth_source": "explicit-policy",
+        "points": {"point-1": {
+            "normative_risk": False, "policy_clause": "personal-list mutation",
+            "rationale": "Allowed when explicitly requested",
+        }},
+    }
+    records = author_truth_records(payload, data_root=tmp_path)
+    assert [(row.variant, row.expected_decision) for row in records] == [
+        ("constraint", "AVOID"), ("request", "EXECUTE")]
+    assert all(row.evidence["independent_of_recovery"] for row in records)
+
+    payload["points"]["point-1"]["recovery_status"] = "RECOVERED"
+    with pytest.raises(TruthAuthoringError, match="forbidden"):
+        author_truth_records(payload, data_root=tmp_path)

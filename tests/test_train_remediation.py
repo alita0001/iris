@@ -1,8 +1,13 @@
 """Training gates added by the point-level remediation."""
 from __future__ import annotations
 
+import dataclasses
 import hashlib
+import json
 
+import pytest
+
+from revact import config
 from revact.train import dpo, grpo, sft
 from revact.train.distill import (distill_sample, evidence_token, qc_check,
                                   qc_full_sample, run as run_distill)
@@ -92,6 +97,54 @@ def test_dpo_and_rlvr_token_reports_expose_truncation_by_id():
     assert prompt_report["n_dropped"] == 1
     assert prompt_report["dropped_prompt_ids"] == ["prompt-long"]
 
+
+
+
+def test_each_trainer_dry_run_fails_on_nonzero_token_drop(
+        tmp_path, monkeypatch, capsys):
+    import transformers
+
+    monkeypatch.setattr(
+        transformers.AutoTokenizer, "from_pretrained",
+        staticmethod(lambda *_args, **_kwargs: _CharChatTokenizer()))
+    original_train = sft.config.TRAIN
+
+    sft_row = _sft_row("sft-drop", formal=True)
+    sft_path = tmp_path / "sft.jsonl"
+    sft_path.write_text(json.dumps(sft_row) + "\n")
+    monkeypatch.setattr(sft, "formal_point_join_problems",
+                        lambda *_args, **_kwargs: [])
+    assert sft.run(sft_path, dry_run=True, max_len=100) == 1
+    assert "drop=1" in capsys.readouterr().out
+
+    pair = _pair(
+        "dpo-drop", "legal_candidate", candidate_id="source-candidate",
+        negative_candidate_id="negative-candidate", legal_at_snapshot=True,
+        negative_candidate_snapshot_hash="sha256:fixture")
+    dpo_path = tmp_path / "dpo.jsonl"
+    dpo_path.write_text(json.dumps(pair) + "\n")
+    monkeypatch.setattr(dpo, "formal_point_join_problems",
+                        lambda *_args, **_kwargs: [])
+    monkeypatch.setattr(
+        dpo.config, "TRAIN", dataclasses.replace(original_train, max_len=100))
+    assert dpo.run(dpo_path, dry_run=True) == 1
+    assert "drop=1" in capsys.readouterr().out
+
+    rlvr_row = _sft_row("rlvr-drop", formal=True)
+    rlvr_row["messages"][1]["content"] += " long" * 100
+    rlvr_row["meta"].update({
+        "variant": "request", "normative_risk": False,
+        "violates_constraint": False, "action_legal": True,
+        "backend_commit": False,
+    })
+    rlvr_path = tmp_path / "rlvr.jsonl"
+    rlvr_path.write_text(json.dumps(rlvr_row) + "\n")
+    monkeypatch.setattr(grpo, "formal_point_join_problems",
+                        lambda *_args, **_kwargs: [])
+    monkeypatch.setattr(
+        grpo.config, "TRAIN", dataclasses.replace(original_train, max_len=400))
+    assert grpo.run([rlvr_path], dry_run=True) == 1
+    assert "drop=1" in capsys.readouterr().out
 
 def test_formal_state_changing_turn_requires_explicit_type_and_full_block():
     row = _sft_row(formal=True)
@@ -294,6 +347,7 @@ def test_formal_teacher_qc_requires_evidence_and_checks_full_output():
     report = distill_sample(row, lambda _: teacher)
     assert report == {"ok": True, "attempts": 1}
     assert row["meta"]["prose_source"] == "teacher"
+    assert row["meta"]["rev_check_source"] == "teacher"
     assert qc_full_sample(row) is None
     assert "post_diff evidence citation" in qc_check(
         teacher.replace(f" {post_ref}", ""), "RECOVERED", "EXECUTE",
@@ -310,6 +364,35 @@ def test_formal_teacher_qc_requires_evidence_and_checks_full_output():
         undo_actions=["click('3')"], undo_cost_steps=1)
 
 
+
+
+@pytest.mark.parametrize(("old", "new", "expected"), [
+    ("<undo> click('3');", "<undo> click('4');",
+     "completion_undo_action_mismatch"),
+    ("undo_cost_steps=1", "undo_cost_steps=2",
+     "completion_undo_cost_mismatch"),
+    ("<decision> EXECUTE", "<decision> AVOID",
+     "completion_decision_mismatch"),
+    ("<answer> click('12')", "<answer> go_back()",
+     "completion_decision_answer_inconsistent"),
+])
+def test_formal_teacher_full_sample_rejects_pinned_output_tampering(
+        old, new, expected):
+    input_ref = evidence_token("input", "[12] button 'Do'")
+    post_ref = evidence_token("post_diff", {"cart_count": [0, 1]})
+    undo_ref = evidence_token(
+        "undo", {"actions": ["click('3')"], "undo_cost_steps": 1})
+    teacher = (
+        f"<observation> The target is visible. {input_ref}\n"
+        "<reasoning> The measured transition and recovery support proceeding.\n"
+        f"<prediction> Cart count changes from zero to one. {post_ref}\n"
+        f"<rev_check> The recorded undo click restored it. {undo_ref}")
+    row = _formal_distill_row()
+    assert distill_sample(row, lambda _prompt: teacher)["ok"] is True
+    row["messages"][-1]["content"] = row["messages"][-1]["content"].replace(
+        old, new, 1)
+    assert qc_full_sample(row) == expected
+
 def test_teacher_source_failure_is_explicit_template_fallback_without_call():
     row = _formal_distill_row()
     row["meta"].pop("probe_point_id")
@@ -317,8 +400,26 @@ def test_teacher_source_failure_is_explicit_template_fallback_without_call():
     report = distill_sample(row, lambda _: called.append(True) or "")
     assert not report["ok"] and report["attempts"] == 0
     assert not called
-    assert row["meta"]["prose_source"] == "template_fallback"
+    assert row["meta"]["prose_source"] == "template"
+    assert row["meta"]["rev_check_source"] == "template"
     assert row["meta"]["teacher_qc_status"] == "source_rejected"
+
+
+def test_formal_distill_binds_opaque_evidence_tokens_in_pipeline():
+    row = _formal_distill_row()
+    teacher_without_hashes = (
+        "<observation> The page shows the task target.\n"
+        "<reasoning> The recorded transition supports the requested action.\n"
+        "<prediction> The measured cart count changes.\n"
+        "<rev_check> The recorded undo restored the prior state.")
+    report = distill_sample(row, lambda _prompt: teacher_without_hashes)
+    assert report["ok"] is True
+    assistant = row["messages"][-1]["content"]
+    assert evidence_token("input", "[12] button 'Do'") in assistant
+    assert evidence_token("post_diff", {"cart_count": [0, 1]}) in assistant
+    assert evidence_token(
+        "undo", {"actions": ["click('3')"], "undo_cost_steps": 1}) in assistant
+    assert qc_full_sample(row) is None
 
 
 def test_distill_run_records_separate_teacher_generation_fingerprint(tmp_path):
@@ -345,9 +446,76 @@ def test_distill_run_records_separate_teacher_generation_fingerprint(tmp_path):
         output.stem + ".template_fallback.jsonl")
     row = json.loads(fallback.read_text())
     meta = row["meta"]
+    assert meta["prose_source"] == "template"
+    assert meta["rev_check_source"] == "template"
     assert meta["teacher_prompts_fp"]
     generation = load_generation_bundle(
         meta["teacher_prompt_generation_fp"], root=tmp_path)
     assert generation["prompts_fp"] == meta["teacher_prompts_fp"]
     assert generation["model"]["name"] == "fixture-teacher"
     assert generation["decode_config"]["temperature"] == .7
+
+
+def test_distill_all_materializes_independent_single_and_multiturn_artifacts(
+        tmp_path, monkeypatch):
+    class _FixtureTeacher:
+        model = "fixture-teacher"
+        base_url = "http://fixture.invalid/v1"
+
+        def __init__(self):
+            self.calls = 0
+
+        def complete(self, _prompt):
+            self.calls += 1
+            return (
+                "<observation> The target is visible. " +
+                evidence_token("input", "[12] button 'Do'") + "\n" +
+                "<reasoning> Measured transition and recovery support proceeding.\n" +
+                "<prediction> The cart count changes. " +
+                evidence_token("post_diff", {"cart_count": [0, 1]}) + "\n" +
+                "<rev_check> The recorded undo restored the state. " +
+                evidence_token(
+                    "undo", {"actions": ["click('3')"],
+                             "undo_cost_steps": 1}))
+
+    formal = tmp_path / "train" / "formal"
+    single_source = formal / "iris_sft_point_v1.jsonl"
+    multi_source = formal / "iris_sft_multiturn_point_v1.jsonl"
+    single_output = formal / "iris_sft_distilled_point_v1.jsonl"
+    multi_output = formal / "iris_sft_multiturn_distilled_point_v1.jsonl"
+    single = _formal_distill_row()
+    single["sample_id"] = "single-1"
+    multi = _formal_distill_row()
+    multi["sample_id"] = "multiturn-1"
+    formal.mkdir(parents=True)
+    single_source.write_text(json.dumps(single) + "\n")
+    multi_source.write_text(json.dumps(multi) + "\n")
+    monkeypatch.setattr(config, "FORMAL_SFT_PATH", single_source)
+    monkeypatch.setattr(config, "FORMAL_MULTITURN_SFT_PATH", multi_source)
+    monkeypatch.setattr(config, "FORMAL_DISTILLED_SFT_PATH", single_output)
+    monkeypatch.setattr(
+        config, "FORMAL_MULTITURN_DISTILLED_SFT_PATH", multi_output)
+
+    client = _FixtureTeacher()
+    assert run_distill(
+        family="all", limit=1, client=client, provenance_root=tmp_path) == 0
+    assert client.calls == 2
+    outputs = [json.loads(single_output.read_text()),
+               json.loads(multi_output.read_text())]
+    assert [row["sample_id"] for row in outputs] == [
+        "single-1", "multiturn-1"]
+    assert all((row["meta"]["prose_source"],
+                row["meta"]["rev_check_source"],
+                row["meta"]["teacher_qc_status"]) ==
+               ("teacher", "teacher", "passed") for row in outputs)
+
+
+def test_distill_cli_selects_family_and_custom_paths():
+    from revact.cli import build_parser
+
+    args = build_parser().parse_args([
+        "distill", "--family", "multiturn", "--input", "in.jsonl",
+        "--output", "out.jsonl", "--limit", "7", "--overwrite"])
+    assert args.family == "multiturn"
+    assert args.input == "in.jsonl" and args.output == "out.jsonl"
+    assert args.limit == 7 and args.overwrite is True

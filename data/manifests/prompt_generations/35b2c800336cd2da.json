@@ -1,0 +1,21 @@
+{
+  "decode_config": {
+    "max_tokens": 300,
+    "response_format": {
+      "type": "json_object"
+    },
+    "seed": 0,
+    "temperature": 0.0,
+    "top_p": 1.0
+  },
+  "fingerprint": "35b2c800336cd2da",
+  "model": {
+    "base_url": "https://openrouter.ai/api/v1",
+    "name": "deepseek/deepseek-v3.2",
+    "provider": "openrouter",
+    "role": "opinion"
+  },
+  "producer": "revact.data.opinion_collect",
+  "prompts_fp": "532c10eaa54d",
+  "schema_version": "iris.prompt-generation.v1"
+}

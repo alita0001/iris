@@ -125,6 +125,7 @@ def export_dataset(store: DataStore | None = None, params: dict | None = None) -
     include_needs_review = bool(params.get("include_needs_review", False))
     prefer_distilled = bool(params.get("prefer_distilled", True))
     formal = bool(params.get("formal", True))
+    dry_run = bool(params.get("dry_run", False))
 
     splits_dir = store.root / "train" / ("formal/splits" if formal else "splits")
     sft_train = _jsonl(splits_dir / "sft_train.jsonl")
@@ -137,13 +138,11 @@ def export_dataset(store: DataStore | None = None, params: dict | None = None) -
     mt_test = _jsonl(splits_dir / "sft_test_multiturn.jsonl")
     mt_dpo_train = _jsonl(splits_dir / "dpo_train_multiturn.jsonl")
     mt_dpo_dev = _jsonl(splits_dir / "dpo_dev_multiturn.jsonl")
-    if not sft_train and not sft_test and not mt_train and not mt_test:
-        return {"ok": False, "note": "没有 splits 产物：先运行 assemble + split"}
     if formal:
         source_rows = _jsonl(store.root / "train" / "formal" /
-                             "iris_sft_point_v1.jsonl")
+                             config.FORMAL_SFT_PATH.name)
         source_rows += _jsonl(store.root / "train" / "formal" /
-                              "iris_sft_multiturn_point_v1.jsonl")
+                              config.FORMAL_MULTITURN_SFT_PATH.name)
         split_gate = _formal_split_gate(splits_dir, {
             "train": sft_train + mt_train,
             "dev": sft_dev + mt_dev,
@@ -156,15 +155,25 @@ def export_dataset(store: DataStore | None = None, params: dict | None = None) -
     else:
         split_gate = {"passes": None, "errors": [],
                       "report": {"formal": False}}
+        if not sft_train and not sft_test and not mt_train and not mt_test:
+            return {"ok": False,
+                    "note": "没有 legacy splits 产物：先运行 assemble + split"}
 
     sample_ann = annotations.effective("sample", store.root)
     grounded_ann = annotations.effective("grounded", store.root)
     distill_ann = annotations.effective("distill", store.root)
-    distilled_path = (store.root / "train" / "formal" /
-                      "iris_sft_distilled_point_v1.jsonl") if formal else (
-                          store.root / "train" / "sft" /
-                          "revact_sft_distilled.jsonl")
-    distilled_by_id = {r.get("sample_id"): r for r in _jsonl(distilled_path)}
+    distilled_paths = ([
+        store.root / "train" / "formal" /
+        config.FORMAL_DISTILLED_SFT_PATH.name,
+        store.root / "train" / "formal" /
+        config.FORMAL_MULTITURN_DISTILLED_SFT_PATH.name,
+    ] if formal else [
+        store.root / "train" / "sft" / "revact_sft_distilled.jsonl",
+    ])
+    distilled_by_id = {
+        row.get("sample_id"): row
+        for path in distilled_paths for row in _jsonl(path)
+    }
     # map action_type -> human override label (via probe_id rows)
     probe_by_id = {g["probe_id"]: g for g in store.grounded_runs() if g["probe_id"]}
     override_by_type: dict[str, str] = {}
@@ -368,6 +377,34 @@ def export_dataset(store: DataStore | None = None, params: dict | None = None) -
             "passes": None, "n_pairs": (len(dpo) + len(dpo_val) +
                                            len(mt_dpo) + len(mt_dpo_val)),
             "reason": "legacy-development export",
+        }
+
+    if dry_run:
+        # All source, lineage, prompt, split, annotation and DPO-provenance
+        # gates above have executed.  Return the exact would-write inventory
+        # before allocating a timestamped directory or touching any file.
+        return {
+            "ok": True, "dry_run": True, "formal": formal,
+            "note": "all export gates passed; no files written",
+            "output_dir": None,
+            "n_train": len(train), "n_val": len(val), "n_test": len(test),
+            "n_dpo": len(dpo), "n_dpo_val": len(dpo_val),
+            "n_multiturn_train": len(mt_train_out),
+            "n_multiturn_val": len(mt_val),
+            "n_multiturn_test": len(mt_test_out),
+            "n_multiturn_dpo": len(mt_dpo),
+            "n_multiturn_dpo_val": len(mt_dpo_val),
+            "n_excluded": len(excluded), "excluded": excluded,
+            "split_gate": split_gate,
+            "formal_dpo_source_gate": dpo_source_gate,
+            "would_write": [
+                "sft_train.jsonl", "sft_val.jsonl", "sft_test.jsonl",
+                "dpo_train.jsonl", "dpo_val.jsonl",
+                "sft_train_multiturn.jsonl", "sft_val_multiturn.jsonl",
+                "sft_test_multiturn.jsonl", "dpo_train_multiturn.jsonl",
+                "dpo_val_multiturn.jsonl", "excluded.jsonl", "samples.csv",
+                "stats.json", "prompts.json", "prompt_bundles/",
+            ],
         }
 
     stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S-%f")

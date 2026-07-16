@@ -10,9 +10,12 @@ from revact.data.candidates import (
     CATEGORY_GOAL_VIOLATING,
     CATEGORY_ORDINARY,
     CATEGORY_SAFE_ALTERNATIVE,
+    CATEGORY_POLICY_ERROR,
+    CATEGORY_UNCERTAIN,
     SOURCE_A11Y,
     SOURCE_LLM,
     CandidateValidationError,
+    _rule_category,
     audit_dpo_negative_sources,
     build_a11y_candidate_set,
     candidate_distribution,
@@ -51,16 +54,45 @@ def _candidate(bid: str, category: str, *, source: str = SOURCE_A11Y):
 def test_s4_accepts_four_to_six_legal_diverse_candidates():
     rows = [
         _candidate("10", CATEGORY_EXPERT),
-        _candidate("11", CATEGORY_SAFE_ALTERNATIVE),
+        _candidate("11", CATEGORY_ORDINARY),
         _candidate("12", CATEGORY_CONSTRAINT_TRIGGER),
-        _candidate("13", CATEGORY_DECOY),
+        _candidate("13", CATEGORY_ORDINARY),
         _candidate("14", CATEGORY_ORDINARY),
-        _candidate("15", CATEGORY_GOAL_VIOLATING),
+        _candidate("15", CATEGORY_UNCERTAIN),
     ]
     validate_candidate_set(rows, AXTREE)
     distribution = candidate_distribution(rows)
-    assert distribution["category"][CATEGORY_DECOY] == 1
+    assert distribution["category"] == {
+        CATEGORY_CONSTRAINT_TRIGGER: 1,
+        CATEGORY_EXPERT: 1,
+        CATEGORY_ORDINARY: 3,
+        CATEGORY_UNCERTAIN: 1,
+    }
     assert distribution["source"] == {SOURCE_A11Y: 6}
+
+
+@pytest.mark.parametrize(("name", "expected"), [
+    ("Bunch of 3 Bananas", CATEGORY_ORDINARY),
+    ("Stored Payment Methods", CATEGORY_ORDINARY),
+    ("Ban user", CATEGORY_CONSTRAINT_TRIGGER),
+    ("Pay now", CATEGORY_CONSTRAINT_TRIGGER),
+    ("Place Order", CATEGORY_CONSTRAINT_TRIGGER),
+])
+def test_constraint_trigger_matching_respects_token_and_phrase_boundaries(
+        name, expected):
+    element = {"bid": "2", "role": "button", "name": name}
+    assert _rule_category(element, expert_bid="1") == expected
+
+
+def test_static_rule_never_fabricates_evidence_dependent_categories():
+    forbidden = {
+        CATEGORY_DECOY, CATEGORY_GOAL_VIOLATING, CATEGORY_POLICY_ERROR,
+        CATEGORY_SAFE_ALTERNATIVE,
+    }
+    for index, name in enumerate((
+            "Cancel", "Undo vote", "Restore draft", "Remove from cart"), 1):
+        element = {"bid": str(index), "role": "button", "name": name}
+        assert _rule_category(element, expert_bid="99") not in forbidden
 
 
 def test_s4_rejects_absent_bid_and_snapshot_hash_mismatch():
@@ -106,6 +138,30 @@ def test_a11y_builder_filters_structure_and_builds_diverse_legal_set():
     assert rows[0].source == "expert"
     assert all(r.source == SOURCE_A11Y for r in rows[1:])
     assert len({r.category for r in rows}) >= 4
+
+
+def test_a11y_builder_prefers_task_local_siblings_and_caps_global_chrome():
+    tree = ("RootWebArea 'Product'\n"
+            "  [1] link 'My Account'\n"
+            "  [2] link 'My Wish List'\n"
+            "  [3] link 'Sign Out'\n"
+            "  [4] link 'Skip to Content'\n"
+            "  [5] link 'store logo'\n"
+            "  [6] menuitem 'Electronics'\n"
+            "  [20] main 'Product'\n"
+            "    [21] spinbutton 'Qty'\n"
+            "    [22] button 'Add to Cart'\n"
+            "    [23] link 'Add to Wish List'\n"
+            "    [24] link 'Add to Compare'\n"
+            "    [25] tab 'Details'\n"
+            "    [26] button 'Next'\n")
+    rows = build_a11y_candidate_set(
+        state_id="product-1", axtree_txt=tree, expert_bid="22")
+    bids = {row.bid for row in rows}
+    assert {"22", "23", "24", "25"} <= bids
+    assert len(bids & {"1", "2", "3", "4", "5", "6"}) <= 1
+    next_row = next(row for row in rows if row.bid == "26")
+    assert next_row.category == CATEGORY_ORDINARY
 
 
 def test_dpo_negative_source_gate_and_auditable_distribution():

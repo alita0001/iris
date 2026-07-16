@@ -75,7 +75,7 @@ def disable_llm_reward(verbose: bool = True) -> bool:
 # --------------------------------------------------------------------------- #
 def route_llm_reward(
     base_url: str | None = None,
-    api_key_env: str = "DEEPSEEK_API_KEY",
+    api_key_env: str | None = None,
     model: str | None = None,
     verbose: bool = True,
 ) -> bool:
@@ -83,6 +83,11 @@ def route_llm_reward(
     the judge model. WebArena's own judge prompts/parsing are left intact."""
     if _STATE.get("mode") == "route":
         return True
+    api_key_env = (
+        api_key_env
+        or os.environ.get("REVACT_WA_JUDGE_API_KEY_ENV")
+        or "DEEPSEEK_API_KEY"
+    )
     base_url = (
         base_url
         or os.environ.get("REVACT_WA_JUDGE_BASE_URL")
@@ -145,7 +150,8 @@ def configure_reward_judge(verbose: bool = True) -> str:
     if mode in ("off", "disable", "none"):
         disable_llm_reward(verbose=verbose)
         return "off"
-    if mode in ("deepseek", "route", "vllm", "openai_compatible"):
+    if mode in ("deepseek", "openrouter", "route", "vllm",
+                "openai_compatible"):
         route_llm_reward(verbose=verbose)
         return "route"
     # mode == "openai": leave WebArena untouched (needs OPENAI_API_KEY).

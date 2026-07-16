@@ -1,0 +1,85 @@
+{
+  "commit": false,
+  "failures": [
+    {
+      "action_type": "add_to_cart",
+      "cleanup_actions": [],
+      "cleanup_error": null,
+      "cleanup_status": "NOT_REQUIRED_PRE_MUTATION",
+      "exception_type": "PointExecutionError",
+      "probe_point_id": "point-be317503642c79159bdb",
+      "reason": "replayed state does not reproduce the recorded snapshot or its reviewed dynamic-page target contract (replayed sha=a0bb93b5057e, recorded sha=0079e21ee9d5, url_match=True, target_match=True); refusing to rebase",
+      "recovery_journal": "/workspace/iris/data/grounded/recovery_journal/point-be317503642c79159bdb.json",
+      "state_id": "pt_add_to_cart__cell-phone-stand-doboli-phone-stand-for-"
+    },
+    {
+      "action_type": "wishlist_add",
+      "cleanup_actions": [],
+      "cleanup_error": null,
+      "cleanup_status": "NOT_REQUIRED_PRE_MUTATION",
+      "exception_type": "PointExecutionError",
+      "probe_point_id": "point-1bc8edb3f34144616f5e",
+      "reason": "replayed state does not reproduce the recorded snapshot or its reviewed dynamic-page target contract (replayed sha=a0bb93b5057e, recorded sha=0079e21ee9d5, url_match=True, target_match=True); refusing to rebase",
+      "recovery_journal": "/workspace/iris/data/grounded/recovery_journal/point-1bc8edb3f34144616f5e.json",
+      "state_id": "pt_wishlist_add__cell-phone-stand-doboli-phone-stand-for-"
+    },
+    {
+      "action_type": "compare_add",
+      "cleanup_actions": [],
+      "cleanup_error": null,
+      "cleanup_status": "NOT_REQUIRED_PRE_MUTATION",
+      "exception_type": "PointExecutionError",
+      "probe_point_id": "point-06496d9a745645de2919",
+      "reason": "replayed state does not reproduce the recorded snapshot or its reviewed dynamic-page target contract (replayed sha=a0bb93b5057e, recorded sha=0079e21ee9d5, url_match=True, target_match=True); refusing to rebase",
+      "recovery_journal": "/workspace/iris/data/grounded/recovery_journal/point-06496d9a745645de2919.json",
+      "state_id": "pt_compare_add__cell-phone-stand-doboli-phone-stand-for-"
+    },
+    {
+      "action_type": "add_to_cart",
+      "cleanup_actions": [],
+      "cleanup_error": null,
+      "cleanup_status": "NOT_REQUIRED_PRE_MUTATION",
+      "exception_type": "PointExecutionError",
+      "probe_point_id": "point-9f13b22e3698d0d485f0",
+      "reason": "replayed state does not reproduce the recorded snapshot or its reviewed dynamic-page target contract (replayed sha=bbb3ce4a7b44, recorded sha=e7a66d5023ca, url_match=True, target_match=True); refusing to rebase",
+      "recovery_journal": "/workspace/iris/data/grounded/recovery_journal/point-9f13b22e3698d0d485f0.json",
+      "state_id": "pt_add_to_cart__figatia-astronomy-telescope-phone-adapte"
+    },
+    {
+      "action_type": "wishlist_add",
+      "cleanup_actions": [],
+      "cleanup_error": null,
+      "cleanup_status": "NOT_REQUIRED_PRE_MUTATION",
+      "exception_type": "PointExecutionError",
+      "probe_point_id": "point-768c85905d9f1a6ddbe4",
+      "reason": "replayed state does not reproduce the recorded snapshot or its reviewed dynamic-page target contract (replayed sha=bbb3ce4a7b44, recorded sha=e7a66d5023ca, url_match=True, target_match=True); refusing to rebase",
+      "recovery_journal": "/workspace/iris/data/grounded/recovery_journal/point-768c85905d9f1a6ddbe4.json",
+      "state_id": "pt_wishlist_add__figatia-astronomy-telescope-phone-adapte"
+    },
+    {
+      "action_type": "compare_add",
+      "cleanup_actions": [],
+      "cleanup_error": null,
+      "cleanup_status": "NOT_REQUIRED_PRE_MUTATION",
+      "exception_type": "PointExecutionError",
+      "probe_point_id": "point-4f682232d8b798169a34",
+      "reason": "replayed state does not reproduce the recorded snapshot or its reviewed dynamic-page target contract (replayed sha=bbb3ce4a7b44, recorded sha=e7a66d5023ca, url_match=True, target_match=True); refusing to rebase",
+      "recovery_journal": "/workspace/iris/data/grounded/recovery_journal/point-4f682232d8b798169a34.json",
+      "state_id": "pt_compare_add__figatia-astronomy-telescope-phone-adapte"
+    }
+  ],
+  "n_executed": 3,
+  "n_persisted": 3,
+  "n_specs": 9,
+  "n_transitions_captured": 3,
+  "n_transitions_persisted": 3,
+  "persist_error": "",
+  "persisted_point_ids": [
+    "point-1fbcbccd420a8dbe9839",
+    "point-cdaff79c736b3995ab67",
+    "point-ffcd3a9477e3ea2ddb34"
+  ],
+  "spec": "data/grounded/specs/live-transition-backfill-20260716-shopping01.jsonl",
+  "transition_body": "/workspace/iris/data/grounded/transitions/probe_transitions.v1.jsonl",
+  "transition_manifest": "/workspace/iris/data/grounded/transitions/TRANSITION_MANIFEST.v1.jsonl"
+}

@@ -7,9 +7,12 @@ from copy import deepcopy
 
 import pytest
 
+from revact import config
 from revact.eval.truth import (EVALUATION_TRUTH_SCHEMA_VERSION,
                                EvaluationTruthRecord, save_truth_records)
-from revact.data.candidates import (CANDIDATE_SCHEMA_VERSION, Candidate,
+from revact.data.candidates import (CANDIDATE_SCHEMA_VERSION,
+                                    FORMAL_CANDIDATE_BODY_NAME,
+                                    FORMAL_CANDIDATE_MANIFEST_NAME, Candidate,
                                     save_candidate_set, snapshot_sha256)
 from revact.grounding.schema import (EFFECT_CHANGED, RECOVERY_RECOVERED,
                                      GroundingPoint, save_probe_points)
@@ -218,7 +221,7 @@ def _seed(root):
     sft_dir.mkdir(parents=True, exist_ok=True)
     dpo_dir.mkdir(parents=True, exist_ok=True)
     split_dir.mkdir(parents=True, exist_ok=True)
-    (sft_dir / "iris_sft_point_v1.jsonl").write_text(
+    (sft_dir / config.FORMAL_SFT_PATH.name).write_text(
         "".join(json.dumps(item) + "\n" for item in rows))
     candidates = root / "raw" / "candidates"
     candidates.mkdir(parents=True, exist_ok=True)
@@ -236,7 +239,7 @@ def _seed(root):
         source="a11y_enumeration", legal_at_snapshot=True,
         proposer_model="fixture", proposer_version="v1",
         snapshot_hash=snapshot_sha256(AXTREE))],
-        candidates / "iris_candidates.v3.jsonl")
+        candidates / FORMAL_CANDIDATE_BODY_NAME)
     state_bank = root / "raw" / "state_bank" / "shopping_key_states.jsonl"
     state_bank.parent.mkdir(parents=True, exist_ok=True)
     state_bank.write_text("".join(json.dumps({
@@ -325,7 +328,8 @@ def test_completion_and_candidate_manifest_tampering_fail_closed(root):
     assert any("completion_recovery_status_mismatch" in item
                for item in problems)
 
-    manifest = root / "raw" / "candidates" / "CANDIDATE_MANIFEST.jsonl"
+    manifest = (root / "raw" / "candidates" /
+                FORMAL_CANDIDATE_MANIFEST_NAME)
     manifest.unlink()
     problems = formal_point_join_problems([row], root)
     assert any("formal_candidate_artifact_invalid" in item
@@ -343,13 +347,14 @@ def test_legacy_and_tampered_provenance_fail_closed(root, monkeypatch):
              prediction_source="action_meta_template_legacy"),
         _sft(fp, "manual-undo__request", undo_source="manual_hint"),
         _sft(fp, "mock-missing__request", is_mock=None),
+        _sft(fp, "mock-explicit__request", is_mock=True),
         _sft("0" * 12, "lost-prompt__request"),
     ]
     path = root / "train" / "formal" / "splits" / "sft_train.jsonl"
     path.write_text("\n".join(json.dumps(r) for r in bad_rows) + "\n")
     dev = json.loads((path.parent / "sft_dev.jsonl").read_text())
     test = json.loads((path.parent / "sft_test.jsonl").read_text())
-    (root / "train" / "formal" / "iris_sft_point_v1.jsonl").write_text(
+    (root / "train" / "formal" / config.FORMAL_SFT_PATH.name).write_text(
         "".join(json.dumps(r) + "\n" for r in [*bad_rows, dev, test]))
     report_path = path.parent / "SPLIT_REPORT.json"
     split_report = json.loads(report_path.read_text())
@@ -372,6 +377,10 @@ def test_legacy_and_tampered_provenance_fail_closed(root, monkeypatch):
                for reason in all_reasons)
     # Source files are audit assets and must remain byte-for-byte present.
     assert len(path.read_text().splitlines()) == len(bad_rows)
+    mock_item = next(item for item in excluded
+                     if item["id"] == "mock-explicit__request")
+    assert "is_mock_not_explicitly_false" in mock_item.get(
+        "reasons", [mock_item["reason"]])
     assert row["sample_id"] != bad_rows[0]["sample_id"]
 
 
@@ -379,7 +388,8 @@ def test_teacher_and_dpo_cannot_rebind_or_change_source_input(root, monkeypatch)
     row, _ = _seed(root)
     distilled = deepcopy(row)
     distilled["messages"][0]["content"] = "different system"
-    (root / "train" / "formal" / "iris_sft_distilled_point_v1.jsonl").write_text(
+    (root / "train" / "formal" /
+     config.FORMAL_DISTILLED_SFT_PATH.name).write_text(
         json.dumps(distilled) + "\n")
     pair = {
         "pair_id": row["sample_id"] + "__wrong_prompt",
@@ -404,7 +414,7 @@ def test_teacher_and_dpo_cannot_rebind_or_change_source_input(root, monkeypatch)
     assert "prompt_bundle_system_mismatch" in reasons
 
     (root / "train" / "formal" /
-     "iris_sft_distilled_point_v1.jsonl").unlink()
+     config.FORMAL_DISTILLED_SFT_PATH.name).unlink()
     report, _, excluded = _export(root, monkeypatch, "dpo-rebind")
     assert report["ok"] is True and report["n_dpo"] == 0
     reasons = {reason for item in excluded
@@ -492,3 +502,58 @@ def test_formal_dpo_source_ratio_is_release_wide(root, monkeypatch):
     assert gate["legal_or_on_policy_share"] == .5
     assert report["n_dpo"] == report["n_multiturn_dpo"] == 1
     assert excluded == []
+
+
+def test_formal_export_includes_valid_single_and_multiturn_families(
+        root, monkeypatch):
+    _seed(root)
+    formal_dir = root / "train" / "formal"
+    split_dir = formal_dir / "splits"
+    multiturn_rows = []
+    for side in ("train", "dev", "test"):
+        single = json.loads((split_dir / f"sft_{side}.jsonl").read_text())
+        multi = deepcopy(single)
+        multi["sample_id"] = single["sample_id"] + "__multiturn"
+        multi["meta"]["kind"] = "multiturn"
+        multiturn_rows.append(multi)
+        (split_dir / f"sft_{side}_multiturn.jsonl").write_text(
+            json.dumps(multi) + "\n")
+    (formal_dir / config.FORMAL_MULTITURN_SFT_PATH.name).write_text(
+        "".join(json.dumps(row) + "\n" for row in multiturn_rows))
+
+    split_report_path = split_dir / "SPLIT_REPORT.json"
+    split_report = json.loads(split_report_path.read_text())
+    split_report.update({"n_train": 2, "n_dev": 2, "n_test": 2})
+    split_report_path.write_text(json.dumps(split_report) + "\n")
+
+    report, directory, excluded = _export(
+        root, monkeypatch, "single-and-multiturn")
+    assert report["ok"] is True
+    assert report["n_train"] == report["n_val"] == report["n_test"] == 1
+    assert report["n_multiturn_train"] == 1
+    assert report["n_multiturn_val"] == 1
+    assert report["n_multiturn_test"] == 1
+    assert excluded == []
+    for name in (
+            "sft_train_multiturn.jsonl", "sft_val_multiturn.jsonl",
+            "sft_test_multiturn.jsonl"):
+        rows = [line for line in (directory / name).read_text().splitlines()
+                if line.strip()]
+        assert len(rows) == 1
+    stats = json.loads((directory / "stats.json").read_text())
+    assert stats["volumes"]["sft_samples"] == 6
+
+
+def test_dataset_export_dry_run_executes_gates_without_writes(root, monkeypatch):
+    _seed(root)
+    output_root = root / "would-be-exports"
+    monkeypatch.setattr("revact.server.export.EXPORTS_DIR", output_root)
+    report = export_dataset(DataStore(root), {
+        "name": "dry-run", "formal": True, "dry_run": True,
+        "prefer_distilled": False,
+    })
+    assert report["ok"] is True and report["dry_run"] is True
+    assert report["output_dir"] is None
+    assert report["n_train"] == report["n_val"] == report["n_test"] == 1
+    assert "stats.json" in report["would_write"]
+    assert not output_root.exists()

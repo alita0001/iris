@@ -1,0 +1,9 @@
+{
+  "body_name": "iris_dpo_on_policy_transition_v3_openrouter_qwen3_8b_20260716.jsonl",
+  "body_sha256": "1b32c31155fbf6fa80561dab4f1543a70c579037fc93c4d0608c5244e6f8bff6",
+  "n_rows": 9,
+  "pair_ids_sha256": "f9c70662e0b3ec4144853332f13b6fdcd8eb879c43bf3ec45b410fce30a831fe",
+  "release_id": "openrouter-qwen3-8b-shopping-constraint-20260716-v1",
+  "schema_version": "iris.formal_dpo_supplement_manifest.v1",
+  "source_sample_ids_sha256": "9487ceb47427e55abef44fd03888d0d772252c0b720e131ef696f7731219bd44"
+}

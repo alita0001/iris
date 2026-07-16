@@ -6,7 +6,8 @@ paths:
 
 webarena:
   # shopping / shopping_admin come from env WA_SHOPPING / WA_SHOPPING_ADMIN
-  session_task: webarena.21    # any shopping task; used only to bootstrap a session
+  session_task: webarena.21    # shopping customer session bootstrap
+  shopping_admin_session_task: webarena.0  # shopping-admin-only login bootstrap
   shopping: http://user2-dind:7770
   shopping_admin: http://user2-dind:7780/admin
   reddit: http://user2-dind:9999
@@ -17,7 +18,11 @@ obs:
   # One shared history budget for dataset materialization and live policies.
   # Keeping separate train/deploy values previously produced a silent shift
   # (multi-turn assembly kept 5 steps while IrisPolicy kept 6).
-  policy_history_steps: 6
+  # Readiness has explicit 4--6 and >=7 evidence buckets.  A shared K=6 made
+  # the latter mathematically unreachable even if a real long trace existed.
+  # K=9 is used by both training materialization and live policy deployment;
+  # token dry-runs remain a hard gate before any such rows are admitted.
+  policy_history_steps: 9
 
 fingerprint:
   text_jaccard: 0.05

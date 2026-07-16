@@ -1,9 +1,14 @@
 """Product-level split: no slug leakage between train and test."""
 import json
 
+import pytest
+
+from revact.cli import main
 from revact.data.splits import (audit_split_leakage, build_splits, parse_sid,
+                                formal_dpo_supplement_manifest_path,
                                 formal_validation_partition,
-                                stable_group_is_val, state_group_of)
+                                stable_group_is_val, state_group_of,
+                                write_formal_dpo_supplement_manifest)
 
 
 def _sample(action, slug, variant):
@@ -178,6 +183,113 @@ def test_formal_split_is_unavailable_instead_of_leaking_shared_environment(
     persisted = json.loads((out / "SPLIT_REPORT.json").read_text())
     assert persisted["available"] is False
     assert persisted["reason"] == report["reason"]
+    assert persisted["schema_version"] == "iris.split_report.v2"
+    graph = report["joint_graph"]
+    assert persisted["joint_graph"] == graph
+    assert graph["schema_version"] == \
+        "iris.formal_joint_graph_diagnostics.v1"
+    assert graph["partition_metadata_complete"] is True
+    assert graph["n_rows"] == 4 and graph["n_components"] == 1
+    component = graph["components"][0]
+    assert component["n_rows"] == 4
+    assert component["distributions"]["environment"] == {
+        "shared-environment": 4}
+    assert component["distributions"]["action"] == {"add_to_cart": 4}
+    assert component["merge_evidence"]["shared_isolation_values"][
+        "environment"] == [{"value": "shared-environment", "n_rows": 4}]
+
+
+def test_formal_joint_graph_reports_cross_environment_template_bridges(
+        tmp_path):
+    rows = [
+        _formal_sample(
+            0, site="shopping", goal_template="shared-template",
+            environment_instance="shop-env", page_template_id="shop-page"),
+        _formal_sample(
+            1, site="reddit", goal_template="shared-template",
+            environment_instance="reddit-env", page_template_id="reddit-page"),
+        _formal_sample(
+            2, site="shopping_admin", goal_template="admin-template",
+            environment_instance="admin-env", page_template_id="admin-page"),
+        _formal_sample(
+            3, site="third", goal_template="third-template",
+            environment_instance="third-env", page_template_id="third-page"),
+    ]
+    sft = tmp_path / "formal_sft.jsonl"
+    dpo = tmp_path / "formal_dpo.jsonl"
+    out = tmp_path / "formal" / "splits"
+    sft.write_text("".join(json.dumps(row) + "\n" for row in rows))
+    dpo.write_text("")
+
+    report = build_splits(sft, dpo, out, holdout_frac=.25)
+    # The diagnostic code must not relax the graph: three genuine components
+    # remain sufficient for strict train/dev/test, with zero isolation overlap.
+    assert report["available"] is True
+    assert report["n_train"] + report["n_dev"] + report["n_test"] == 4
+    for axis in ("state_group", "canonical_entity", "goal_template",
+                 "page_template", "environment"):
+        assert report["leakage"][axis]["n_overlap"] == 0
+        assert report["validation"]["leakage"][axis]["n_overlap"] == 0
+
+    graph = report["joint_graph"]
+    assert graph["n_rows"] == 4 and graph["n_components"] == 3
+    bridges = graph["goal_template_bridges"]
+    assert bridges["cross_environment_values"] == ["shared-template"]
+    assert bridges["cross_site_values"] == ["shared-template"]
+    assert bridges["details"] == [{
+        "goal_template": "shared-template",
+        "n_rows": 2,
+        "environments": {"reddit-env": 1, "shop-env": 1},
+        "sites": {"reddit": 1, "shopping": 1},
+        "cross_environment": True,
+        "cross_site": True,
+        "component_ids": bridges["details"][0]["component_ids"],
+    }]
+    assert len(bridges["details"][0]["component_ids"]) == 1
+    bridged_component = next(
+        component for component in graph["components"]
+        if component["distributions"]["goal_template"] == {
+            "shared-template": 2})
+    assert bridged_component["n_rows"] == 2
+    assert bridged_component["distributions"]["environment"] == {
+        "reddit-env": 1, "shop-env": 1}
+    assert bridged_component["distributions"]["site"] == {
+        "reddit": 1, "shopping": 1}
+    assert bridged_component["merge_evidence"][
+        "cross_environment_or_site_goal_templates"] == ["shared-template"]
+    persisted = json.loads((out / "SPLIT_REPORT.json").read_text())
+    assert persisted["joint_graph"] == graph
+
+
+def test_cross_site_challenge_can_be_audited_when_base_split_is_blocked(
+        tmp_path):
+    # A shared goal-template connects the two environments, so the joint base
+    # graph is intentionally unsplittable.  The independent site challenge may
+    # still drop the leaking shopping state and retain another clean one.
+    rows = [
+        _formal_sample(
+            0, site="shopping", goal_template="shared-template",
+            environment_instance="shop-env", page_template_id="shop-page"),
+        _formal_sample(
+            1, site="shopping", goal_template="shopping-only-template",
+            environment_instance="shop-env", page_template_id="shop-page"),
+        _formal_sample(
+            2, site="reddit", goal_template="shared-template",
+            environment_instance="reddit-env", page_template_id="reddit-page"),
+    ]
+    sft = tmp_path / "formal_sft.jsonl"
+    dpo = tmp_path / "formal_dpo.jsonl"
+    sft.write_text("".join(json.dumps(row) + "\n" for row in rows))
+    dpo.write_text("")
+
+    report = build_splits(sft, dpo, tmp_path / "formal" / "splits")
+    assert report["available"] is False
+    challenge = report["challenges"]["cross_site"]
+    assert challenge["available"] is True
+    assert challenge["n_train"] == 1 and challenge["n_test"] == 1
+    for axis in ("state_group", "canonical_entity", "goal_template",
+                 "page_template", "environment"):
+        assert challenge["leakage"][axis]["n_overlap"] == 0
 
 
 def test_formal_split_requires_every_isolation_axis(tmp_path):
@@ -191,6 +303,12 @@ def test_formal_split_requires_every_isolation_axis(tmp_path):
     report = build_splits(sft, dpo, tmp_path / "formal" / "splits")
     assert report["available"] is False
     assert "template" in report["reason"]
+    graph = report["joint_graph"]
+    assert graph["partition_metadata_complete"] is False
+    assert graph["missing_isolation_metadata"] == [{
+        "sample_id": rows[1]["sample_id"],
+        "missing_axes": ["goal_template"],
+    }]
 
 
 def test_formal_validation_never_splits_a_joint_component():
@@ -275,3 +393,134 @@ def test_rebuild_with_empty_multiturn_source_clears_stale_shards(tmp_path):
     build_splits(sft, dpo, out, multiturn_sft_path=mt_sft,
                  multiturn_dpo_path=mt_dpo, formal=True)
     assert all(path.read_text() == "" for path in out.glob("*_multiturn.jsonl"))
+
+
+def _supplement_pair(source: dict, pair_id: str, *, formal: bool = True) -> dict:
+    return {
+        "pair_id": pair_id,
+        "prompt": source["messages"][:-1],
+        "chosen": source["messages"][-1]["content"],
+        "rejected": "rejected",
+        "meta": {
+            **source["meta"],
+            "formal_dataset": formal,
+            "source_sample_id": source["sample_id"],
+            "negative_source": "on_policy",
+        },
+    }
+
+
+def test_additional_dpo_supplement_requires_release_manifest_and_formal_join(
+        tmp_path):
+    rows = [_formal_sample(index) for index in range(8)]
+    sft = tmp_path / "formal" / "formal_sft.jsonl"
+    dpo = tmp_path / "formal" / "formal_dpo.jsonl"
+    sft.parent.mkdir(parents=True)
+    sft.write_text("".join(json.dumps(row) + "\n" for row in rows))
+    dpo.write_text("")
+    supplement = tmp_path / "formal" / "iris_dpo_on_policy_batch.jsonl"
+    supplement.write_text(json.dumps(_supplement_pair(rows[0], "pair-supp-1")) + "\n")
+
+    with pytest.raises(ValueError, match="body/manifest are both required"):
+        build_splits(
+            sft, dpo, tmp_path / "formal" / "splits",
+            additional_dpo_paths=(supplement,), formal=True)
+
+    manifest = write_formal_dpo_supplement_manifest(
+        supplement, release_id="release-20260714")
+    assert manifest == formal_dpo_supplement_manifest_path(supplement)
+    report = build_splits(
+        sft, dpo, tmp_path / "formal" / "splits",
+        additional_dpo_paths=(supplement,), formal=True)
+    assert report["n_additional_dpo"] == 1
+    assert report["additional_dpo_releases"] == [{
+        "path": str(supplement),
+        "manifest_path": str(manifest),
+        "release_id": "release-20260714",
+        "body_sha256": json.loads(manifest.read_text())["body_sha256"],
+        "n_rows": 1,
+    }]
+
+    supplement.write_text(json.dumps(
+        _supplement_pair(rows[0], "pair-tampered")) + "\n")
+    with pytest.raises(ValueError, match="does not exactly pin"):
+        build_splits(
+            sft, dpo, tmp_path / "formal" / "splits",
+            additional_dpo_paths=(supplement,), formal=True)
+
+
+def test_pin_dpo_supplement_cli_creates_immutable_release_manifest(
+        tmp_path, capsys):
+    source = _formal_sample(0)
+    supplement = tmp_path / "iris_dpo_on_policy_batch.jsonl"
+    supplement.write_text(json.dumps(
+        _supplement_pair(source, "pair-cli-1")) + "\n")
+    assert main([
+        "pin-dpo-supplement",
+        "--body", str(supplement),
+        "--release-id", "release-cli-1",
+    ]) == 0
+    response = json.loads(capsys.readouterr().out)
+    manifest = formal_dpo_supplement_manifest_path(supplement)
+    assert response == {
+        "body": str(supplement),
+        "manifest": str(manifest),
+        "release_id": "release-cli-1",
+    }
+    assert json.loads(manifest.read_text())["release_id"] == "release-cli-1"
+
+    # Re-pinning an identical body/release is idempotent, never an overwrite.
+    assert main([
+        "pin-dpo-supplement",
+        "--body", str(supplement),
+        "--release-id", "release-cli-1",
+    ]) == 0
+    capsys.readouterr()
+    assert main([
+        "pin-dpo-supplement",
+        "--body", str(supplement),
+        "--release-id", "different-release",
+    ]) == 1
+    assert "refusing to overwrite" in capsys.readouterr().out
+
+
+def test_additional_dpo_supplement_rejects_nonformal_unknown_and_duplicate_ids(
+        tmp_path):
+    rows = [_formal_sample(index) for index in range(8)]
+    sft = tmp_path / "formal" / "formal_sft.jsonl"
+    dpo = tmp_path / "formal" / "formal_dpo.jsonl"
+    sft.parent.mkdir(parents=True)
+    sft.write_text("".join(json.dumps(row) + "\n" for row in rows))
+
+    nonformal = tmp_path / "formal" / "nonformal.jsonl"
+    nonformal.write_text(json.dumps(
+        _supplement_pair(rows[0], "nonformal-pair", formal=False)) + "\n")
+    with pytest.raises(ValueError, match="non-formal row"):
+        write_formal_dpo_supplement_manifest(nonformal, release_id="release-1")
+
+    unknown_source = json.loads(json.dumps(rows[0]))
+    unknown_source["sample_id"] = "unknown-source"
+    unknown = tmp_path / "formal" / "unknown.jsonl"
+    unknown.write_text(json.dumps(
+        _supplement_pair(unknown_source, "unknown-pair")) + "\n")
+    write_formal_dpo_supplement_manifest(unknown, release_id="release-1")
+    dpo.write_text("")
+    with pytest.raises(ValueError, match="unknown formal SFT sources"):
+        build_splits(
+            sft, dpo, tmp_path / "formal" / "splits",
+            additional_dpo_paths=(unknown,), formal=True)
+
+    duplicate = tmp_path / "formal" / "duplicate.jsonl"
+    duplicate.write_text(json.dumps(
+        _supplement_pair(rows[0], "duplicate-pair")) + "\n")
+    write_formal_dpo_supplement_manifest(duplicate, release_id="release-1")
+    dpo.write_text(json.dumps(_supplement_pair(rows[0], "duplicate-pair")) + "\n")
+    with pytest.raises(ValueError, match="unique non-empty pair_id"):
+        build_splits(
+            sft, dpo, tmp_path / "formal" / "splits",
+            additional_dpo_paths=(duplicate,), formal=True)
+
+    with pytest.raises(ValueError, match="duplicate additional DPO supplement path"):
+        build_splits(
+            sft, dpo, tmp_path / "formal" / "splits",
+            additional_dpo_paths=(duplicate, duplicate), formal=True)

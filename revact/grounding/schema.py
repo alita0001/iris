@@ -64,6 +64,11 @@ def _signal_present(value: Any) -> bool:
     return value is not None and value != "" and value != {} and value != []
 
 
+def _normalized_reset_method(value: Any) -> str:
+    """Normalize a reset descriptor before applying the fail-closed denylist."""
+    return str(value or "").strip().lower().replace("-", "_").replace(" ", "_")
+
+
 def legacy_label_to_statuses(label: str) -> tuple[str, str]:
     """Map a legacy display label to the two canonical axes.
 
@@ -201,6 +206,10 @@ class GroundingPoint:
         if self.undo_cost_steps is not None and (
                 not isinstance(self.undo_cost_steps, int) or self.undo_cost_steps < 0):
             errors.append("undo_cost_steps must be a nullable non-negative integer")
+        if (isinstance(self.undo_cost_steps, int) and
+                isinstance(self.budget_k, int) and
+                self.undo_cost_steps > self.budget_k):
+            errors.append("undo_cost_steps cannot exceed budget_k")
         if self.recovery_status == RECOVERY_RECOVERED:
             if self.undo_cost_steps is None:
                 errors.append("RECOVERED requires undo_cost_steps")
@@ -237,11 +246,31 @@ class GroundingPoint:
             if formal:
                 union = self.evidence.get("solver_union") \
                     if isinstance(self.evidence, dict) else None
-                if not isinstance(union, dict) or union.get("protocol") != "solver_union.v1":
+                if not isinstance(union, dict) or union.get("protocol") != "solver_union.v2":
                     errors.append(
-                        "formal negative requires evidence.solver_union protocol=solver_union.v1")
+                        "formal negative requires evidence.solver_union protocol=solver_union.v2")
                 else:
-                    traces = union.get("traces") or []
+                    post_hash = union.get("post_action_state_hash")
+                    if not str(post_hash or "").strip():
+                        errors.append(
+                            "formal negative solver union requires post_action_state_hash")
+                    elif post_hash != self.post_observation_hash:
+                        errors.append(
+                            "solver union post_action_state_hash contradicts point "
+                            "post_observation_hash")
+                    if "post_signal" not in union:
+                        errors.append("formal negative solver union requires post_signal")
+                    elif union.get("post_signal") != self.post_signal:
+                        errors.append(
+                            "solver union post_signal contradicts point post_signal")
+
+                    raw_traces = union.get("traces")
+                    if not isinstance(raw_traces, list) or not raw_traces:
+                        errors.append(
+                            "formal negative solver union requires non-empty trace list")
+                        traces = []
+                    else:
+                        traces = raw_traces
                     kinds = {str(trace.get("solver_kind")) for trace in traces
                              if isinstance(trace, dict)}
                     required_kinds = {
@@ -290,6 +319,40 @@ class GroundingPoint:
                         if str(trace.get("termination_reason") or "") == "recovered":
                             errors.append(
                                 f"formal negative trace {name} terminated as recovered")
+                        start_hash = trace.get("start_state_hash")
+                        if not str(start_hash or "").strip():
+                            errors.append(
+                                f"formal negative trace {name} requires start_state_hash")
+                        elif post_hash and start_hash != post_hash:
+                            errors.append(
+                                f"formal negative trace {name} start_state_hash "
+                                "contradicts solver-union post_action_state_hash")
+                        if "start_signal" not in trace:
+                            errors.append(
+                                f"formal negative trace {name} requires start_signal")
+                        elif ("post_signal" in union and
+                              trace.get("start_signal") != union.get("post_signal")):
+                            errors.append(
+                                f"formal negative trace {name} start_signal "
+                                "contradicts solver-union post_signal")
+                        reset_method = _normalized_reset_method(
+                            trace.get("reset_method"))
+                        if not reset_method:
+                            errors.append(
+                                f"formal negative trace {name} requires reset_method")
+                        trace_evidence = trace.get("evidence")
+                        branch_reset = _normalized_reset_method(
+                            trace_evidence.get("branch_reset")
+                            if isinstance(trace_evidence, dict) else "")
+                        if (reset_method == "url_reanchor_only" or
+                                branch_reset == "url_reanchor_only"):
+                            errors.append(
+                                f"formal negative trace {name} uses url_reanchor_only, "
+                                "not an independent state reset")
+                        if trace.get("reset_verified") is not True:
+                            errors.append(
+                                f"formal negative trace {name} requires "
+                                "reset_verified=true")
         if not isinstance(self.is_mock, bool):
             errors.append("is_mock must be boolean")
 

@@ -81,19 +81,41 @@ EVAL_DATA_DIR = DATA_ROOT / "eval"
 EVALUATION_TRUTH_PATH = EVAL_DATA_DIR / "truth.jsonl"
 EVALUATION_TRUTH_MANIFEST_PATH = EVAL_DATA_DIR / "TRUTH_MANIFEST.jsonl"
 
+# Opinion baselines are deliberately outside formal grounding/evaluation
+# truth.  V2 is keyed by point × evaluation-case/goal × rater; legacy v1 rows
+# cannot identify the goal behind normative risk and remain audit-only.
+OPINION_DIR = DATA_ROOT / "opinions"
+OPINION_LABEL_PATH = OPINION_DIR / "opinion_labels.v2.jsonl"
+OPINION_MANIFEST_PATH = OPINION_DIR / "OPINION_LABEL_MANIFEST.v2.jsonl"
+OPINION_INPUT_DIR = OPINION_DIR / "inputs"
+FORMAL_OPINION_INPUT_PATH = (
+    OPINION_INPUT_DIR / "formal_request_constraint_inputs.v2.jsonl")
+FORMAL_OPINION_INPUT_MANIFEST_PATH = (
+    OPINION_INPUT_DIR / "FORMAL_REQUEST_CONSTRAINT_INPUT_MANIFEST.v2.jsonl")
+
 TRAIN_DIR = DATA_ROOT / "train"
 # Frozen pilot artifacts remain at ``sft/``, ``dpo/`` and ``splits/``.  They
 # are intentionally *not* the defaults used by any trainer.  Formal trainers
 # consume only the point-grounded split namespace below.
 FORMAL_TRAIN_DIR = TRAIN_DIR / "formal"
 FORMAL_SPLITS_DIR = FORMAL_TRAIN_DIR / "splits"
-FORMAL_SFT_PATH = FORMAL_TRAIN_DIR / "iris_sft_point_v1.jsonl"
-FORMAL_MULTITURN_SFT_PATH = FORMAL_TRAIN_DIR / "iris_sft_multiturn_point_v1.jsonl"
-FORMAL_DISTILLED_SFT_PATH = FORMAL_TRAIN_DIR / "iris_sft_distilled_point_v1.jsonl"
+FORMAL_SFT_PATH = FORMAL_TRAIN_DIR / "iris_sft_transition_v3.jsonl"
+FORMAL_MULTITURN_SFT_PATH = (
+    FORMAL_TRAIN_DIR / "iris_sft_multiturn_transition_v3.jsonl")
+FORMAL_DISTILLED_SFT_PATH = (
+    FORMAL_TRAIN_DIR / "iris_sft_distilled_transition_v5.jsonl")
+FORMAL_MULTITURN_DISTILLED_SFT_PATH = (
+    FORMAL_TRAIN_DIR / "iris_sft_multiturn_distilled_transition_v5.jsonl")
 # Candidate/on-policy DPO main sets are intentionally distinct from the
 # synthetic-flip ablation written by the assemblers.
-FORMAL_DPO_PATH = FORMAL_TRAIN_DIR / "iris_dpo_point_v1.jsonl"
-FORMAL_MULTITURN_DPO_PATH = FORMAL_TRAIN_DIR / "iris_dpo_multiturn_point_v1.jsonl"
+FORMAL_DPO_PATH = FORMAL_TRAIN_DIR / "iris_dpo_transition_v3.jsonl"
+FORMAL_MULTITURN_DPO_PATH = (
+    FORMAL_TRAIN_DIR / "iris_dpo_multiturn_transition_v3.jsonl")
+# Only a manifest-pinned supplement whose basename matches the active release
+# namespace may join the active split.  Older on-policy smoke assets remain
+# inspectable but cannot silently contaminate a later formal release.
+FORMAL_DPO_SUPPLEMENT_GLOB = \
+    "iris_dpo_on_policy_transition_v3_strict_*.jsonl"
 FORMAL_SFT_TRAIN_PATH = FORMAL_SPLITS_DIR / "sft_train.jsonl"
 FORMAL_DPO_TRAIN_PATH = FORMAL_SPLITS_DIR / "dpo_train.jsonl"
 SFT_PATH = TRAIN_DIR / "sft" / "revact_sft.jsonl"
@@ -112,8 +134,10 @@ WA_SHOPPING_ADMIN = os.environ.get("WA_SHOPPING_ADMIN",
                                    _cfg("webarena", "shopping_admin", default=""))
 WA_REDDIT = os.environ.get("WA_REDDIT", _cfg("webarena", "reddit", default=""))
 WA_GITLAB = os.environ.get("WA_GITLAB", _cfg("webarena", "gitlab", default=""))
-# Any shopping task id works as a login/session bootstrap for probes.
+# Site-specific task ids bootstrap the correct authenticated browser storage.
 SESSION_TASK_ID = _cfg("webarena", "session_task", default="webarena.21")
+SHOPPING_ADMIN_SESSION_TASK_ID = _cfg(
+    "webarena", "shopping_admin_session_task", default="webarena.0")
 # A reddit task id bootstraps a logged-in Postmill session for reddit probes.
 REDDIT_SESSION_TASK_ID = _cfg("webarena", "reddit_session_task", default="webarena.27")
 
@@ -152,17 +176,19 @@ class SiteSpec:
     base_env: str             # env var holding the base url
     session_task: str         # a task id that bootstraps a logged-in session
     paths_name: str           # which *_PATHS dict this site uses
+    environment_family: str   # underlying application/technology family
     requires_login: bool = True
 
 
 SITES: dict[str, SiteSpec] = {
     "shopping": SiteSpec("shopping", "Shopping (Magento)", "WA_SHOPPING",
-                         str(SESSION_TASK_ID), "SHOPPING_PATHS"),
+                         str(SESSION_TASK_ID), "SHOPPING_PATHS", "magento"),
     "shopping_admin": SiteSpec("shopping_admin", "Shopping Admin (Magento)",
-                               "WA_SHOPPING_ADMIN", str(SESSION_TASK_ID),
-                               "SHOPPING_PATHS"),
+                               "WA_SHOPPING_ADMIN",
+                               str(SHOPPING_ADMIN_SESSION_TASK_ID),
+                               "SHOPPING_PATHS", "magento"),
     "reddit": SiteSpec("reddit", "Reddit (Postmill)", "WA_REDDIT",
-                       str(REDDIT_SESSION_TASK_ID), "REDDIT_PATHS"),
+                       str(REDDIT_SESSION_TASK_ID), "REDDIT_PATHS", "postmill"),
 }
 
 _PATHS_BY_NAME = {"SHOPPING_PATHS": SHOPPING_PATHS, "REDDIT_PATHS": REDDIT_PATHS}
@@ -180,6 +206,12 @@ def site_paths(site: str) -> dict:
     spec = SITES.get(site)
     return _PATHS_BY_NAME.get(spec.paths_name, {}) if spec else {}
 
+
+def site_environment_family(site: str) -> str:
+    """Return the application family; concrete sites remain separate axes."""
+    spec = SITES.get(site)
+    return spec.environment_family if spec else ""
+
 # --------------------------------------------------------------------------- #
 # Key-state detection during collection (S2). Keyword matching is intentionally
 # shallow here; grounding refines it with probes.
@@ -196,7 +228,7 @@ ADDRESS_URL_HINTS = ["address", "/customer/address", "account"]
 # --------------------------------------------------------------------------- #
 MAX_AXTREE_CHARS_SNAPSHOT = int(_cfg("obs", "max_axtree_chars_snapshot", default=6000))
 MAX_AXTREE_CHARS_POLICY = int(_cfg("obs", "max_axtree_chars_policy", default=12000))
-POLICY_HISTORY_STEPS = int(_cfg("obs", "policy_history_steps", default=6))
+POLICY_HISTORY_STEPS = int(_cfg("obs", "policy_history_steps", default=9))
 
 
 # --------------------------------------------------------------------------- #

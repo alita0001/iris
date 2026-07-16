@@ -63,6 +63,28 @@ def evidence_token(kind: str, payload) -> str:
     return f"[evidence:{kind}:{hashlib.sha256(encoded).hexdigest()[:12]}]"
 
 
+def _bind_formal_evidence_tokens(
+        text: str, *, input_ref: str, post_ref: str, rev_ref: str) -> str:
+    """Attach machine-generated provenance tokens to teacher prose.
+
+    The teacher is responsible for prose, not for copying opaque hashes.  The
+    pipeline deterministically binds each accepted compartment to its exact
+    source before QC; this cannot change a label or add a factual claim.
+    """
+    required = {
+        "<observation>": input_ref,
+        "<prediction>": post_ref,
+        "<rev_check>": rev_ref,
+    }
+    lines = (text or "").splitlines()
+    for index, line in enumerate(lines):
+        stripped = line.lstrip()
+        for tag, token in required.items():
+            if stripped.startswith(tag) and token not in line:
+                lines[index] = line.rstrip() + " " + token
+    return "\n".join(lines)
+
+
 def _unsupported_control_claim(text: str, input_observation: str) -> str:
     """Return a positively asserted UI control absent from the current AXTree."""
     patterns = (
@@ -315,6 +337,11 @@ def distill_sample(row: dict, complete: Callable[[str], str],
     row's assistant message has teacher prose with the labels untouched."""
     max_retries = max_retries if max_retries is not None else config.DISTILL_MAX_RETRIES
     meta = row["meta"]
+    # Template prose is a first-class, auditable source rather than an implicit
+    # absence of teacher metadata.  A successful teacher pass promotes both
+    # prose fields together; every failure leaves both explicitly templated.
+    meta.setdefault("prose_source", "template")
+    meta.setdefault("rev_check_source", "template")
     asst = row["messages"][-1]["content"]
     user_message = next((m for m in reversed(row["messages"][:-1])
                          if m.get("role") == "user"), {})
@@ -324,7 +351,8 @@ def distill_sample(row: dict, complete: Callable[[str], str],
     if formal:
         preflight = qc_source_sample(row)
         if preflight:
-            meta["prose_source"] = "template_fallback"
+            meta["prose_source"] = "template"
+            meta["rev_check_source"] = "template"
             meta["teacher_qc_status"] = "source_rejected"
             meta["teacher_qc_reason"] = preflight
             return {"ok": False, "attempts": 0, "last_reason": preflight,
@@ -366,11 +394,17 @@ def distill_sample(row: dict, complete: Callable[[str], str],
             f"token {input_ref} to <observation>, {post_ref} to <prediction>, "
             f"and {rev_ref} to <rev_check>. These content-addressed tokens "
             "bind the prose to this sample's evidence compartments; do not "
-            "invent controls not present in the supplied input.")
+            "invent controls not present in the supplied input. Do not claim "
+            "that any undo, remove, wishlist, or recovery control is present "
+            "or absent in the current page. Do not use permanent, irreversible, "
+            "cannot undo, or no undo; describe only the recorded measurement.")
 
     reason = "teacher returned no attempts"
     for attempt in range(1, max_retries + 1):
         text = complete(prompt)
+        if formal:
+            text = _bind_formal_evidence_tokens(
+                text, input_ref=input_ref, post_ref=post_ref, rev_ref=rev_ref)
         reason = qc_check(
             text, recovery, meta["decision"], formal=formal,
             input_observation=parsed_user.get("obs", ""),
@@ -383,10 +417,12 @@ def distill_sample(row: dict, complete: Callable[[str], str],
             reason = qc_full_sample(row)
             if reason is None:
                 row["meta"]["prose_source"] = "teacher"
+                row["meta"]["rev_check_source"] = "teacher"
                 row["meta"]["teacher_qc_status"] = "passed"
                 return {"ok": True, "attempts": attempt}
             row["messages"][-1]["content"] = asst
-    meta["prose_source"] = "template_fallback"
+    meta["prose_source"] = "template"
+    meta["rev_check_source"] = "template"
     meta["teacher_qc_status"] = "failed"
     meta["teacher_qc_reason"] = reason
     return {"ok": False, "attempts": max_retries, "last_reason": reason,
@@ -408,14 +444,11 @@ def _splice(asst: str, teacher_text: str) -> str:
     return out
 
 
-def run(in_path: Path | None = None, out_path: Path | None = None,
-        limit: int = 10, client: Optional[DeepSeekClient] = None,
-        *, overwrite: bool = False,
-        min_formal_teacher_coverage: float = .95,
-        provenance_root: Path | None = None) -> int:
-    """Distill up to `limit` samples (smoke-sized by default to control cost)."""
-    in_path = in_path or config.FORMAL_SFT_PATH
-    out_path = out_path or config.FORMAL_DISTILLED_SFT_PATH
+def _run_family(*, family: str, in_path: Path, out_path: Path, limit: int,
+                client: Optional[DeepSeekClient], overwrite: bool,
+                min_formal_teacher_coverage: float,
+                provenance_root: Path | None) -> int:
+    """Distill one explicitly selected formal sample family."""
     if not in_path.exists():
         print(f"ERROR: missing {in_path} (run `revact assemble` first)")
         return 1
@@ -449,6 +482,7 @@ def run(in_path: Path | None = None, out_path: Path | None = None,
     teacher_decode = {
         "temperature": 0.7, "max_tokens": 400,
         "max_retries": config.DISTILL_MAX_RETRIES,
+        "sample_family": family,
     }
     teacher_provenance = prompts.snapshot_generation(
         root=provenance_root or config.DATA_ROOT, author="teacher-distill",
@@ -491,6 +525,52 @@ def run(in_path: Path | None = None, out_path: Path | None = None,
               "fallback rows remain quarantined from the teacher set.")
         return 1
     return 0 if ok else 1
+
+
+def _formal_family_paths() -> dict[str, tuple[Path, Path]]:
+    """Resolve config lazily so tests/local data-root overrides remain exact."""
+    return {
+        "single": (config.FORMAL_SFT_PATH, config.FORMAL_DISTILLED_SFT_PATH),
+        "multiturn": (config.FORMAL_MULTITURN_SFT_PATH,
+                      config.FORMAL_MULTITURN_DISTILLED_SFT_PATH),
+    }
+
+
+def run(in_path: Path | None = None, out_path: Path | None = None,
+        limit: int = 10, client: Optional[DeepSeekClient] = None,
+        *, family: str | None = None, overwrite: bool = False,
+        min_formal_teacher_coverage: float = .95,
+        provenance_root: Path | None = None) -> int:
+    """Distill one or both formal SFT families.
+
+    ``family=None`` preserves programmatic custom-path compatibility: explicit
+    input/output paths select one custom job, while canonical defaults process
+    both single and multiturn sources.  The public CLI always passes an explicit
+    ``single``, ``multiturn`` or ``all`` value.
+    """
+    if family is None:
+        family = "single" if in_path is not None or out_path is not None else "all"
+    family_paths = _formal_family_paths()
+    if family not in {*family_paths, "all"}:
+        print(f"ERROR: unknown distill family {family!r}")
+        return 1
+    if family == "all" and (in_path is not None or out_path is not None):
+        print("ERROR: --input/--output cannot be combined with family=all")
+        return 1
+
+    selected = tuple(family_paths) if family == "all" else (family,)
+    results = []
+    for selected_family in selected:
+        default_input, default_output = family_paths[selected_family]
+        selected_input = Path(in_path) if in_path is not None else default_input
+        selected_output = Path(out_path) if out_path is not None else default_output
+        results.append(_run_family(
+            family=selected_family, in_path=selected_input,
+            out_path=selected_output, limit=limit, client=client,
+            overwrite=overwrite,
+            min_formal_teacher_coverage=min_formal_teacher_coverage,
+            provenance_root=provenance_root))
+    return 0 if results and all(result == 0 for result in results) else 1
 
 
 def _atomic_write_jsonl(path: Path, rows: list[dict], *, overwrite: bool) -> None:

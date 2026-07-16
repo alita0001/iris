@@ -73,6 +73,20 @@ class StepRecord:
     # omit it; newly collected trajectories stamp the same value into the raw
     # steps, trajectory manifest, and key-state rows.
     run_id: str = ""
+    code_version: str = ""
+    # Exact policy-call/transition capture for future stateless-episode
+    # authoring.  These fields are evidence only: their presence never makes a
+    # raw collector trajectory formal supervision.  The canonical importer
+    # still requires exact SFT, point and truth joins.
+    policy_call_captured: bool = False
+    policy_input_messages: list[dict[str, Any]] = field(default_factory=list)
+    policy_input_messages_sha256: str = ""
+    assistant_completion: str = ""
+    assistant_completion_sha256: str = ""
+    pre_observation: dict[str, Any] = field(default_factory=dict)
+    post_observation: dict[str, Any] = field(default_factory=dict)
+    observed_history_entry: dict[str, Any] = field(default_factory=dict)
+    policy_guarded: bool = False
 
 
 class StepLogger:
@@ -96,6 +110,54 @@ class StepLogger:
                 f.write(json.dumps(asdict(r), ensure_ascii=False) + "\n")
 
 
+@dataclass
+class PolicyAttemptRecord:
+    """Exact evidence for one policy call, including calls yielding no action.
+
+    This is deliberately separate from :class:`StepRecord`: a model call that
+    fails to produce an executable action is not an environment transition and
+    must never be smuggled into an episode as one.  The record contains no HTTP
+    headers or credential values.
+    """
+
+    schema_version: str
+    run_id: str
+    trajectory_id: str
+    task_id: str
+    attempt_index: int
+    step_id_before: int
+    url: str
+    policy_input_messages: list[dict[str, Any]]
+    policy_input_messages_sha256: str
+    proposed_action: str
+    proposed_completion: str
+    proposed_completion_sha256: str
+    executed_action: str
+    executed_completion: str
+    executed_completion_sha256: str
+    execution_status: str
+    finish_reason: str
+    provider: str = ""
+    model: str = ""
+    code_version: str = ""
+
+
+class PolicyAttemptLogger:
+    """In-memory policy-call journal with exclusive immutable serialization."""
+
+    def __init__(self) -> None:
+        self.records: list[PolicyAttemptRecord] = []
+
+    def add(self, rec: PolicyAttemptRecord) -> None:
+        self.records.append(rec)
+
+    def to_jsonl(self, path: Path) -> None:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("x", encoding="utf-8") as f:
+            for record in self.records:
+                f.write(json.dumps(asdict(record), ensure_ascii=False) + "\n")
+
+
 # --------------------------------------------------------------------------- #
 # RevActEnv wrapper
 # --------------------------------------------------------------------------- #
@@ -117,11 +179,13 @@ class RevActEnv:
         self.site = site
         self.save_screenshots = save_screenshots
         self.logger = StepLogger()
+        self.policy_attempt_logger = PolicyAttemptLogger()
         self.history: list[str] = []          # executed action strings (replay prefix)
         self.step_id = 0
         self.goal = ""
         self.trajectory_id = ""
         self.run_id = ""
+        self.code_version = ""
         self._last_obs_view: dict = {}
 
     def _save_screenshot(self, obs) -> str:
@@ -147,13 +211,15 @@ class RevActEnv:
             return ""
 
     def reset(self, seed: int = 0, trajectory_id: Optional[str] = None,
-              run_id: str = ""):
+              run_id: str = "", code_version: str = ""):
         obs, info = self.env.reset(seed=seed)
         self.history = []
         self.logger.records.clear()   # one JSONL per trajectory, not cumulative
+        self.policy_attempt_logger.records.clear()
         self.step_id = 0
         self.trajectory_id = trajectory_id or f"{self.task_id}_seed{seed}"
         self.run_id = run_id
+        self.code_version = code_version
         view = to_obs_view(obs)
         self.goal = obs.get("goal", "") if isinstance(obs, dict) else ""
         self._last_obs_view = view
@@ -170,6 +236,7 @@ class RevActEnv:
                 obs_after_axtree=prune_axtree_txt(view.get("axtree_txt", "")),
                 backend_after=view.get("backend_state"), replay_prefix=[],
                 screenshot=shot_path, run_id=self.run_id,
+                code_version=self.code_version,
             )
         )
         return obs, info, view
@@ -197,7 +264,7 @@ class RevActEnv:
                 backend_after=view.get("backend_state"),
                 replay_prefix=list(self.history),
                 screenshot=shot_path,
-                run_id=self.run_id,
+                run_id=self.run_id, code_version=self.code_version,
             )
         )
         self._last_obs_view = view

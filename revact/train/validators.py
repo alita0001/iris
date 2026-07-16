@@ -305,16 +305,40 @@ def formal_negative_candidate_reasons(
             meta.get("negative_source") not in {"legal_candidate", "on_policy"}:
         return []
     reasons: list[str] = []
+    source = str(meta.get("negative_source") or "")
     candidate_id = str(meta.get("negative_candidate_id") or "")
     snapshot_hash = str(meta.get("negative_candidate_snapshot_hash") or "")
-    if not candidate_id:
-        reasons.append("negative_candidate_id_missing")
-    if not snapshot_hash:
-        reasons.append("negative_candidate_snapshot_hash_missing")
-    if meta.get("legal_at_snapshot") is not True:
-        reasons.append("negative_candidate_not_legal_at_snapshot")
+    if source == "legal_candidate":
+        if not candidate_id:
+            reasons.append("negative_candidate_id_missing")
+        if not snapshot_hash:
+            reasons.append("negative_candidate_snapshot_hash_missing")
+        if meta.get("legal_at_snapshot") is not True:
+            reasons.append("negative_candidate_not_legal_at_snapshot")
+    else:
+        required_trace = {
+            "on_policy_trace_id", "on_policy_input_messages_sha256",
+            "on_policy_raw_completion_sha256", "on_policy_error_types",
+            "on_policy_action_kind", "on_policy_action_legal",
+            "on_policy_rollout_run_id",
+        }
+        missing = sorted(name for name in required_trace
+                         if meta.get(name) in (None, "", []))
+        if meta.get("on_policy_trace_verified") is not True:
+            reasons.append("on_policy_trace_not_verified")
+        if missing:
+            reasons.append("on_policy_trace_fields_missing:" + ",".join(missing))
+        action_legal = meta.get("on_policy_action_legal")
+        if not isinstance(action_legal, bool):
+            reasons.append("on_policy_action_legal_not_boolean")
+        if action_legal is False and (candidate_id or snapshot_hash):
+            reasons.append("illegal_on_policy_action_claims_candidate")
+        rejected_action = parse_action(answer_text(row.get("rejected") or ""))
+        if (action_legal is True and rejected_action is not None and
+                rejected_action.bid and not candidate_id):
+            reasons.append("legal_dom_on_policy_action_lacks_candidate")
     candidate = candidates.get(candidate_id) if candidates is not None else None
-    if candidates is not None:
+    if candidates is not None and candidate_id:
         if candidate is None:
             reasons.append("unknown_negative_candidate_id")
         else:
@@ -340,10 +364,12 @@ def formal_negative_candidate_reasons(
                  for message in reversed(prompt)
                  if isinstance(message, dict) and message.get("role") == "user"), "")
     rejected = parse_action(answer_text(row.get("rejected") or ""))
-    if rejected and rejected.bid and not bid_is_visible(
+    should_be_visible = (source == "legal_candidate" or
+                         meta.get("on_policy_action_legal") is True)
+    if should_be_visible and rejected and rejected.bid and not bid_is_visible(
             prompt_registry.parse_observation_message(user), rejected.bid):
         reasons.append("negative_candidate_bid_absent_from_input")
-    if meta.get("negative_source") == "on_policy" and not (
+    if source == "on_policy" and not (
             meta.get("policy_model_version") or
             meta.get("proposer_model_version")):
         reasons.append("on_policy_model_version_missing")

@@ -1,0 +1,264 @@
+{
+  "artifact_version": "formal_candidates.v4",
+  "body": "data/raw/candidates/formal_candidates.v4.jsonl",
+  "category": {
+    "constraint_trigger_action": 7,
+    "expert_action": 25,
+    "ordinary_interactive_action": 118
+  },
+  "code_version": "b67852828d6d9fb335114c2ceb1dc3a7002faca7+worktree:f8d42a40c19918626a369f2d8ed43f8f01af2fa32e12217bfe3ed2490cd7f06f",
+  "evidence_dependent_role_count": 0,
+  "exact_input_sft": {
+    "eligible_count": 31,
+    "eligible_probe_point_ids": [
+      "point-01172ce8e1aba9a1c7c4",
+      "point-074184630008bef3d416",
+      "point-08e0821355b9728143ba",
+      "point-093c3548c37db9fa3b15",
+      "point-109f0be9a9e8287759b8",
+      "point-11010e3d33a1be8b8686",
+      "point-187930109f86179fc391",
+      "point-1fbcbccd420a8dbe9839",
+      "point-208cb955a7e5316ae8b1",
+      "point-2dfc13d42bba13e05cb3",
+      "point-3632c37a158b2fce341d",
+      "point-63dedbde95a63c277e2e",
+      "point-83174a73e8b150f6d476",
+      "point-855d61530e55666b0c17",
+      "point-865965f6496570cda87d",
+      "point-8a3f911291b5219e384e",
+      "point-92b86822851c2f36e650",
+      "point-938bf921350b80c5e1e1",
+      "point-a3cc348686dad59674d0",
+      "point-a8127f75994e3b08ac01",
+      "point-acac084bf979f81eb1e9",
+      "point-afaf878e5e62df66d91a",
+      "point-b9902a3352bd6319232f",
+      "point-be723db90bacfbfcae3c",
+      "point-becb7efdf06a54c66edf",
+      "point-cdaff79c736b3995ab67",
+      "point-e628b5e8b8026277980e",
+      "point-e7f92bdc88a2e7a2e4cf",
+      "point-ec44c865a70a21420158",
+      "point-f8686bcacf15ca1190be",
+      "point-ffcd3a9477e3ea2ddb34"
+    ],
+    "excluded": [
+      {
+        "candidate_snapshot_hash": "59d6f94430308cfd5a7e4871cc79f7c1d52b9662e9ee6a2bcf9fb74975e00a15",
+        "pre_observation_hash": "6800f6f22b3ba327eb58da58671aa81c980aa68181edfe1293389f88391a37ff",
+        "probe_point_id": "point-faecb74ebfe8edb06654",
+        "reason": "pre_observation_hash_differs_from_candidate_snapshot",
+        "state_id": "pt_reddit_subscribe__books"
+      }
+    ],
+    "excluded_count": 1
+  },
+  "expert_point_join_complete": true,
+  "legacy_v3": {
+    "exists": true,
+    "formal_consumer": false,
+    "path": "data/raw/candidates/iris_candidates.v3.jsonl",
+    "sha256_after": "1930d48d3a2b303325cc0c7a53b2794ce8f4640f1083a09df79723544e152cb4",
+    "sha256_before": "1930d48d3a2b303325cc0c7a53b2794ce8f4640f1083a09df79723544e152cb4",
+    "unchanged": true
+  },
+  "manifest": "data/raw/candidates/FORMAL_CANDIDATE_MANIFEST.v4.jsonl",
+  "n_candidates": 150,
+  "n_points": 32,
+  "n_states": 25,
+  "per_state_sizes": {
+    "6": 25
+  },
+  "point_expert_candidates": {
+    "point-01172ce8e1aba9a1c7c4": "cand-5a5851e7810d2408d622",
+    "point-074184630008bef3d416": "cand-c7decfe77904145250a8",
+    "point-08e0821355b9728143ba": "cand-b07c87a9c32615f0b8c5",
+    "point-093c3548c37db9fa3b15": "cand-4bb69c9bfb38e47715f2",
+    "point-109f0be9a9e8287759b8": "cand-4c50a6a54d817ced2d44",
+    "point-11010e3d33a1be8b8686": "cand-98a1f24f3c7a6af288d1",
+    "point-187930109f86179fc391": "cand-ec6a45cbc0d65f386907",
+    "point-1fbcbccd420a8dbe9839": "cand-cf333c017cf28048705c",
+    "point-208cb955a7e5316ae8b1": "cand-1ed4de01b832cbf1aa27",
+    "point-2dfc13d42bba13e05cb3": "cand-cf333c017cf28048705c",
+    "point-3632c37a158b2fce341d": "cand-dcef9f4c1b1c39334fe8",
+    "point-63dedbde95a63c277e2e": "cand-300e3f5eebf2db628204",
+    "point-83174a73e8b150f6d476": "cand-3a7e2f03f81444d57e3f",
+    "point-855d61530e55666b0c17": "cand-e60f1fb8d95b2d079b02",
+    "point-865965f6496570cda87d": "cand-22c392cbad3639b4497f",
+    "point-8a3f911291b5219e384e": "cand-52d7e6297a2f5462b9f8",
+    "point-92b86822851c2f36e650": "cand-4c50a6a54d817ced2d44",
+    "point-938bf921350b80c5e1e1": "cand-5e6395f543bc5c80cdee",
+    "point-a3cc348686dad59674d0": "cand-4bb69c9bfb38e47715f2",
+    "point-a8127f75994e3b08ac01": "cand-1581891026f35c4dfd3f",
+    "point-acac084bf979f81eb1e9": "cand-202c6151310f88f31dc6",
+    "point-afaf878e5e62df66d91a": "cand-bbc2d6db887d3a8aebe9",
+    "point-b9902a3352bd6319232f": "cand-b8be7398dec1ec8a6d0a",
+    "point-be723db90bacfbfcae3c": "cand-17bd4381d67445ad3b80",
+    "point-becb7efdf06a54c66edf": "cand-be67e8b63eca93b9da16",
+    "point-cdaff79c736b3995ab67": "cand-1581891026f35c4dfd3f",
+    "point-e628b5e8b8026277980e": "cand-5e6395f543bc5c80cdee",
+    "point-e7f92bdc88a2e7a2e4cf": "cand-23d4c52def7cb918eac1",
+    "point-ec44c865a70a21420158": "cand-1f55c10b380dbe33f014",
+    "point-f8686bcacf15ca1190be": "cand-02a33a17a77bb0c8900b",
+    "point-faecb74ebfe8edb06654": "cand-22c392cbad3639b4497f",
+    "point-ffcd3a9477e3ea2ddb34": "cand-23d4c52def7cb918eac1"
+  },
+  "repeated_measurement_states": {
+    "pt_add_to_cart__car-mount-phone-holder-sturdy-cup-holder": [
+      "point-1fbcbccd420a8dbe9839",
+      "point-2dfc13d42bba13e05cb3"
+    ],
+    "pt_compare_add__car-mount-phone-holder-sturdy-cup-holder": [
+      "point-e7f92bdc88a2e7a2e4cf",
+      "point-ffcd3a9477e3ea2ddb34"
+    ],
+    "pt_reddit_subscribe__AskReddit": [
+      "point-109f0be9a9e8287759b8",
+      "point-92b86822851c2f36e650"
+    ],
+    "pt_reddit_subscribe__books": [
+      "point-865965f6496570cda87d",
+      "point-faecb74ebfe8edb06654"
+    ],
+    "pt_reddit_vote__59421": [
+      "point-093c3548c37db9fa3b15",
+      "point-a3cc348686dad59674d0"
+    ],
+    "pt_reddit_vote__81371": [
+      "point-938bf921350b80c5e1e1",
+      "point-e628b5e8b8026277980e"
+    ],
+    "pt_wishlist_add__car-mount-phone-holder-sturdy-cup-holder": [
+      "point-a8127f75994e3b08ac01",
+      "point-cdaff79c736b3995ab67"
+    ]
+  },
+  "schema_version": "iris.formal_candidate_asset_report.v1",
+  "selector_version": "a11y-rule-v2-boundary-locality-fix1",
+  "snapshot_sources": {
+    "point-01172ce8e1aba9a1c7c4": [
+      "data/raw/state_bank/shopping_key_states.jsonl:273"
+    ],
+    "point-074184630008bef3d416": [
+      "data/raw/state_bank/formal_point_reached_states.jsonl:1",
+      "data/raw/state_bank/shopping_key_states.jsonl:260"
+    ],
+    "point-08e0821355b9728143ba": [
+      "data/raw/state_bank/formal_point_reached_states.jsonl:2",
+      "data/raw/state_bank/reddit_key_states.jsonl:7"
+    ],
+    "point-093c3548c37db9fa3b15": [
+      "data/raw/state_bank/formal_point_reached_states.jsonl:9",
+      "data/raw/state_bank/reddit_key_states.jsonl:1"
+    ],
+    "point-109f0be9a9e8287759b8": [
+      "data/raw/state_bank/formal_point_reached_states.jsonl:3",
+      "data/raw/state_bank/reddit_key_states.jsonl:4"
+    ],
+    "point-11010e3d33a1be8b8686": [
+      "data/raw/state_bank/shopping_key_states.jsonl:281"
+    ],
+    "point-187930109f86179fc391": [
+      "data/raw/state_bank/formal_point_reached_states.jsonl:4",
+      "data/raw/state_bank/shopping_key_states.jsonl:254"
+    ],
+    "point-1fbcbccd420a8dbe9839": [
+      "data/raw/state_bank/formal_point_reached_states.jsonl:6",
+      "data/raw/state_bank/shopping_key_states.jsonl:243"
+    ],
+    "point-208cb955a7e5316ae8b1": [
+      "data/raw/state_bank/formal_point_reached_states.jsonl:5",
+      "data/raw/state_bank/shopping_key_states.jsonl:244"
+    ],
+    "point-2dfc13d42bba13e05cb3": [
+      "data/raw/state_bank/formal_point_reached_states.jsonl:6",
+      "data/raw/state_bank/shopping_key_states.jsonl:243"
+    ],
+    "point-3632c37a158b2fce341d": [
+      "data/raw/state_bank/formal_point_reached_states.jsonl:7",
+      "data/raw/state_bank/shopping_key_states.jsonl:242"
+    ],
+    "point-63dedbde95a63c277e2e": [
+      "data/raw/state_bank/formal_point_reached_states.jsonl:8",
+      "data/raw/state_bank/shopping_key_states.jsonl:252"
+    ],
+    "point-83174a73e8b150f6d476": [
+      "data/raw/state_bank/shopping_key_states.jsonl:276"
+    ],
+    "point-855d61530e55666b0c17": [
+      "data/raw/state_bank/shopping_key_states.jsonl:274"
+    ],
+    "point-865965f6496570cda87d": [
+      "data/raw/state_bank/reddit_key_states.jsonl:3"
+    ],
+    "point-8a3f911291b5219e384e": [
+      "data/raw/state_bank/shopping_key_states.jsonl:278"
+    ],
+    "point-92b86822851c2f36e650": [
+      "data/raw/state_bank/formal_point_reached_states.jsonl:3",
+      "data/raw/state_bank/reddit_key_states.jsonl:4"
+    ],
+    "point-938bf921350b80c5e1e1": [
+      "data/raw/state_bank/formal_point_reached_states.jsonl:14",
+      "data/raw/state_bank/reddit_key_states.jsonl:2"
+    ],
+    "point-a3cc348686dad59674d0": [
+      "data/raw/state_bank/formal_point_reached_states.jsonl:9",
+      "data/raw/state_bank/reddit_key_states.jsonl:1"
+    ],
+    "point-a8127f75994e3b08ac01": [
+      "data/raw/state_bank/formal_point_reached_states.jsonl:10",
+      "data/raw/state_bank/shopping_key_states.jsonl:253"
+    ],
+    "point-acac084bf979f81eb1e9": [
+      "data/raw/state_bank/shopping_key_states.jsonl:279"
+    ],
+    "point-afaf878e5e62df66d91a": [
+      "data/raw/state_bank/shopping_key_states.jsonl:275"
+    ],
+    "point-b9902a3352bd6319232f": [
+      "data/raw/state_bank/formal_point_reached_states.jsonl:11",
+      "data/raw/state_bank/reddit_key_states.jsonl:5"
+    ],
+    "point-be723db90bacfbfcae3c": [
+      "data/raw/state_bank/formal_point_reached_states.jsonl:12",
+      "data/raw/state_bank/shopping_key_states.jsonl:262"
+    ],
+    "point-becb7efdf06a54c66edf": [
+      "data/raw/state_bank/formal_point_reached_states.jsonl:13",
+      "data/raw/state_bank/reddit_key_states.jsonl:6"
+    ],
+    "point-cdaff79c736b3995ab67": [
+      "data/raw/state_bank/formal_point_reached_states.jsonl:10",
+      "data/raw/state_bank/shopping_key_states.jsonl:253"
+    ],
+    "point-e628b5e8b8026277980e": [
+      "data/raw/state_bank/formal_point_reached_states.jsonl:14",
+      "data/raw/state_bank/reddit_key_states.jsonl:2"
+    ],
+    "point-e7f92bdc88a2e7a2e4cf": [
+      "data/raw/state_bank/formal_point_reached_states.jsonl:15",
+      "data/raw/state_bank/shopping_key_states.jsonl:261"
+    ],
+    "point-ec44c865a70a21420158": [
+      "data/raw/state_bank/shopping_key_states.jsonl:277"
+    ],
+    "point-f8686bcacf15ca1190be": [
+      "data/raw/state_bank/shopping_key_states.jsonl:280"
+    ],
+    "point-faecb74ebfe8edb06654": [
+      "data/raw/state_bank/reddit_key_states.jsonl:3"
+    ],
+    "point-ffcd3a9477e3ea2ddb34": [
+      "data/raw/state_bank/formal_point_reached_states.jsonl:15",
+      "data/raw/state_bank/shopping_key_states.jsonl:261"
+    ]
+  },
+  "source": {
+    "a11y_enumeration": 125,
+    "expert": 25
+  },
+  "state_scope_exact": true,
+  "status": "created"
+}

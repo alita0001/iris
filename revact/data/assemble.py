@@ -43,6 +43,10 @@ from ..eval.truth import (assert_truth_manifest_integrity,
 from ..grounding.base import load_reversibility_details
 from ..grounding.schema import (GroundingPoint, GroundingValidationError,
                                 load_probe_points)
+from ..grounding.transitions import (ProbeTransition,
+                                     assert_point_transition_integrity,
+                                     load_probe_transitions,
+                                     transition_manifest_row)
 from ..train.validators import parse_action
 
 
@@ -425,6 +429,53 @@ def build_rev_fields(action_type: str, info: dict) -> tuple[str, str]:
     return rev_check, "unverified"
 
 
+def _transition_prediction(info: dict) -> str:
+    """Render only facts measured in the immediate post-action observation."""
+    transition = info.get("transition")
+    if not isinstance(transition, ProbeTransition):
+        pre = json.dumps(info.get("pre_signal"), ensure_ascii=False, sort_keys=True)
+        post = json.dumps(info.get("post_signal"), ensure_ascii=False, sort_keys=True)
+        effect = info.get("effect_status")
+        measured = (
+            f"left the measured signal unchanged at {pre} (post={post})"
+            if effect == "NO_EFFECT" else
+            f"changed the measured signal from {pre} to {post}"
+            if effect == "CHANGED" else
+            f"recorded measured signal {pre} -> {post}; effect status is UNKNOWN, "
+            "so no directional next-state change is asserted")
+        return (
+            f"Probe point {info['probe_point_id']} {measured}, "
+            "but its exact post-action observation body was not retained; this is "
+            "hash-only effect evidence, not a next-state target.")
+
+    from .candidates import interactive_elements
+    before = {
+        (row["role"], row["name"]) for row in interactive_elements(
+            transition.pre_observation.policy_axtree)
+    }
+    after = {
+        (row["role"], row["name"]) for row in interactive_elements(
+            transition.post_observation.policy_axtree)
+    }
+    added = [f"{role}:{name}" for role, name in sorted(after - before)][:5]
+    removed = [f"{role}:{name}" for role, name in sorted(before - after)][:5]
+    facts = [
+        f"immediate post URL={transition.post_observation.url}",
+        "measured signal " + json.dumps(
+            transition.pre_signal, ensure_ascii=False, sort_keys=True) +
+        " -> " + json.dumps(
+            transition.post_signal, ensure_ascii=False, sort_keys=True),
+    ]
+    if added:
+        facts.append("interactive controls added=" + json.dumps(added, ensure_ascii=False))
+    if removed:
+        facts.append("interactive controls removed=" + json.dumps(
+            removed, ensure_ascii=False))
+    return (
+        f"Probe transition {transition.transition_id} actually executed the pinned "
+        f"action; " + "; ".join(facts) + ".")
+
+
 def build_fields(state: dict, action_type: str, reversibility, goal: str,
                  violates_constraint: bool, requested: bool,
                  normative_risk: Optional[bool] = None) -> dict:
@@ -469,23 +520,10 @@ def build_fields(state: dict, action_type: str, reversibility, goal: str,
                      + ("proceeding is safe." if decision == "EXECUTE"
                         else "I should confirm before committing."))
     if info.get("formal_point"):
-        pre = json.dumps(info.get("pre_signal"), ensure_ascii=False, sort_keys=True)
-        post = json.dumps(info.get("post_signal"), ensure_ascii=False, sort_keys=True)
-        effect_status = info.get("effect_status")
-        if effect_status == "CHANGED":
-            prediction = (
-                f"For probe point {info['probe_point_id']}, executing the referenced "
-                f"action changed the measured signal from {pre} to {post}.")
-        elif effect_status == "NO_EFFECT":
-            prediction = (
-                f"For probe point {info['probe_point_id']}, the recorded execution "
-                f"left the measured signal unchanged at {pre} (post={post}).")
-        else:
-            prediction = (
-                f"Probe point {info['probe_point_id']} contains a recorded post-action "
-                "observation, but its measured effect status is UNKNOWN; no directional "
-                "next-state change is asserted.")
-        prediction_source = "probe_transition"
+        prediction = _transition_prediction(info)
+        prediction_source = (
+            "probe_transition" if info.get("transition_body_verified")
+            else "probe_signal_diff_hash_only")
     else:
         prediction = f"Clicking '{risky_text}' would {meta['effect']}."
         prediction_source = "action_meta_template_legacy"
@@ -628,7 +666,8 @@ def _dpo_pairs_for(f: dict, state: dict, violates: bool, requested: bool) -> lis
     return pairs
 
 
-def _point_info(point: GroundingPoint) -> dict:
+def _point_info(point: GroundingPoint,
+                transition: ProbeTransition | None = None) -> dict:
     return {
         "formal_point": True,
         "label": point.recovery_status,
@@ -643,6 +682,8 @@ def _point_info(point: GroundingPoint) -> dict:
         "pre_signal": point.pre_signal,
         "post_signal": point.post_signal,
         "evidence": point.evidence,
+        "transition": transition,
+        "transition_body_verified": transition is not None,
     }
 
 
@@ -654,7 +695,9 @@ def _state_normative_risk(state: dict) -> Optional[bool]:
 
 
 def _resolve_formal_point(state: dict,
-                          points: dict[str, GroundingPoint]) -> GroundingPoint:
+                          points: dict[str, GroundingPoint],
+                          transition: ProbeTransition | None = None
+                          ) -> GroundingPoint:
     risky = state.get("risky_action") or {}
     point_id = state.get("probe_point_id") or risky.get("probe_point_id")
     if not point_id:
@@ -663,6 +706,10 @@ def _resolve_formal_point(state: dict,
     if point is None:
         raise FormalAssemblyError(f"unknown probe_point_id {point_id!r}")
     point.validate(formal=True)
+    if transition is None:
+        raise FormalAssemblyError(
+            "exact probe transition body is absent; hash-only grounding cannot "
+            "enter the formal forward-supervised main set")
     state_id = state.get("state_id")
     if not state_id or str(state_id) != point.state_id:
         raise FormalAssemblyError(
@@ -682,9 +729,18 @@ def _resolve_formal_point(state: dict,
         raise FormalAssemblyError("canonical action differs from the point")
     state_hash = (state.get("pre_observation_hash") or
                   (state.get("pre_fingerprint") or {}).get("axtree_hash"))
-    if not state_hash or str(state_hash) != point.pre_observation_hash:
-        raise FormalAssemblyError(
-            "pre observation hash is missing or differs from the probe transition")
+    if not state_hash:
+        raise FormalAssemblyError("pre observation hash is missing")
+    if str(state_hash) != point.pre_observation_hash:
+        dynamic_verified = (
+            transition is not None and
+            transition.pre_observation.policy_axtree_sha256 ==
+            point.pre_observation_hash and
+            transition.replay_verification == "dynamic_page_target_contract")
+        if not dynamic_verified:
+            raise FormalAssemblyError(
+                "pre observation hash differs without a verified dynamic target "
+                "transition body")
     if point.is_mock:
         raise FormalAssemblyError("mock point is forbidden in the formal main set")
     if state.get("collector_success") is not True:
@@ -718,6 +774,17 @@ def assemble(reached_path: Path, rev_path: Path, out_dir: Path, *,
     except GroundingValidationError as exc:
         raise FormalAssemblyError(str(exc)) from exc
     rev = {} if formal else load_reversibility_details(rev_path)
+    transitions_by_point: dict[str, ProbeTransition] = {}
+    if formal:
+        transition_path = (rev_path.parent / "transitions" /
+                           "probe_transitions.v1.jsonl")
+        transitions = load_probe_transitions(transition_path, validate=True)
+        assert_point_transition_integrity(
+            points, transitions, require_all=False)
+        transitions_by_point = {
+            transition.probe_point_id: transition
+            for transition in transitions.values()
+        }
     truth = {}
     if formal:
         truth_path = truth_path or out_dir / "eval" / "truth.jsonl"
@@ -750,15 +817,21 @@ def assemble(reached_path: Path, rev_path: Path, out_dir: Path, *,
         state_name = str(state.get("name") or state.get("state_id") or "<unnamed>")
         try:
             if formal:
-                point = _resolve_formal_point(state, points)
-                at, info = point.action_type, _point_info(point)
+                point_id = str(state.get("probe_point_id") or
+                               (state.get("risky_action") or {}).get(
+                                   "probe_point_id") or "")
+                transition = transitions_by_point.get(point_id)
+                point = _resolve_formal_point(state, points, transition)
+                at, info = point.action_type, _point_info(point, transition)
             else:
                 binding = _legacy_binding(state, rev)
                 if binding is None:
                     raise FormalAssemblyError("no legacy keyword/class binding")
                 at, info = binding
                 point = None
-            obs = state.get("axtree_snapshot", "")
+            obs = (transition.pre_observation.policy_axtree
+                   if formal and transition is not None
+                   else state.get("axtree_snapshot", ""))
             history, hist_src = prompts.state_history(state)
             if formal and hist_src != "trajectory":
                 raise FormalAssemblyError(
@@ -828,6 +901,8 @@ def assemble(reached_path: Path, rev_path: Path, out_dir: Path, *,
                     "assistant_turn_types": ["decision"],
                     "reversibility_grounded": formal,
                     "history_source": hist_src,
+                    "history_snapshot_alignment": state.get(
+                        "history_snapshot_alignment", "exact_raw_snapshot"),
                     "risky_raw_action": risky_raw,
                     "risky_action": ((parsed.to_dict()
                                       if (parsed := parse_action(risky_raw)) else None)
@@ -870,6 +945,13 @@ def assemble(reached_path: Path, rev_path: Path, out_dir: Path, *,
                         "pre_signal": point.pre_signal,
                         "post_signal": point.post_signal,
                     } if point else None),
+                    "transition_id": (
+                        transition.transition_id if formal and transition else ""),
+                    "transition_record_sha256": (
+                        transition_manifest_row(transition)["record_sha256"]
+                        if formal and transition else ""),
+                    "transition_body_verified": bool(
+                        formal and transition is not None),
                     "undo_actions": list(point.undo_actions) if point else [],
                     "undo_semantic_actions": (
                         list(point.undo_semantic_actions) if point else []),
@@ -914,7 +996,8 @@ def assemble(reached_path: Path, rev_path: Path, out_dir: Path, *,
             blocked.append({"state": state_name, "reason": str(exc)})
 
     if formal:
-        sft_path = out_dir / "train" / "formal" / "iris_sft_point_v1.jsonl"
+        sft_path = (out_dir / "train" / "formal" /
+                    config.FORMAL_SFT_PATH.name)
         dpo_path = out_dir / "train" / "ablation" / "iris_dpo_synthetic_point_v1.jsonl"
         report_path = out_dir / "train" / "formal" / "assembly_report.json"
     else:

@@ -1,0 +1,13 @@
+{
+  "schema_version": "iris.collection-run-quarantine.v1",
+  "run_id": "20260716T060628737452Z-27943c94",
+  "reason": "BrowserGym reset failed before any trajectory, meta, key-state, or policy-attempt write because the required WA_* endpoint environment was absent.",
+  "source_path": "data/manifests/collection_runs/20260716T060628737452Z-27943c94.json",
+  "quarantine_path": "data/manifests/collection_runs/quarantine/20260716T060628737452Z-27943c94/FAILED_RUN.json",
+  "quarantined_sha256": "042816381554d7b3db7a60ef9f86f5cddb4f8cd68a6412450a6f2a699f37d8c1",
+  "related_artifacts": [],
+  "counts_as_collection_run": false,
+  "counts_as_formal": false,
+  "rollback": "Move FAILED_RUN.json back to source_path only for forensic inspection; it remains status=FAILED and must never be admitted to formal lineage.",
+  "timestamp": "2026-07-16T06:08:47.925884Z"
+}

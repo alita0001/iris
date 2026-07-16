@@ -22,10 +22,22 @@ from revact.grounding.solvers import (
 
 CONTEXT = SolverContext(
     probe_point_id="point-1", initial_signal={"item": 0},
-    post_action_signal={"item": 1})
+    post_action_signal={"item": 1}, post_action_state_hash="mutated")
 
 
-def _failure(kind, name, *, seeds=(), attack_attempts=0, exhausted=False):
+_DEFAULT_START_SIGNAL = object()
+
+
+def _failure(
+        kind, name, *, seeds=(), attack_attempts=0, exhausted=False,
+        start_state_hash="post", start_signal=_DEFAULT_START_SIGNAL,
+        reset_method="fixture_state_clone", reset_verified=True,
+        branch_reset=None):
+    if start_signal is _DEFAULT_START_SIGNAL:
+        start_signal = {"item": 1}
+    evidence = {"fixture": True}
+    if branch_reset is not None:
+        evidence["branch_reset"] = branch_reset
     return SolverTrace(
         solver_name=name,
         solver_kind=kind,
@@ -41,7 +53,11 @@ def _failure(kind, name, *, seeds=(), attack_attempts=0, exhausted=False):
         budget_exhausted=exhausted,
         attack_attempts=attack_attempts,
         seeds=tuple(seeds),
-        evidence={"fixture": True},
+        evidence=evidence,
+        start_state_hash=start_state_hash,
+        start_signal=start_signal,
+        reset_method=reset_method,
+        reset_verified=reset_verified,
     )
 
 
@@ -82,6 +98,10 @@ def test_second_undo_channel_flips_fixed_controller_false_negative():
     assert result.successful_solver == "shopping.affordance_bfs"
     assert result.undo_actions == ("open_menu", "remove_item")
     assert result.undo_cost_steps == 2
+    assert bfs_trace.start_state_hash == "mutated"
+    assert bfs_trace.start_signal == {"item": 1}
+    assert bfs_trace.reset_method == "fixture_state_clone"
+    assert bfs_trace.reset_verified is True
 
 
 def test_all_solver_failures_only_mean_not_recovered_within_budget():
@@ -100,6 +120,11 @@ def test_all_solver_failures_only_mean_not_recovered_within_budget():
     assert result.attack_attempts == 2
     assert result.budget_exhausted is True
     assert set(result.explored_actions) == set(result.solver_set)
+    evidence = result.to_evidence()
+    assert evidence["protocol"] == "solver_union.v2"
+    assert evidence["post_action_state_hash"] == "post"
+    assert evidence["post_signal"] == {"item": 1}
+    assert all(trace["reset_verified"] is True for trace in evidence["traces"])
 
 
 def test_solver_union_evidence_attaches_to_formal_point():
@@ -133,6 +158,69 @@ def test_solver_union_evidence_attaches_to_formal_point():
     point.validate(formal=True)
     assert point.recovery_status == RECOVERY_NOT_WITHIN_BUDGET
     assert point.evidence["solver_union"]["attack_attempts"] == 2
+
+
+@pytest.mark.parametrize(
+    ("bad_trace", "message"),
+    [
+        (_failure(SOLVER_DETERMINISTIC, "deterministic",
+                  reset_verified=False), "reset_verified=true"),
+        (_failure(SOLVER_DETERMINISTIC, "deterministic",
+                  reset_method="url_reanchor_only"), "url_reanchor_only"),
+        (_failure(SOLVER_DETERMINISTIC, "deterministic",
+                  branch_reset="url_reanchor_only"), "url_reanchor_only"),
+        (_failure(SOLVER_DETERMINISTIC, "deterministic",
+                  start_state_hash=""), "start_state_hash"),
+        (_failure(SOLVER_DETERMINISTIC, "deterministic",
+                  start_signal=None), "start_signal"),
+    ],
+)
+def test_formal_negative_rejects_unverified_or_url_only_start(
+        bad_trace, message):
+    with pytest.raises(SolverProtocolError, match=message):
+        combine_solver_traces([
+            bad_trace,
+            _failure(SOLVER_BFS, "bfs", exhausted=True),
+            _failure(
+                SOLVER_LLM_ATTACKER, "llm", seeds=(7, 11),
+                attack_attempts=2, exhausted=True),
+        ], budget_k=3)
+
+
+@pytest.mark.parametrize(
+    "changed",
+    [
+        {"start_state_hash": "a-different-post-state"},
+        {"start_signal": {"item": 2}},
+    ],
+)
+def test_formal_negative_rejects_solver_start_disagreement(changed):
+    with pytest.raises(SolverProtocolError, match="do not share one"):
+        combine_solver_traces([
+            _failure(SOLVER_DETERMINISTIC, "deterministic"),
+            _failure(SOLVER_BFS, "bfs", exhausted=True, **changed),
+            _failure(
+                SOLVER_LLM_ATTACKER, "llm", seeds=(7, 11),
+                attack_attempts=2, exhausted=True),
+        ], budget_k=3)
+
+
+def test_constructive_positive_remains_compatible_without_reset_provenance():
+    trace = SolverTrace(
+        solver_name="legacy-positive", solver_kind=SOLVER_DETERMINISTIC,
+        solver_version="legacy-1", budget_k=3, success=True,
+        explored_actions=("remove",), explored_states=("initial",),
+        undo_actions=("click('remove')",),
+        undo_semantic_actions=("remove item",),
+        undo_observation_hashes=("undo-hash",), final_signal={"item": 0},
+        residual_diff={}, termination_reason="recovered",
+        budget_exhausted=False)
+    result = combine_solver_traces([trace], budget_k=3)
+    evidence = result.to_evidence()
+    assert result.recovery_status == RECOVERY_RECOVERED
+    assert evidence["protocol"] == "solver_union.v1"
+    assert "post_action_state_hash" not in evidence
+    assert "post_signal" not in evidence
 
 
 def test_formal_negative_requires_three_routes_and_multi_seed_attacker():

@@ -16,13 +16,13 @@ Routes (JSON unless noted):
   POST /api/prompts                       {id, value} save prompt override
   POST /api/prompts/reset                 {id} drop override, back to default
   GET  /api/trajectories                  index; /api/trajectories/<id> detail
-  GET  /api/keystates | /api/states | /api/grounded | /api/probes
+  GET  /api/keystates | /api/states[?tier=formal|legacy] | /api/grounded | /api/probes
   GET/POST /api/probe-specs               label-free declarative probe specs
   GET  /api/sft[?distilled=1] | /api/dpo | /api/templates | /api/quality
   GET  /api/dataset_card                  sample anatomy + schema + counts
   GET  /api/sample_raw?sample=<sample_id> full unclipped SFT/distilled/DPO rows
   GET  /api/constraints/preview[?state=]  real build_goal output
-  GET  /api/candidates?state=<name>       expert/safe/DPO counterfactuals
+  GET  /api/candidates?state=<name>&tier=  formal v1 (default) or legacy preview
   GET  /api/lineage?sample=<sample_id>
   GET  /api/annotations/<kind>            effective + history
   POST /api/annotations                   {kind, target_id, payload}
@@ -62,6 +62,16 @@ _MIME = {".html": "text/html; charset=utf-8", ".css": "text/css; charset=utf-8",
          ".svg": "image/svg+xml", ".json": "application/json"}
 
 _lock = threading.Lock()
+
+_PROBE_LABEL_FIELDS = frozenset({
+    "label", "reversibility", "effect_status", "recovery_status",
+    "normative_risk", "expected_decision", "safe", "irreversible",
+})
+
+
+def _authored_probe_specs_path(root: Path) -> Path:
+    """Return the single authoring inbox used by UI and batch preparation."""
+    return root / "grounded" / "specs" / "authored_specs.jsonl"
 
 
 def load_local_config() -> None:
@@ -213,15 +223,20 @@ class Handler(BaseHTTPRequestHandler):
                 return self._json({"ok": True, "items": store.key_states(),
                                    "annotations": annotations.effective("key_state")})
             if path == "/api/states":
-                return self._json({"ok": True, "items": store.reached_states(),
+                tier = q.get("tier", ["formal"])[0]
+                return self._json({"ok": True,
+                                   "asset_tier": tier,
+                                   "default_tier": "formal",
+                                   "legacy_display_only": tier == "legacy",
+                                   "items": store.reached_states(tier=tier),
                                    "annotations": annotations.effective("state")})
             if path == "/api/grounded":
                 formal = store.formal_grounding()
                 return self._json({"ok": True,
-                                   # Compatibility aliases; explicitly legacy.
-                                   "items": store.grounded_runs(),
-                                   "effective_labels": store.effective_labels(),
-                                   "manifest": store.manifest(),
+                                   "asset_tier": "formal",
+                                   # Unqualified fields are formal by default.
+                                   "items": formal["items"],
+                                   "manifest": formal["manifest"],
                                    "legacy_class_smoke": {
                                        "items": store.grounded_runs(),
                                        "effective_labels": store.effective_labels(),
@@ -239,12 +254,12 @@ class Handler(BaseHTTPRequestHandler):
             if path == "/api/probes":
                 return self._json({"ok": True, "items": store.probe_specs()})
             if path == "/api/probe-specs":
-                spec_path = (store.root / "grounded" / "probe_specs" /
-                             "authored_specs.jsonl")
+                spec_path = _authored_probe_specs_path(store.root)
                 return self._json({
                     "ok": True,
                     "items": [spec.to_dict() for spec in
                               load_authored_specs(spec_path)],
+                    "artifact": str(spec_path),
                     "execution_enabled": False,
                     "label_entry_supported": False,
                     "note": "Specs define action/signal/undo/solver/budget only; labels are execution outputs.",
@@ -252,19 +267,21 @@ class Handler(BaseHTTPRequestHandler):
             if path == "/api/sft":
                 distilled = q.get("distilled", ["0"])[0] == "1"
                 family = q.get("family", ["single"])[0]
-                tier = q.get("tier", ["legacy"])[0]
+                tier = q.get("tier", ["formal"])[0]
                 return self._json({"ok": True,
                                    "items": store.sft(distilled=distilled,
                                                       family=family,
                                                       tier=tier),
                                    "asset_tier": tier,
+                                   "default_tier": "formal",
                                    "annotations": annotations.effective(
                                        "distill" if distilled else "sample")})
             if path == "/api/dpo":
+                tier = q.get("tier", ["formal"])[0]
                 return self._json({"ok": True, "items": store.dpo(
                     family=q.get("family", ["single"])[0],
-                    tier=q.get("tier", ["legacy"])[0]),
-                    "asset_tier": q.get("tier", ["legacy"])[0]})
+                    tier=tier),
+                    "asset_tier": tier, "default_tier": "formal"})
             if path == "/api/dataset_card":
                 return self._json({"ok": True, "card": store.dataset_card()})
             if path == "/api/sample_raw":
@@ -285,11 +302,15 @@ class Handler(BaseHTTPRequestHandler):
                 return self._json({"ok": True, "previews": previews})
             if path == "/api/candidates":
                 name = q.get("state", [""])[0]
-                res = store.candidates_for(name) if name else None
+                tier = q.get("tier", ["formal"])[0]
+                res = store.candidates_for(name, tier=tier) if name else None
                 anns = annotations.effective("candidate")
                 mine = {k: v for k, v in anns.items()
                         if k == name or k.startswith(name + "__")}
                 return self._json({"ok": bool(res), "candidates": res,
+                                   "asset_tier": tier,
+                                   "default_tier": "formal",
+                                   "legacy_display_only": tier == "legacy",
                                    "annotations": mine})
             if path == "/api/lineage":
                 sid = q.get("sample", [""])[0]
@@ -396,6 +417,10 @@ class Handler(BaseHTTPRequestHandler):
                                    "fingerprint": prompts.fingerprint()})
             if path == "/api/probe-specs":
                 with _lock:
+                    leaked = sorted(set(body) & _PROBE_LABEL_FIELDS)
+                    if leaked:
+                        return self._err(
+                            400, f"probe authoring cannot accept final labels: {leaked}")
                     proposal = dict(body.get("proposal") or {})
                     proposal.setdefault("author", str(body.get("author") or
                                                        "workbench"))
@@ -405,8 +430,7 @@ class Handler(BaseHTTPRequestHandler):
                             timespec="seconds"),
                         controller_version=config.CONTROLLER_VERSION,
                     )
-                    artifact = (store.root / "grounded" / "probe_specs" /
-                                "authored_specs.jsonl")
+                    artifact = _authored_probe_specs_path(store.root)
                     save_authored_spec(spec, artifact)
                 return self._json({"ok": True, "spec": spec.to_dict(),
                                    "artifact": str(artifact),

@@ -1,0 +1,25 @@
+{
+  "commit": false,
+  "failures": [
+    {
+      "action_type": "reddit_subscribe",
+      "cleanup_actions": [],
+      "cleanup_error": null,
+      "cleanup_status": "NOT_REQUIRED_PRE_MUTATION",
+      "exception_type": "PointExecutionError",
+      "probe_point_id": "point-be2af9a7a1ec056c6190",
+      "reason": "replayed state does not reproduce the recorded snapshot (replayed sha=6800f6f22b3b, recorded sha=59d6f9443030); refusing to rebase",
+      "recovery_journal": "/workspace/iris/data/grounded/recovery_journal/point-be2af9a7a1ec056c6190.json",
+      "state_id": "pt_reddit_subscribe__books"
+    }
+  ],
+  "n_executed": 2,
+  "n_persisted": 2,
+  "n_specs": 3,
+  "persist_error": "",
+  "persisted_point_ids": [
+    "point-e628b5e8b8026277980e",
+    "point-109f0be9a9e8287759b8"
+  ],
+  "spec": "data/grounded/specs/live-reddit-safe-20260713-03.jsonl"
+}

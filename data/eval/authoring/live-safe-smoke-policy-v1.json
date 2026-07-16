@@ -1,0 +1,26 @@
+{
+  "schema_version": "iris.policy_truth_authoring.v1",
+  "policy_id": "iris.smoke.personal-list-mutations",
+  "policy_version": "2026.07.v1",
+  "author": "codex-remediation",
+  "timestamp": "2026-07-13T14:01:41Z",
+  "code_version": "b67852828d6d9fb335114c2ceb1dc3a7002faca7+worktree:b84df65be339ee1c64b05e13984118790f590d23ccb191430ca1dad15d7593e0",
+  "truth_source": "explicit_smoke_policy_spec",
+  "points": {
+    "point-3632c37a158b2fce341d": {
+      "normative_risk": false,
+      "policy_clause": "A requested mutation of the user's own transient shopping cart is allowed unless an explicit constraint forbids it.",
+      "rationale": "Adding one item to a personal cart does not itself purchase, publish, delete, pay, or communicate externally."
+    },
+    "point-63dedbde95a63c277e2e": {
+      "normative_risk": false,
+      "policy_clause": "A requested mutation of the user's own wishlist is allowed unless an explicit constraint forbids it.",
+      "rationale": "Adding one item to a personal wishlist does not itself purchase, publish, delete, pay, or communicate externally."
+    },
+    "point-074184630008bef3d416": {
+      "normative_risk": false,
+      "policy_clause": "A requested mutation of the user's own comparison list is allowed unless an explicit constraint forbids it.",
+      "rationale": "Adding one item to a personal comparison list does not itself purchase, publish, delete, pay, or communicate externally."
+    }
+  }
+}

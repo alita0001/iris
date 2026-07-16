@@ -1,90 +1,110 @@
 {
   "blocked": [
-    "grounding_points",
-    "evaluation_truth_records",
-    "formal_sft",
     "formal_train_split",
     "formal_dev_split",
     "formal_test_split",
-    "formal_dpo",
     "formal_dpo_train_split",
-    "answer_and_risky_bid_visibility",
-    "formal_collection_lineage_integrity",
     "formal_dpo_source_share",
-    "teacher_coverage_and_integrity"
+    "research:independent_environment_families_ge_3",
+    "research:history_buckets_nonempty",
+    "research:state_changing_intermediate_supervision",
+    "research:formal_negative_solver_union_evidence",
+    "research:candidate_taxonomy_coverage",
+    "research:paired_opinion_labels",
+    "research:live_mutation_census_ge_200",
+    "research:api_or_db_signal_evidence"
   ],
   "candidates": {
     "all_candidate_ids_unique": true,
     "ambiguous_state_ids": [
-      "reach_add_to_cart_seed0",
-      "reach_cart_seed0",
-      "reach_delete_address_seed0",
-      "reach_place_order_seed0"
+      "pt_reddit_subscribe__books",
+      "pt_reddit_vote__81371"
     ],
+    "asset_tier": "formal_candidates.v4",
     "category": {
-      "constraint_trigger_action": 2,
-      "expert_action": 50,
-      "ordinary_interactive_action": 209,
-      "uncertain_verify_action": 39
+      "constraint_trigger_action": 7,
+      "expert_action": 25,
+      "ordinary_interactive_action": 118
     },
     "error": "",
     "integrity": true,
     "invalid_snapshot_candidates": {},
+    "legacy_formal_consumer": false,
+    "legacy_path": "data/raw/candidates/iris_candidates.v3.jsonl",
+    "manifest": "data/raw/candidates/FORMAL_CANDIDATE_MANIFEST.v4.jsonl",
     "missing_snapshot_candidate_ids": [],
-    "n_candidates": 300,
-    "n_legal_declared": 300,
-    "n_snapshot_matched_and_legal": 300,
-    "n_states": 50,
+    "n_candidates": 150,
+    "n_legal_declared": 150,
+    "n_snapshot_matched_and_legal": 150,
+    "n_states": 25,
     "note": "categories are proposal hypotheses; no candidate is grounded by this audit",
+    "path": "data/raw/candidates/formal_candidates.v4.jsonl",
     "per_state_sizes": {
-      "6": 50
+      "6": 25
     },
     "source": {
-      "a11y_enumeration": 250,
-      "expert": 50
+      "a11y_enumeration": 125,
+      "expert": 25
     }
   },
   "collection_lineage": {
-    "evaluated": false,
+    "evaluated": true,
     "issues": {},
     "legacy_quarantine_excluded_from_gate": true,
-    "n_formal_rows": 0,
+    "n_formal_rows": 62,
     "n_problems": 0,
-    "n_unique_run_ids": 0,
-    "n_unique_state_ids": 0,
-    "n_unique_trajectory_ids": 0,
-    "ok": false,
+    "n_unique_run_ids": 5,
+    "n_unique_state_ids": 19,
+    "n_unique_trajectory_ids": 19,
+    "ok": true,
     "scope": "formal_samples_only"
   },
   "evaluation_truth": {
-    "body_exists": false,
+    "body_exists": true,
     "body_path": "data/eval/truth.jsonl",
     "error": "",
     "integrity": true,
-    "manifest_exists": false,
+    "manifest_exists": true,
     "manifest_path": "data/eval/TRUTH_MANIFEST.jsonl",
-    "n_manifest": 0,
-    "n_records": 0,
+    "n_manifest": 64,
+    "n_records": 64,
     "unknown_probe_point_ids": []
   },
   "formal_dpo": {
     "body_paths": [
-      "data/train/formal/iris_dpo_point_v1.jsonl",
-      "data/train/formal/iris_dpo_multiturn_point_v1.jsonl"
+      "data/train/formal/iris_dpo_transition_v3.jsonl",
+      "data/train/formal/iris_dpo_multiturn_transition_v3.jsonl",
+      "data/train/formal/iris_dpo_on_policy_transition_v3_strict_openrouter_20260715.jsonl",
+      "data/train/formal/iris_dpo_on_policy_transition_v3_strict_openrouter_llama32_3b_20260716.jsonl",
+      "data/train/formal/iris_dpo_on_policy_transition_v3_strict_openrouter_qwen3_8b_20260716.jsonl",
+      "data/train/formal/iris_dpo_on_policy_transition_v3_strict_openrouter_technology_20260715.jsonl"
     ],
     "body_source_share": {
-      "legal_or_on_policy_n": 0,
-      "legal_or_on_policy_share": null,
+      "legal_or_on_policy_n": 28,
+      "legal_or_on_policy_share": 1.0,
       "minimum_required_share": 0.5,
-      "n_pairs": 0,
-      "passed": false,
-      "source_counts": {}
+      "n_pairs": 28,
+      "passed": true,
+      "source_counts": {
+        "legal_candidate": 6,
+        "on_policy": 22
+      }
     },
     "body_validation": {
-      "deployment_negative_ratio": null,
+      "deployment_negative_ratio": 1.0,
+      "min_deployment_negative_ratio": 0.0,
+      "n_deployment_negatives": 28,
+      "n_formal": 28,
       "n_problems": 0,
-      "n_rows": 0,
-      "negative_source_dist": {},
+      "n_rows": 28,
+      "negative_source_dist": {
+        "legal_candidate": 6,
+        "on_policy": 22
+      },
+      "pair_types": {
+        "observed_policy_error": 22,
+        "reviewed_legal_counterfactual": 6
+      },
       "problems": []
     },
     "dev_source_share": {
@@ -101,12 +121,39 @@
     ],
     "integrity": true,
     "issues": {},
-    "n_body_pairs": 0,
+    "n_body_pairs": 28,
     "n_dev_pairs": 0,
     "n_structural_issues": 0,
     "n_train_pairs": 0,
     "source_share_passed": false,
     "split_integrity": true,
+    "supplement_failures": {},
+    "supplement_releases": [
+      {
+        "body_sha256": "93bb8be2e940d777b80632eb888b821420fa3799e81a16da24eb3eb9a430e905",
+        "n_rows": 2,
+        "path": "data/train/formal/iris_dpo_on_policy_transition_v3_strict_openrouter_20260715.jsonl",
+        "release_id": "transition-v3-strict-openrouter-live-20260715"
+      },
+      {
+        "body_sha256": "64528412293c288aecb28e7660d3a74efa66f94fa7d75118dc68c4558b30b29d",
+        "n_rows": 9,
+        "path": "data/train/formal/iris_dpo_on_policy_transition_v3_strict_openrouter_llama32_3b_20260716.jsonl",
+        "release_id": "strict-openrouter-llama32-3b-shopping-constraint-20260716-v1"
+      },
+      {
+        "body_sha256": "1b32c31155fbf6fa80561dab4f1543a70c579037fc93c4d0608c5244e6f8bff6",
+        "n_rows": 9,
+        "path": "data/train/formal/iris_dpo_on_policy_transition_v3_strict_openrouter_qwen3_8b_20260716.jsonl",
+        "release_id": "strict-openrouter-qwen3-8b-shopping-constraint-20260716-v1"
+      },
+      {
+        "body_sha256": "85267f9b26afa471602d5f16776f2e93d9973c915e3d1ec4ed1c6b757323f439",
+        "n_rows": 2,
+        "path": "data/train/formal/iris_dpo_on_policy_transition_v3_strict_openrouter_technology_20260715.jsonl",
+        "release_id": "transition-v3-strict-openrouter-technology-live-20260715"
+      }
+    ],
     "train_source_share": {
       "legal_or_on_policy_n": 0,
       "legal_or_on_policy_share": null,
@@ -311,39 +358,166 @@
   "formal_training": {
     "bid_visibility": {
       "assistant_answers": {
-        "checked_ids": [],
-        "evaluated": false,
+        "checked_ids": [
+          "pt_add_to_cart__cell-phone-stand-doboli-phone-stand-for-__recapture-20260716__point-01172ce8e1aba9a1c7c4__request:turn-2:bid-1468",
+          "pt_reddit_subscribe__technology__point-08e0821355b9728143ba__request:turn-2:bid-1109",
+          "pt_reddit_vote__59421__point-093c3548c37db9fa3b15__request:turn-2:bid-153",
+          "pt_compare_add__figatia-astronomy-telescope-phone-adapte__recapture-20260716__point-11010e3d33a1be8b8686__request:turn-2:bid-1440",
+          "pt_add_to_cart__car-mount-phone-holder-sturdy-cup-holder__point-1fbcbccd420a8dbe9839__request:turn-2:bid-1433",
+          "pt_wishlist_add__cell-phone-stand-doboli-phone-stand-for-__recapture-20260716__point-83174a73e8b150f6d476__request:turn-2:bid-1473",
+          "pt_add_to_cart__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716__point-855d61530e55666b0c17__request:turn-2:bid-1433",
+          "pt_reddit_subscribe__books__point-865965f6496570cda87d__request:turn-2:bid-1094",
+          "pt_wishlist_add__figatia-astronomy-telescope-phone-adapte__recapture-20260716__point-8a3f911291b5219e384e__request:turn-2:bid-1438",
+          "pt_reddit_subscribe__AskReddit__point-92b86822851c2f36e650__request:turn-2:bid-1084",
+          "pt_reddit_vote__81371__point-938bf921350b80c5e1e1__request:turn-2:bid-151",
+          "pt_compare_add__cell-phone-stand-doboli-phone-stand-for-__recapture-20260716__point-acac084bf979f81eb1e9__request:turn-2:bid-1475",
+          "pt_add_to_cart__figatia-astronomy-telescope-phone-adapte__recapture-20260716__point-afaf878e5e62df66d91a__request:turn-2:bid-1433",
+          "pt_reddit_vote__59447__point-b9902a3352bd6319232f__request:turn-2:bid-151",
+          "pt_reddit_vote__103102__point-becb7efdf06a54c66edf__request:turn-2:bid-151",
+          "pt_wishlist_add__car-mount-phone-holder-sturdy-cup-holder__point-cdaff79c736b3995ab67__request:turn-2:bid-1438",
+          "pt_wishlist_add__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716__point-ec44c865a70a21420158__request:turn-2:bid-1438",
+          "pt_compare_add__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716__point-f8686bcacf15ca1190be__request:turn-2:bid-1440",
+          "pt_compare_add__car-mount-phone-holder-sturdy-cup-holder__point-ffcd3a9477e3ea2ddb34__request:turn-2:bid-1440",
+          "mt__pt_add_to_cart__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716__run_20260716T035657209223Z-bbaa9745__s1__add_to_cart__request:turn-2:bid-1433",
+          "mt__pt_add_to_cart__cell-phone-stand-doboli-phone-stand-for-__recapture-20260716__run_20260716T035657209223Z-bbaa9745__s1__add_to_cart__request:turn-2:bid-1468",
+          "mt__pt_add_to_cart__figatia-astronomy-telescope-phone-adapte__recapture-20260716__run_20260716T035657209223Z-bbaa9745__s1__add_to_cart__request:turn-2:bid-1433",
+          "mt__pt_compare_add__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716__run_20260716T035657209223Z-bbaa9745__s1__compare_add__request:turn-2:bid-1440",
+          "mt__pt_compare_add__cell-phone-stand-doboli-phone-stand-for-__recapture-20260716__run_20260716T035657209223Z-bbaa9745__s1__compare_add__request:turn-2:bid-1475",
+          "mt__pt_compare_add__figatia-astronomy-telescope-phone-adapte__recapture-20260716__run_20260716T035657209223Z-bbaa9745__s1__compare_add__request:turn-2:bid-1440",
+          "mt__pt_reddit_subscribe__technology__run_20260715T112745383440Z-4674bc4f__s1__reddit_subscribe__request:turn-2:bid-1109",
+          "mt__pt_reddit_vote__103102__run_20260715T112745383440Z-4674bc4f__s1__reddit_vote__request:turn-2:bid-151",
+          "mt__pt_reddit_vote__59447__run_20260715T102709982138Z-90cdf7bc__s1__reddit_vote__request:turn-2:bid-151",
+          "mt__pt_wishlist_add__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716__run_20260716T035657209223Z-bbaa9745__s1__wishlist_add__request:turn-2:bid-1438",
+          "mt__pt_wishlist_add__cell-phone-stand-doboli-phone-stand-for-__recapture-20260716__run_20260716T035657209223Z-bbaa9745__s1__wishlist_add__request:turn-2:bid-1473",
+          "mt__pt_wishlist_add__figatia-astronomy-telescope-phone-adapte__recapture-20260716__run_20260716T035657209223Z-bbaa9745__s1__wishlist_add__request:turn-2:bid-1438"
+        ],
+        "evaluated": true,
         "invalid_action_ids": [],
         "missing_ids": [],
-        "n_actions": 0,
-        "n_bid_actions": 0,
-        "n_visible": 0,
-        "non_bid_action_ids": [],
-        "passed": null,
-        "visibility_rate": null
+        "n_actions": 62,
+        "n_bid_actions": 31,
+        "n_visible": 31,
+        "non_bid_action_ids": [
+          "pt_add_to_cart__cell-phone-stand-doboli-phone-stand-for-__recapture-20260716__point-01172ce8e1aba9a1c7c4__constraint:turn-2",
+          "pt_reddit_subscribe__technology__point-08e0821355b9728143ba__constraint:turn-2",
+          "pt_reddit_vote__59421__point-093c3548c37db9fa3b15__constraint:turn-2",
+          "pt_compare_add__figatia-astronomy-telescope-phone-adapte__recapture-20260716__point-11010e3d33a1be8b8686__constraint:turn-2",
+          "pt_add_to_cart__car-mount-phone-holder-sturdy-cup-holder__point-1fbcbccd420a8dbe9839__constraint:turn-2",
+          "pt_wishlist_add__cell-phone-stand-doboli-phone-stand-for-__recapture-20260716__point-83174a73e8b150f6d476__constraint:turn-2",
+          "pt_add_to_cart__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716__point-855d61530e55666b0c17__constraint:turn-2",
+          "pt_reddit_subscribe__books__point-865965f6496570cda87d__constraint:turn-2",
+          "pt_wishlist_add__figatia-astronomy-telescope-phone-adapte__recapture-20260716__point-8a3f911291b5219e384e__constraint:turn-2",
+          "pt_reddit_subscribe__AskReddit__point-92b86822851c2f36e650__constraint:turn-2",
+          "pt_reddit_vote__81371__point-938bf921350b80c5e1e1__constraint:turn-2",
+          "pt_compare_add__cell-phone-stand-doboli-phone-stand-for-__recapture-20260716__point-acac084bf979f81eb1e9__constraint:turn-2",
+          "pt_add_to_cart__figatia-astronomy-telescope-phone-adapte__recapture-20260716__point-afaf878e5e62df66d91a__constraint:turn-2",
+          "pt_reddit_vote__59447__point-b9902a3352bd6319232f__constraint:turn-2",
+          "pt_reddit_vote__103102__point-becb7efdf06a54c66edf__constraint:turn-2",
+          "pt_wishlist_add__car-mount-phone-holder-sturdy-cup-holder__point-cdaff79c736b3995ab67__constraint:turn-2",
+          "pt_wishlist_add__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716__point-ec44c865a70a21420158__constraint:turn-2",
+          "pt_compare_add__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716__point-f8686bcacf15ca1190be__constraint:turn-2",
+          "pt_compare_add__car-mount-phone-holder-sturdy-cup-holder__point-ffcd3a9477e3ea2ddb34__constraint:turn-2",
+          "mt__pt_add_to_cart__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716__run_20260716T035657209223Z-bbaa9745__s1__add_to_cart__constraint:turn-2",
+          "mt__pt_add_to_cart__cell-phone-stand-doboli-phone-stand-for-__recapture-20260716__run_20260716T035657209223Z-bbaa9745__s1__add_to_cart__constraint:turn-2",
+          "mt__pt_add_to_cart__figatia-astronomy-telescope-phone-adapte__recapture-20260716__run_20260716T035657209223Z-bbaa9745__s1__add_to_cart__constraint:turn-2",
+          "mt__pt_compare_add__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716__run_20260716T035657209223Z-bbaa9745__s1__compare_add__constraint:turn-2",
+          "mt__pt_compare_add__cell-phone-stand-doboli-phone-stand-for-__recapture-20260716__run_20260716T035657209223Z-bbaa9745__s1__compare_add__constraint:turn-2",
+          "mt__pt_compare_add__figatia-astronomy-telescope-phone-adapte__recapture-20260716__run_20260716T035657209223Z-bbaa9745__s1__compare_add__constraint:turn-2",
+          "mt__pt_reddit_subscribe__technology__run_20260715T112745383440Z-4674bc4f__s1__reddit_subscribe__constraint:turn-2",
+          "mt__pt_reddit_vote__103102__run_20260715T112745383440Z-4674bc4f__s1__reddit_vote__constraint:turn-2",
+          "mt__pt_reddit_vote__59447__run_20260715T102709982138Z-90cdf7bc__s1__reddit_vote__constraint:turn-2",
+          "mt__pt_wishlist_add__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716__run_20260716T035657209223Z-bbaa9745__s1__wishlist_add__constraint:turn-2",
+          "mt__pt_wishlist_add__cell-phone-stand-doboli-phone-stand-for-__recapture-20260716__run_20260716T035657209223Z-bbaa9745__s1__wishlist_add__constraint:turn-2",
+          "mt__pt_wishlist_add__figatia-astronomy-telescope-phone-adapte__recapture-20260716__run_20260716T035657209223Z-bbaa9745__s1__wishlist_add__constraint:turn-2"
+        ],
+        "passed": true,
+        "visibility_rate": 1.0
       },
-      "evaluated": false,
-      "passed": false,
+      "evaluated": true,
+      "passed": true,
       "risky_raw_actions": {
-        "checked_ids": [],
-        "evaluated": false,
+        "checked_ids": [
+          "pt_add_to_cart__cell-phone-stand-doboli-phone-stand-for-__recapture-20260716__point-01172ce8e1aba9a1c7c4__constraint:risky_raw_action:bid-1468",
+          "pt_add_to_cart__cell-phone-stand-doboli-phone-stand-for-__recapture-20260716__point-01172ce8e1aba9a1c7c4__request:risky_raw_action:bid-1468",
+          "pt_reddit_subscribe__technology__point-08e0821355b9728143ba__constraint:risky_raw_action:bid-1109",
+          "pt_reddit_subscribe__technology__point-08e0821355b9728143ba__request:risky_raw_action:bid-1109",
+          "pt_reddit_vote__59421__point-093c3548c37db9fa3b15__constraint:risky_raw_action:bid-153",
+          "pt_reddit_vote__59421__point-093c3548c37db9fa3b15__request:risky_raw_action:bid-153",
+          "pt_compare_add__figatia-astronomy-telescope-phone-adapte__recapture-20260716__point-11010e3d33a1be8b8686__constraint:risky_raw_action:bid-1440",
+          "pt_compare_add__figatia-astronomy-telescope-phone-adapte__recapture-20260716__point-11010e3d33a1be8b8686__request:risky_raw_action:bid-1440",
+          "pt_add_to_cart__car-mount-phone-holder-sturdy-cup-holder__point-1fbcbccd420a8dbe9839__constraint:risky_raw_action:bid-1433",
+          "pt_add_to_cart__car-mount-phone-holder-sturdy-cup-holder__point-1fbcbccd420a8dbe9839__request:risky_raw_action:bid-1433",
+          "pt_wishlist_add__cell-phone-stand-doboli-phone-stand-for-__recapture-20260716__point-83174a73e8b150f6d476__constraint:risky_raw_action:bid-1473",
+          "pt_wishlist_add__cell-phone-stand-doboli-phone-stand-for-__recapture-20260716__point-83174a73e8b150f6d476__request:risky_raw_action:bid-1473",
+          "pt_add_to_cart__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716__point-855d61530e55666b0c17__constraint:risky_raw_action:bid-1433",
+          "pt_add_to_cart__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716__point-855d61530e55666b0c17__request:risky_raw_action:bid-1433",
+          "pt_reddit_subscribe__books__point-865965f6496570cda87d__constraint:risky_raw_action:bid-1094",
+          "pt_reddit_subscribe__books__point-865965f6496570cda87d__request:risky_raw_action:bid-1094",
+          "pt_wishlist_add__figatia-astronomy-telescope-phone-adapte__recapture-20260716__point-8a3f911291b5219e384e__constraint:risky_raw_action:bid-1438",
+          "pt_wishlist_add__figatia-astronomy-telescope-phone-adapte__recapture-20260716__point-8a3f911291b5219e384e__request:risky_raw_action:bid-1438",
+          "pt_reddit_subscribe__AskReddit__point-92b86822851c2f36e650__constraint:risky_raw_action:bid-1084",
+          "pt_reddit_subscribe__AskReddit__point-92b86822851c2f36e650__request:risky_raw_action:bid-1084",
+          "pt_reddit_vote__81371__point-938bf921350b80c5e1e1__constraint:risky_raw_action:bid-151",
+          "pt_reddit_vote__81371__point-938bf921350b80c5e1e1__request:risky_raw_action:bid-151",
+          "pt_compare_add__cell-phone-stand-doboli-phone-stand-for-__recapture-20260716__point-acac084bf979f81eb1e9__constraint:risky_raw_action:bid-1475",
+          "pt_compare_add__cell-phone-stand-doboli-phone-stand-for-__recapture-20260716__point-acac084bf979f81eb1e9__request:risky_raw_action:bid-1475",
+          "pt_add_to_cart__figatia-astronomy-telescope-phone-adapte__recapture-20260716__point-afaf878e5e62df66d91a__constraint:risky_raw_action:bid-1433",
+          "pt_add_to_cart__figatia-astronomy-telescope-phone-adapte__recapture-20260716__point-afaf878e5e62df66d91a__request:risky_raw_action:bid-1433",
+          "pt_reddit_vote__59447__point-b9902a3352bd6319232f__constraint:risky_raw_action:bid-151",
+          "pt_reddit_vote__59447__point-b9902a3352bd6319232f__request:risky_raw_action:bid-151",
+          "pt_reddit_vote__103102__point-becb7efdf06a54c66edf__constraint:risky_raw_action:bid-151",
+          "pt_reddit_vote__103102__point-becb7efdf06a54c66edf__request:risky_raw_action:bid-151",
+          "pt_wishlist_add__car-mount-phone-holder-sturdy-cup-holder__point-cdaff79c736b3995ab67__constraint:risky_raw_action:bid-1438",
+          "pt_wishlist_add__car-mount-phone-holder-sturdy-cup-holder__point-cdaff79c736b3995ab67__request:risky_raw_action:bid-1438",
+          "pt_wishlist_add__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716__point-ec44c865a70a21420158__constraint:risky_raw_action:bid-1438",
+          "pt_wishlist_add__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716__point-ec44c865a70a21420158__request:risky_raw_action:bid-1438",
+          "pt_compare_add__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716__point-f8686bcacf15ca1190be__constraint:risky_raw_action:bid-1440",
+          "pt_compare_add__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716__point-f8686bcacf15ca1190be__request:risky_raw_action:bid-1440",
+          "pt_compare_add__car-mount-phone-holder-sturdy-cup-holder__point-ffcd3a9477e3ea2ddb34__constraint:risky_raw_action:bid-1440",
+          "pt_compare_add__car-mount-phone-holder-sturdy-cup-holder__point-ffcd3a9477e3ea2ddb34__request:risky_raw_action:bid-1440",
+          "mt__pt_add_to_cart__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716__run_20260716T035657209223Z-bbaa9745__s1__add_to_cart__constraint:risky_raw_action:bid-1433",
+          "mt__pt_add_to_cart__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716__run_20260716T035657209223Z-bbaa9745__s1__add_to_cart__request:risky_raw_action:bid-1433",
+          "mt__pt_add_to_cart__cell-phone-stand-doboli-phone-stand-for-__recapture-20260716__run_20260716T035657209223Z-bbaa9745__s1__add_to_cart__constraint:risky_raw_action:bid-1468",
+          "mt__pt_add_to_cart__cell-phone-stand-doboli-phone-stand-for-__recapture-20260716__run_20260716T035657209223Z-bbaa9745__s1__add_to_cart__request:risky_raw_action:bid-1468",
+          "mt__pt_add_to_cart__figatia-astronomy-telescope-phone-adapte__recapture-20260716__run_20260716T035657209223Z-bbaa9745__s1__add_to_cart__constraint:risky_raw_action:bid-1433",
+          "mt__pt_add_to_cart__figatia-astronomy-telescope-phone-adapte__recapture-20260716__run_20260716T035657209223Z-bbaa9745__s1__add_to_cart__request:risky_raw_action:bid-1433",
+          "mt__pt_compare_add__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716__run_20260716T035657209223Z-bbaa9745__s1__compare_add__constraint:risky_raw_action:bid-1440",
+          "mt__pt_compare_add__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716__run_20260716T035657209223Z-bbaa9745__s1__compare_add__request:risky_raw_action:bid-1440",
+          "mt__pt_compare_add__cell-phone-stand-doboli-phone-stand-for-__recapture-20260716__run_20260716T035657209223Z-bbaa9745__s1__compare_add__constraint:risky_raw_action:bid-1475",
+          "mt__pt_compare_add__cell-phone-stand-doboli-phone-stand-for-__recapture-20260716__run_20260716T035657209223Z-bbaa9745__s1__compare_add__request:risky_raw_action:bid-1475",
+          "mt__pt_compare_add__figatia-astronomy-telescope-phone-adapte__recapture-20260716__run_20260716T035657209223Z-bbaa9745__s1__compare_add__constraint:risky_raw_action:bid-1440",
+          "mt__pt_compare_add__figatia-astronomy-telescope-phone-adapte__recapture-20260716__run_20260716T035657209223Z-bbaa9745__s1__compare_add__request:risky_raw_action:bid-1440",
+          "mt__pt_reddit_subscribe__technology__run_20260715T112745383440Z-4674bc4f__s1__reddit_subscribe__constraint:risky_raw_action:bid-1109",
+          "mt__pt_reddit_subscribe__technology__run_20260715T112745383440Z-4674bc4f__s1__reddit_subscribe__request:risky_raw_action:bid-1109",
+          "mt__pt_reddit_vote__103102__run_20260715T112745383440Z-4674bc4f__s1__reddit_vote__constraint:risky_raw_action:bid-151",
+          "mt__pt_reddit_vote__103102__run_20260715T112745383440Z-4674bc4f__s1__reddit_vote__request:risky_raw_action:bid-151",
+          "mt__pt_reddit_vote__59447__run_20260715T102709982138Z-90cdf7bc__s1__reddit_vote__constraint:risky_raw_action:bid-151",
+          "mt__pt_reddit_vote__59447__run_20260715T102709982138Z-90cdf7bc__s1__reddit_vote__request:risky_raw_action:bid-151",
+          "mt__pt_wishlist_add__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716__run_20260716T035657209223Z-bbaa9745__s1__wishlist_add__constraint:risky_raw_action:bid-1438",
+          "mt__pt_wishlist_add__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716__run_20260716T035657209223Z-bbaa9745__s1__wishlist_add__request:risky_raw_action:bid-1438",
+          "mt__pt_wishlist_add__cell-phone-stand-doboli-phone-stand-for-__recapture-20260716__run_20260716T035657209223Z-bbaa9745__s1__wishlist_add__constraint:risky_raw_action:bid-1473",
+          "mt__pt_wishlist_add__cell-phone-stand-doboli-phone-stand-for-__recapture-20260716__run_20260716T035657209223Z-bbaa9745__s1__wishlist_add__request:risky_raw_action:bid-1473",
+          "mt__pt_wishlist_add__figatia-astronomy-telescope-phone-adapte__recapture-20260716__run_20260716T035657209223Z-bbaa9745__s1__wishlist_add__constraint:risky_raw_action:bid-1438",
+          "mt__pt_wishlist_add__figatia-astronomy-telescope-phone-adapte__recapture-20260716__run_20260716T035657209223Z-bbaa9745__s1__wishlist_add__request:risky_raw_action:bid-1438"
+        ],
+        "evaluated": true,
         "invalid_action_ids": [],
         "missing_ids": [],
-        "n_actions": 0,
-        "n_bid_actions": 0,
-        "n_visible": 0,
+        "n_actions": 62,
+        "n_bid_actions": 62,
+        "n_visible": 62,
         "non_bid_action_ids": [],
-        "passed": null,
-        "visibility_rate": null
+        "passed": true,
+        "visibility_rate": 1.0
       }
     },
     "n_failed_collector": 0,
     "n_mock": 0,
-    "n_multiturn_sft": 0,
+    "n_multiturn_sft": 24,
     "n_prompt_content_failures": 0,
     "n_release_gate_failures": 0,
-    "n_single_sft": 0,
-    "n_total_sft": 0,
+    "n_single_sft": 38,
+    "n_total_sft": 62,
     "prompt_content_failures": {},
     "release_gate_failures": {}
   },
@@ -354,26 +528,28 @@
     "manifest_exists": true,
     "missing_provenance": 0,
     "mock_points": 0,
-    "n_manifest": 0,
-    "n_points": 0,
+    "n_manifest": 32,
+    "n_points": 32,
     "not_recovered_points": 0
   },
   "integrity_gates": {
-    "answer_and_risky_bid_visibility": false,
+    "answer_and_risky_bid_visibility": true,
     "candidate_manifest_and_snapshot_integrity": true,
     "evaluation_truth_manifest_integrity": true,
-    "formal_collection_lineage_integrity": false,
+    "formal_collection_lineage_integrity": true,
     "formal_collectors_succeeded": true,
     "formal_dpo_integrity": true,
     "formal_dpo_source_share": false,
     "formal_dpo_split_integrity": true,
     "formal_has_no_mock": true,
     "formal_release_and_prompt_content": true,
+    "formal_transition_body_join": true,
     "grounding_has_no_mock": true,
     "grounding_manifest_integrity": true,
     "grounding_provenance_complete": true,
     "split_overlap_zero": true,
-    "teacher_coverage_and_integrity": false
+    "teacher_coverage_and_integrity": true,
+    "transition_body_manifest_integrity": true
   },
   "legacy_collection_lineage": {
     "duplicate_meta_trajectory_ids": [
@@ -407,18 +583,23 @@
       "webarena.96_seed0"
     ],
     "environment_origin": {
-      "unknown": 93
+      "unknown": 93,
+      "webarena": 53
     },
-    "incomplete_collection_manifests": [],
+    "incomplete_collection_manifests": [
+      "20260716T061046105191Z-b6961cf4"
+    ],
     "invalid_collection_manifests": [],
+    "invalid_policy_attempt_artifacts": [],
     "meta_without_raw": [],
     "missing_collection_manifests": [],
+    "missing_policy_attempt_artifacts": [],
     "missing_run_id_new": [],
-    "n_key_states": 241,
-    "n_meta_rows": 93,
-    "n_problems": 121,
-    "n_raw_files": 31,
-    "n_unique_trajectory_ids": 31,
+    "n_key_states": 286,
+    "n_meta_rows": 146,
+    "n_problems": 122,
+    "n_raw_files": 84,
+    "n_unique_trajectory_ids": 84,
     "ok": false,
     "orphan_state_runs": [],
     "raw_meta_run_mismatch": [],
@@ -522,14 +703,47 @@
   },
   "non_vacuous": false,
   "non_vacuous_gates": {
-    "evaluation_truth_records": false,
+    "evaluation_truth_records": true,
     "formal_dev_split": false,
-    "formal_dpo": false,
+    "formal_dpo": true,
     "formal_dpo_train_split": false,
-    "formal_sft": false,
+    "formal_sft": true,
     "formal_test_split": false,
     "formal_train_split": false,
-    "grounding_points": false
+    "grounding_points": true,
+    "probe_transition_bodies": true
+  },
+  "probe_transitions": {
+    "body_exists": true,
+    "body_path": "data/grounded/transitions/probe_transitions.v1.jsonl",
+    "coverage": 0.59375,
+    "covered_point_count": 19,
+    "error": "",
+    "formal_row_join_failures": {},
+    "formal_row_join_passed": true,
+    "integrity": true,
+    "manifest_exists": true,
+    "manifest_path": "data/grounded/transitions/TRANSITION_MANIFEST.v1.jsonl",
+    "missing_transition_point_ids": [
+      "point-074184630008bef3d416",
+      "point-109f0be9a9e8287759b8",
+      "point-187930109f86179fc391",
+      "point-208cb955a7e5316ae8b1",
+      "point-2dfc13d42bba13e05cb3",
+      "point-3632c37a158b2fce341d",
+      "point-63dedbde95a63c277e2e",
+      "point-a3cc348686dad59674d0",
+      "point-a8127f75994e3b08ac01",
+      "point-be723db90bacfbfcae3c",
+      "point-e628b5e8b8026277980e",
+      "point-e7f92bdc88a2e7a2e4cf",
+      "point-faecb74ebfe8edb06654"
+    ],
+    "n_manifest": 19,
+    "n_transitions": 19,
+    "point_count": 32,
+    "point_reference_failures": {},
+    "transition_count": 19
   },
   "quarantine": {
     "migration_mode": "index_only_source_files_unchanged",
@@ -553,18 +767,1852 @@
     "rollback": "delete data/train/quarantine; source JSONL files were not changed"
   },
   "ready": false,
-  "schema_version": "iris.formal_readiness_audit.v3",
+  "research_evidence": {
+    "candidate_missing_categories": [
+      "policy_generated_error",
+      "safe_alternative",
+      "uncertain_verify"
+    ],
+    "candidate_role_evidence": {
+      "body_exists": true,
+      "body_path": "data/raw/candidates/candidate_roles.v7.jsonl",
+      "coverage_interpretation": {
+        "applies_n_ge_30_effect_evidence_threshold": false,
+        "gate_contract": "at least one replay-valid EVIDENCED record per required role",
+        "minimum_records_per_required_role_for_gate": 1,
+        "note": "This is a taxonomy-presence gate, not n>=30 evidence for any role, cell, effect estimate, or generalization claim.",
+        "supports_n_ge_30_effect_claims": false
+      },
+      "error": "",
+      "evidence_protocol": {
+        "exact_executed_a11y_ordinary.v1": 16,
+        "exact_goal_constraint_violation.v1": 17,
+        "exact_policy_constraint_trigger.v1": 17,
+        "exact_required_expert_action.v1": 16,
+        "exact_surface_hazard_recovered_safe.v1": 3
+      },
+      "evidenced_case_role_overlap": {
+        "cases": [
+          {
+            "action_types": [
+              "reddit_vote"
+            ],
+            "candidate_role_ids": [
+              "role-84650563c99da16b96e5",
+              "role-a31c5728395e395f5b00",
+              "role-a8eae290ff57a754a43f"
+            ],
+            "evaluation_case_id": "case-00f4256d3891b641af50",
+            "n_records": 3,
+            "n_unique_roles": 3,
+            "probe_point_ids": [
+              "point-b9902a3352bd6319232f"
+            ],
+            "roles": [
+              "decoy",
+              "expert",
+              "ordinary"
+            ],
+            "sites": [
+              "reddit"
+            ],
+            "state_ids": [
+              "pt_reddit_vote__59447"
+            ]
+          },
+          {
+            "action_types": [
+              "add_to_cart"
+            ],
+            "candidate_role_ids": [
+              "role-79d43eecf0d5af6abbe3",
+              "role-b18305031d5acab65e40"
+            ],
+            "evaluation_case_id": "case-0343054fa49c7ab51358",
+            "n_records": 2,
+            "n_unique_roles": 2,
+            "probe_point_ids": [
+              "point-1fbcbccd420a8dbe9839"
+            ],
+            "roles": [
+              "constraint_trigger",
+              "goal_violating"
+            ],
+            "sites": [
+              "shopping"
+            ],
+            "state_ids": [
+              "pt_add_to_cart__car-mount-phone-holder-sturdy-cup-holder"
+            ]
+          },
+          {
+            "action_types": [
+              "compare_add"
+            ],
+            "candidate_role_ids": [
+              "role-ccc2f2f39bc06a795128",
+              "role-d7d04b98f6ce0f305e85"
+            ],
+            "evaluation_case_id": "case-04d9c9ceabb88621cfa9",
+            "n_records": 2,
+            "n_unique_roles": 2,
+            "probe_point_ids": [
+              "point-ffcd3a9477e3ea2ddb34"
+            ],
+            "roles": [
+              "expert",
+              "ordinary"
+            ],
+            "sites": [
+              "shopping"
+            ],
+            "state_ids": [
+              "pt_compare_add__car-mount-phone-holder-sturdy-cup-holder"
+            ]
+          },
+          {
+            "action_types": [
+              "reddit_vote"
+            ],
+            "candidate_role_ids": [
+              "role-0764f346273026b7b63f",
+              "role-4dda8b0204536f68df2a",
+              "role-f889e416a8026b539205"
+            ],
+            "evaluation_case_id": "case-09344816964f608dd6c4",
+            "n_records": 3,
+            "n_unique_roles": 3,
+            "probe_point_ids": [
+              "point-093c3548c37db9fa3b15"
+            ],
+            "roles": [
+              "decoy",
+              "expert",
+              "ordinary"
+            ],
+            "sites": [
+              "reddit"
+            ],
+            "state_ids": [
+              "pt_reddit_vote__59421"
+            ]
+          },
+          {
+            "action_types": [
+              "reddit_vote"
+            ],
+            "candidate_role_ids": [
+              "role-5db8896ca6ecfbfe71fd",
+              "role-eb274f2641372c30030d"
+            ],
+            "evaluation_case_id": "case-0da5b62fe1ce8536a96e",
+            "n_records": 2,
+            "n_unique_roles": 2,
+            "probe_point_ids": [
+              "point-b9902a3352bd6319232f"
+            ],
+            "roles": [
+              "constraint_trigger",
+              "goal_violating"
+            ],
+            "sites": [
+              "reddit"
+            ],
+            "state_ids": [
+              "pt_reddit_vote__59447"
+            ]
+          },
+          {
+            "action_types": [
+              "wishlist_add"
+            ],
+            "candidate_role_ids": [
+              "role-1d140ce06b36eef26b60",
+              "role-c24b6f7db6397d81ab5d"
+            ],
+            "evaluation_case_id": "case-0f4d9219be07c570b45d",
+            "n_records": 2,
+            "n_unique_roles": 2,
+            "probe_point_ids": [
+              "point-cdaff79c736b3995ab67"
+            ],
+            "roles": [
+              "constraint_trigger",
+              "goal_violating"
+            ],
+            "sites": [
+              "shopping"
+            ],
+            "state_ids": [
+              "pt_wishlist_add__car-mount-phone-holder-sturdy-cup-holder"
+            ]
+          },
+          {
+            "action_types": [
+              "reddit_vote"
+            ],
+            "candidate_role_ids": [
+              "role-099d82c76fb3b9f8a87a",
+              "role-533726eb0cf04ab4a8d0"
+            ],
+            "evaluation_case_id": "case-194dc604e8794ff10399",
+            "n_records": 2,
+            "n_unique_roles": 2,
+            "probe_point_ids": [
+              "point-becb7efdf06a54c66edf"
+            ],
+            "roles": [
+              "constraint_trigger",
+              "goal_violating"
+            ],
+            "sites": [
+              "reddit"
+            ],
+            "state_ids": [
+              "pt_reddit_vote__103102"
+            ]
+          },
+          {
+            "action_types": [
+              "wishlist_add"
+            ],
+            "candidate_role_ids": [
+              "role-730c62d59ea5a5b34ebe",
+              "role-d23036f943c59e91a8d8"
+            ],
+            "evaluation_case_id": "case-1c4d7fd29a8268ed7b68",
+            "n_records": 2,
+            "n_unique_roles": 2,
+            "probe_point_ids": [
+              "point-83174a73e8b150f6d476"
+            ],
+            "roles": [
+              "constraint_trigger",
+              "goal_violating"
+            ],
+            "sites": [
+              "shopping"
+            ],
+            "state_ids": [
+              "pt_wishlist_add__cell-phone-stand-doboli-phone-stand-for-__recapture-20260716"
+            ]
+          },
+          {
+            "action_types": [
+              "compare_add"
+            ],
+            "candidate_role_ids": [
+              "role-51bd213adb316d6b3eb2",
+              "role-f486abe4a0e874049b50"
+            ],
+            "evaluation_case_id": "case-1f092198029bbcdf9cf0",
+            "n_records": 2,
+            "n_unique_roles": 2,
+            "probe_point_ids": [
+              "point-f8686bcacf15ca1190be"
+            ],
+            "roles": [
+              "constraint_trigger",
+              "goal_violating"
+            ],
+            "sites": [
+              "shopping"
+            ],
+            "state_ids": [
+              "pt_compare_add__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716"
+            ]
+          },
+          {
+            "action_types": [
+              "compare_add"
+            ],
+            "candidate_role_ids": [
+              "role-621b0d2ac5dc8bada65e",
+              "role-af5b72286c5fd21e9cde"
+            ],
+            "evaluation_case_id": "case-29cf5e6b6b2d03ef0ea6",
+            "n_records": 2,
+            "n_unique_roles": 2,
+            "probe_point_ids": [
+              "point-11010e3d33a1be8b8686"
+            ],
+            "roles": [
+              "expert",
+              "ordinary"
+            ],
+            "sites": [
+              "shopping"
+            ],
+            "state_ids": [
+              "pt_compare_add__figatia-astronomy-telescope-phone-adapte__recapture-20260716"
+            ]
+          },
+          {
+            "action_types": [
+              "reddit_vote"
+            ],
+            "candidate_role_ids": [
+              "role-19cdf6a2819e5bbf551c",
+              "role-32b216c90bdd81fa3658",
+              "role-7a90e41367fd8fd477e0"
+            ],
+            "evaluation_case_id": "case-3d994729b97d2dad9cda",
+            "n_records": 3,
+            "n_unique_roles": 3,
+            "probe_point_ids": [
+              "point-becb7efdf06a54c66edf"
+            ],
+            "roles": [
+              "decoy",
+              "expert",
+              "ordinary"
+            ],
+            "sites": [
+              "reddit"
+            ],
+            "state_ids": [
+              "pt_reddit_vote__103102"
+            ]
+          },
+          {
+            "action_types": [
+              "reddit_subscribe"
+            ],
+            "candidate_role_ids": [
+              "role-4c72e2f5a15be67f7f74",
+              "role-d11a243e5c7c443d9439"
+            ],
+            "evaluation_case_id": "case-4223695074d0dcb888f4",
+            "n_records": 2,
+            "n_unique_roles": 2,
+            "probe_point_ids": [
+              "point-92b86822851c2f36e650"
+            ],
+            "roles": [
+              "expert",
+              "ordinary"
+            ],
+            "sites": [
+              "reddit"
+            ],
+            "state_ids": [
+              "pt_reddit_subscribe__AskReddit"
+            ]
+          },
+          {
+            "action_types": [
+              "wishlist_add"
+            ],
+            "candidate_role_ids": [
+              "role-0c6b177f4053a1737694",
+              "role-bbc6b02919c4d58e18ec"
+            ],
+            "evaluation_case_id": "case-44fb432e92921c617eaf",
+            "n_records": 2,
+            "n_unique_roles": 2,
+            "probe_point_ids": [
+              "point-8a3f911291b5219e384e"
+            ],
+            "roles": [
+              "constraint_trigger",
+              "goal_violating"
+            ],
+            "sites": [
+              "shopping"
+            ],
+            "state_ids": [
+              "pt_wishlist_add__figatia-astronomy-telescope-phone-adapte__recapture-20260716"
+            ]
+          },
+          {
+            "action_types": [
+              "reddit_subscribe"
+            ],
+            "candidate_role_ids": [
+              "role-d55d7de0b4773d22a8b4",
+              "role-fd8013e0642c29995bc6"
+            ],
+            "evaluation_case_id": "case-4d5fadbaf5b23dab0e15",
+            "n_records": 2,
+            "n_unique_roles": 2,
+            "probe_point_ids": [
+              "point-08e0821355b9728143ba"
+            ],
+            "roles": [
+              "constraint_trigger",
+              "goal_violating"
+            ],
+            "sites": [
+              "reddit"
+            ],
+            "state_ids": [
+              "pt_reddit_subscribe__technology"
+            ]
+          },
+          {
+            "action_types": [
+              "reddit_vote"
+            ],
+            "candidate_role_ids": [
+              "role-9acf3bbeeab714f639fa",
+              "role-f5134860ce2276c58508"
+            ],
+            "evaluation_case_id": "case-59aed23fce993cec257a",
+            "n_records": 2,
+            "n_unique_roles": 2,
+            "probe_point_ids": [
+              "point-093c3548c37db9fa3b15"
+            ],
+            "roles": [
+              "constraint_trigger",
+              "goal_violating"
+            ],
+            "sites": [
+              "reddit"
+            ],
+            "state_ids": [
+              "pt_reddit_vote__59421"
+            ]
+          },
+          {
+            "action_types": [
+              "wishlist_add"
+            ],
+            "candidate_role_ids": [
+              "role-11facd7e1d23a846d6bd",
+              "role-24185917b3b40addc1a6"
+            ],
+            "evaluation_case_id": "case-68c84bbc81f003c1b188",
+            "n_records": 2,
+            "n_unique_roles": 2,
+            "probe_point_ids": [
+              "point-8a3f911291b5219e384e"
+            ],
+            "roles": [
+              "expert",
+              "ordinary"
+            ],
+            "sites": [
+              "shopping"
+            ],
+            "state_ids": [
+              "pt_wishlist_add__figatia-astronomy-telescope-phone-adapte__recapture-20260716"
+            ]
+          },
+          {
+            "action_types": [
+              "compare_add"
+            ],
+            "candidate_role_ids": [
+              "role-2c8dbbfda3e7e7f3393c",
+              "role-47534ee683d2995cbcfb"
+            ],
+            "evaluation_case_id": "case-6a121d11bb8a484c37a5",
+            "n_records": 2,
+            "n_unique_roles": 2,
+            "probe_point_ids": [
+              "point-ffcd3a9477e3ea2ddb34"
+            ],
+            "roles": [
+              "constraint_trigger",
+              "goal_violating"
+            ],
+            "sites": [
+              "shopping"
+            ],
+            "state_ids": [
+              "pt_compare_add__car-mount-phone-holder-sturdy-cup-holder"
+            ]
+          },
+          {
+            "action_types": [
+              "compare_add"
+            ],
+            "candidate_role_ids": [
+              "role-832b18211119f7afaff7",
+              "role-df651797e916404bbf3e"
+            ],
+            "evaluation_case_id": "case-6bdcea095fa80997133a",
+            "n_records": 2,
+            "n_unique_roles": 2,
+            "probe_point_ids": [
+              "point-f8686bcacf15ca1190be"
+            ],
+            "roles": [
+              "expert",
+              "ordinary"
+            ],
+            "sites": [
+              "shopping"
+            ],
+            "state_ids": [
+              "pt_compare_add__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716"
+            ]
+          },
+          {
+            "action_types": [
+              "add_to_cart"
+            ],
+            "candidate_role_ids": [
+              "role-48b4fc2eeb5cfe1f6baa",
+              "role-cddf1ef3760e74124d80"
+            ],
+            "evaluation_case_id": "case-769f851ae1c2354c2947",
+            "n_records": 2,
+            "n_unique_roles": 2,
+            "probe_point_ids": [
+              "point-afaf878e5e62df66d91a"
+            ],
+            "roles": [
+              "expert",
+              "ordinary"
+            ],
+            "sites": [
+              "shopping"
+            ],
+            "state_ids": [
+              "pt_add_to_cart__figatia-astronomy-telescope-phone-adapte__recapture-20260716"
+            ]
+          },
+          {
+            "action_types": [
+              "add_to_cart"
+            ],
+            "candidate_role_ids": [
+              "role-94d433d0da3aef9796f4",
+              "role-e47cb7d8a6d9955a7414"
+            ],
+            "evaluation_case_id": "case-76f7e2aa0cfbf337c6e9",
+            "n_records": 2,
+            "n_unique_roles": 2,
+            "probe_point_ids": [
+              "point-855d61530e55666b0c17"
+            ],
+            "roles": [
+              "constraint_trigger",
+              "goal_violating"
+            ],
+            "sites": [
+              "shopping"
+            ],
+            "state_ids": [
+              "pt_add_to_cart__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716"
+            ]
+          },
+          {
+            "action_types": [
+              "add_to_cart"
+            ],
+            "candidate_role_ids": [
+              "role-cc698bb4de0213a559e7",
+              "role-f4ce4afa1f3a3700e05d"
+            ],
+            "evaluation_case_id": "case-8c4d7b0e014509e871b1",
+            "n_records": 2,
+            "n_unique_roles": 2,
+            "probe_point_ids": [
+              "point-1fbcbccd420a8dbe9839"
+            ],
+            "roles": [
+              "expert",
+              "ordinary"
+            ],
+            "sites": [
+              "shopping"
+            ],
+            "state_ids": [
+              "pt_add_to_cart__car-mount-phone-holder-sturdy-cup-holder"
+            ]
+          },
+          {
+            "action_types": [
+              "add_to_cart"
+            ],
+            "candidate_role_ids": [
+              "role-250ebd76d88f8e713037",
+              "role-922c81b905dfccf0c037"
+            ],
+            "evaluation_case_id": "case-8e687ba3b49a5b0994fc",
+            "n_records": 2,
+            "n_unique_roles": 2,
+            "probe_point_ids": [
+              "point-01172ce8e1aba9a1c7c4"
+            ],
+            "roles": [
+              "constraint_trigger",
+              "goal_violating"
+            ],
+            "sites": [
+              "shopping"
+            ],
+            "state_ids": [
+              "pt_add_to_cart__cell-phone-stand-doboli-phone-stand-for-__recapture-20260716"
+            ]
+          },
+          {
+            "action_types": [
+              "wishlist_add"
+            ],
+            "candidate_role_ids": [
+              "role-66bf4e8e62fe467ff061",
+              "role-a9aec72d2f6f801bc783"
+            ],
+            "evaluation_case_id": "case-9816a3943d1f8d716005",
+            "n_records": 2,
+            "n_unique_roles": 2,
+            "probe_point_ids": [
+              "point-ec44c865a70a21420158"
+            ],
+            "roles": [
+              "expert",
+              "ordinary"
+            ],
+            "sites": [
+              "shopping"
+            ],
+            "state_ids": [
+              "pt_wishlist_add__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716"
+            ]
+          },
+          {
+            "action_types": [
+              "compare_add"
+            ],
+            "candidate_role_ids": [
+              "role-05218f3f1f9cf440fb34",
+              "role-27d453b952bb01dc87d6"
+            ],
+            "evaluation_case_id": "case-9cf196bf021b9c3d02bf",
+            "n_records": 2,
+            "n_unique_roles": 2,
+            "probe_point_ids": [
+              "point-acac084bf979f81eb1e9"
+            ],
+            "roles": [
+              "expert",
+              "ordinary"
+            ],
+            "sites": [
+              "shopping"
+            ],
+            "state_ids": [
+              "pt_compare_add__cell-phone-stand-doboli-phone-stand-for-__recapture-20260716"
+            ]
+          },
+          {
+            "action_types": [
+              "compare_add"
+            ],
+            "candidate_role_ids": [
+              "role-13854771ce5acc31c68e",
+              "role-62848676bb97e605983a"
+            ],
+            "evaluation_case_id": "case-aa8641357f1a1b92b855",
+            "n_records": 2,
+            "n_unique_roles": 2,
+            "probe_point_ids": [
+              "point-11010e3d33a1be8b8686"
+            ],
+            "roles": [
+              "constraint_trigger",
+              "goal_violating"
+            ],
+            "sites": [
+              "shopping"
+            ],
+            "state_ids": [
+              "pt_compare_add__figatia-astronomy-telescope-phone-adapte__recapture-20260716"
+            ]
+          },
+          {
+            "action_types": [
+              "add_to_cart"
+            ],
+            "candidate_role_ids": [
+              "role-87b05cb33361e078e76d",
+              "role-8a1a3b6af4d48e5ea01a"
+            ],
+            "evaluation_case_id": "case-aea4edb0a39215718f9d",
+            "n_records": 2,
+            "n_unique_roles": 2,
+            "probe_point_ids": [
+              "point-afaf878e5e62df66d91a"
+            ],
+            "roles": [
+              "constraint_trigger",
+              "goal_violating"
+            ],
+            "sites": [
+              "shopping"
+            ],
+            "state_ids": [
+              "pt_add_to_cart__figatia-astronomy-telescope-phone-adapte__recapture-20260716"
+            ]
+          },
+          {
+            "action_types": [
+              "wishlist_add"
+            ],
+            "candidate_role_ids": [
+              "role-a043e0f2a5a88fa8893a",
+              "role-d97d51378d317a07204b"
+            ],
+            "evaluation_case_id": "case-b05d4c231fbb34c12951",
+            "n_records": 2,
+            "n_unique_roles": 2,
+            "probe_point_ids": [
+              "point-cdaff79c736b3995ab67"
+            ],
+            "roles": [
+              "expert",
+              "ordinary"
+            ],
+            "sites": [
+              "shopping"
+            ],
+            "state_ids": [
+              "pt_wishlist_add__car-mount-phone-holder-sturdy-cup-holder"
+            ]
+          },
+          {
+            "action_types": [
+              "reddit_subscribe"
+            ],
+            "candidate_role_ids": [
+              "role-06a0a9cf2a467d6bd7ac",
+              "role-c1bb68f1bb27010295a4"
+            ],
+            "evaluation_case_id": "case-bf3356f7271f282c1d0f",
+            "n_records": 2,
+            "n_unique_roles": 2,
+            "probe_point_ids": [
+              "point-92b86822851c2f36e650"
+            ],
+            "roles": [
+              "constraint_trigger",
+              "goal_violating"
+            ],
+            "sites": [
+              "reddit"
+            ],
+            "state_ids": [
+              "pt_reddit_subscribe__AskReddit"
+            ]
+          },
+          {
+            "action_types": [
+              "wishlist_add"
+            ],
+            "candidate_role_ids": [
+              "role-a428e8a5d08824db8017",
+              "role-a6cbb28900332b9300ef"
+            ],
+            "evaluation_case_id": "case-ca13c436061d4b89ae8f",
+            "n_records": 2,
+            "n_unique_roles": 2,
+            "probe_point_ids": [
+              "point-ec44c865a70a21420158"
+            ],
+            "roles": [
+              "constraint_trigger",
+              "goal_violating"
+            ],
+            "sites": [
+              "shopping"
+            ],
+            "state_ids": [
+              "pt_wishlist_add__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716"
+            ]
+          },
+          {
+            "action_types": [
+              "add_to_cart"
+            ],
+            "candidate_role_ids": [
+              "role-0f35cc5f0f65e7202c13",
+              "role-6ebb675620fa67af950a"
+            ],
+            "evaluation_case_id": "case-e9268e8577aac578d18b",
+            "n_records": 2,
+            "n_unique_roles": 2,
+            "probe_point_ids": [
+              "point-855d61530e55666b0c17"
+            ],
+            "roles": [
+              "expert",
+              "ordinary"
+            ],
+            "sites": [
+              "shopping"
+            ],
+            "state_ids": [
+              "pt_add_to_cart__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716"
+            ]
+          },
+          {
+            "action_types": [
+              "compare_add"
+            ],
+            "candidate_role_ids": [
+              "role-d1c6d456a60aacd89308",
+              "role-e7db93dd57211764307e"
+            ],
+            "evaluation_case_id": "case-ee8e3330817ea44f284b",
+            "n_records": 2,
+            "n_unique_roles": 2,
+            "probe_point_ids": [
+              "point-acac084bf979f81eb1e9"
+            ],
+            "roles": [
+              "constraint_trigger",
+              "goal_violating"
+            ],
+            "sites": [
+              "shopping"
+            ],
+            "state_ids": [
+              "pt_compare_add__cell-phone-stand-doboli-phone-stand-for-__recapture-20260716"
+            ]
+          },
+          {
+            "action_types": [
+              "wishlist_add"
+            ],
+            "candidate_role_ids": [
+              "role-1898bfba3c02f9b8f625",
+              "role-a3be5aa2feed5e93a63d"
+            ],
+            "evaluation_case_id": "case-f3e33591d10396f43fad",
+            "n_records": 2,
+            "n_unique_roles": 2,
+            "probe_point_ids": [
+              "point-83174a73e8b150f6d476"
+            ],
+            "roles": [
+              "expert",
+              "ordinary"
+            ],
+            "sites": [
+              "shopping"
+            ],
+            "state_ids": [
+              "pt_wishlist_add__cell-phone-stand-doboli-phone-stand-for-__recapture-20260716"
+            ]
+          },
+          {
+            "action_types": [
+              "reddit_subscribe"
+            ],
+            "candidate_role_ids": [
+              "role-166a5acea0165359e4ab",
+              "role-92203be1135007b52efc"
+            ],
+            "evaluation_case_id": "case-fc47771b7d739d921e22",
+            "n_records": 2,
+            "n_unique_roles": 2,
+            "probe_point_ids": [
+              "point-08e0821355b9728143ba"
+            ],
+            "roles": [
+              "expert",
+              "ordinary"
+            ],
+            "sites": [
+              "reddit"
+            ],
+            "state_ids": [
+              "pt_reddit_subscribe__technology"
+            ]
+          }
+        ],
+        "n_evidenced_cases": 33,
+        "n_overlapping_cases": 33,
+        "overlapping_case_ids": [
+          "case-00f4256d3891b641af50",
+          "case-0343054fa49c7ab51358",
+          "case-04d9c9ceabb88621cfa9",
+          "case-09344816964f608dd6c4",
+          "case-0da5b62fe1ce8536a96e",
+          "case-0f4d9219be07c570b45d",
+          "case-194dc604e8794ff10399",
+          "case-1c4d7fd29a8268ed7b68",
+          "case-1f092198029bbcdf9cf0",
+          "case-29cf5e6b6b2d03ef0ea6",
+          "case-3d994729b97d2dad9cda",
+          "case-4223695074d0dcb888f4",
+          "case-44fb432e92921c617eaf",
+          "case-4d5fadbaf5b23dab0e15",
+          "case-59aed23fce993cec257a",
+          "case-68c84bbc81f003c1b188",
+          "case-6a121d11bb8a484c37a5",
+          "case-6bdcea095fa80997133a",
+          "case-769f851ae1c2354c2947",
+          "case-76f7e2aa0cfbf337c6e9",
+          "case-8c4d7b0e014509e871b1",
+          "case-8e687ba3b49a5b0994fc",
+          "case-9816a3943d1f8d716005",
+          "case-9cf196bf021b9c3d02bf",
+          "case-aa8641357f1a1b92b855",
+          "case-aea4edb0a39215718f9d",
+          "case-b05d4c231fbb34c12951",
+          "case-bf3356f7271f282c1d0f",
+          "case-ca13c436061d4b89ae8f",
+          "case-e9268e8577aac578d18b",
+          "case-ee8e3330817ea44f284b",
+          "case-f3e33591d10396f43fad",
+          "case-fc47771b7d739d921e22"
+        ]
+      },
+      "evidenced_role": {
+        "constraint_trigger": 17,
+        "decoy": 3,
+        "expert": 16,
+        "goal_violating": 17,
+        "ordinary": 16
+      },
+      "evidenced_role_coverage": {
+        "constraint_trigger": {
+          "n_records": 17,
+          "n_unique_action_types": 5,
+          "n_unique_evaluation_cases": 17,
+          "n_unique_sites": 2,
+          "n_unique_states": 17,
+          "unique_action_types": [
+            "add_to_cart",
+            "compare_add",
+            "reddit_subscribe",
+            "reddit_vote",
+            "wishlist_add"
+          ],
+          "unique_evaluation_cases": [
+            "case-0343054fa49c7ab51358",
+            "case-0da5b62fe1ce8536a96e",
+            "case-0f4d9219be07c570b45d",
+            "case-194dc604e8794ff10399",
+            "case-1c4d7fd29a8268ed7b68",
+            "case-1f092198029bbcdf9cf0",
+            "case-44fb432e92921c617eaf",
+            "case-4d5fadbaf5b23dab0e15",
+            "case-59aed23fce993cec257a",
+            "case-6a121d11bb8a484c37a5",
+            "case-76f7e2aa0cfbf337c6e9",
+            "case-8e687ba3b49a5b0994fc",
+            "case-aa8641357f1a1b92b855",
+            "case-aea4edb0a39215718f9d",
+            "case-bf3356f7271f282c1d0f",
+            "case-ca13c436061d4b89ae8f",
+            "case-ee8e3330817ea44f284b"
+          ],
+          "unique_sites": [
+            "reddit",
+            "shopping"
+          ],
+          "unique_states": [
+            "pt_add_to_cart__car-mount-phone-holder-sturdy-cup-holder",
+            "pt_add_to_cart__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716",
+            "pt_add_to_cart__cell-phone-stand-doboli-phone-stand-for-__recapture-20260716",
+            "pt_add_to_cart__figatia-astronomy-telescope-phone-adapte__recapture-20260716",
+            "pt_compare_add__car-mount-phone-holder-sturdy-cup-holder",
+            "pt_compare_add__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716",
+            "pt_compare_add__cell-phone-stand-doboli-phone-stand-for-__recapture-20260716",
+            "pt_compare_add__figatia-astronomy-telescope-phone-adapte__recapture-20260716",
+            "pt_reddit_subscribe__AskReddit",
+            "pt_reddit_subscribe__technology",
+            "pt_reddit_vote__103102",
+            "pt_reddit_vote__59421",
+            "pt_reddit_vote__59447",
+            "pt_wishlist_add__car-mount-phone-holder-sturdy-cup-holder",
+            "pt_wishlist_add__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716",
+            "pt_wishlist_add__cell-phone-stand-doboli-phone-stand-for-__recapture-20260716",
+            "pt_wishlist_add__figatia-astronomy-telescope-phone-adapte__recapture-20260716"
+          ]
+        },
+        "decoy": {
+          "n_records": 3,
+          "n_unique_action_types": 1,
+          "n_unique_evaluation_cases": 3,
+          "n_unique_sites": 1,
+          "n_unique_states": 3,
+          "unique_action_types": [
+            "reddit_vote"
+          ],
+          "unique_evaluation_cases": [
+            "case-00f4256d3891b641af50",
+            "case-09344816964f608dd6c4",
+            "case-3d994729b97d2dad9cda"
+          ],
+          "unique_sites": [
+            "reddit"
+          ],
+          "unique_states": [
+            "pt_reddit_vote__103102",
+            "pt_reddit_vote__59421",
+            "pt_reddit_vote__59447"
+          ]
+        },
+        "expert": {
+          "n_records": 16,
+          "n_unique_action_types": 5,
+          "n_unique_evaluation_cases": 16,
+          "n_unique_sites": 2,
+          "n_unique_states": 16,
+          "unique_action_types": [
+            "add_to_cart",
+            "compare_add",
+            "reddit_subscribe",
+            "reddit_vote",
+            "wishlist_add"
+          ],
+          "unique_evaluation_cases": [
+            "case-00f4256d3891b641af50",
+            "case-04d9c9ceabb88621cfa9",
+            "case-09344816964f608dd6c4",
+            "case-29cf5e6b6b2d03ef0ea6",
+            "case-3d994729b97d2dad9cda",
+            "case-4223695074d0dcb888f4",
+            "case-68c84bbc81f003c1b188",
+            "case-6bdcea095fa80997133a",
+            "case-769f851ae1c2354c2947",
+            "case-8c4d7b0e014509e871b1",
+            "case-9816a3943d1f8d716005",
+            "case-9cf196bf021b9c3d02bf",
+            "case-b05d4c231fbb34c12951",
+            "case-e9268e8577aac578d18b",
+            "case-f3e33591d10396f43fad",
+            "case-fc47771b7d739d921e22"
+          ],
+          "unique_sites": [
+            "reddit",
+            "shopping"
+          ],
+          "unique_states": [
+            "pt_add_to_cart__car-mount-phone-holder-sturdy-cup-holder",
+            "pt_add_to_cart__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716",
+            "pt_add_to_cart__figatia-astronomy-telescope-phone-adapte__recapture-20260716",
+            "pt_compare_add__car-mount-phone-holder-sturdy-cup-holder",
+            "pt_compare_add__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716",
+            "pt_compare_add__cell-phone-stand-doboli-phone-stand-for-__recapture-20260716",
+            "pt_compare_add__figatia-astronomy-telescope-phone-adapte__recapture-20260716",
+            "pt_reddit_subscribe__AskReddit",
+            "pt_reddit_subscribe__technology",
+            "pt_reddit_vote__103102",
+            "pt_reddit_vote__59421",
+            "pt_reddit_vote__59447",
+            "pt_wishlist_add__car-mount-phone-holder-sturdy-cup-holder",
+            "pt_wishlist_add__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716",
+            "pt_wishlist_add__cell-phone-stand-doboli-phone-stand-for-__recapture-20260716",
+            "pt_wishlist_add__figatia-astronomy-telescope-phone-adapte__recapture-20260716"
+          ]
+        },
+        "goal_violating": {
+          "n_records": 17,
+          "n_unique_action_types": 5,
+          "n_unique_evaluation_cases": 17,
+          "n_unique_sites": 2,
+          "n_unique_states": 17,
+          "unique_action_types": [
+            "add_to_cart",
+            "compare_add",
+            "reddit_subscribe",
+            "reddit_vote",
+            "wishlist_add"
+          ],
+          "unique_evaluation_cases": [
+            "case-0343054fa49c7ab51358",
+            "case-0da5b62fe1ce8536a96e",
+            "case-0f4d9219be07c570b45d",
+            "case-194dc604e8794ff10399",
+            "case-1c4d7fd29a8268ed7b68",
+            "case-1f092198029bbcdf9cf0",
+            "case-44fb432e92921c617eaf",
+            "case-4d5fadbaf5b23dab0e15",
+            "case-59aed23fce993cec257a",
+            "case-6a121d11bb8a484c37a5",
+            "case-76f7e2aa0cfbf337c6e9",
+            "case-8e687ba3b49a5b0994fc",
+            "case-aa8641357f1a1b92b855",
+            "case-aea4edb0a39215718f9d",
+            "case-bf3356f7271f282c1d0f",
+            "case-ca13c436061d4b89ae8f",
+            "case-ee8e3330817ea44f284b"
+          ],
+          "unique_sites": [
+            "reddit",
+            "shopping"
+          ],
+          "unique_states": [
+            "pt_add_to_cart__car-mount-phone-holder-sturdy-cup-holder",
+            "pt_add_to_cart__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716",
+            "pt_add_to_cart__cell-phone-stand-doboli-phone-stand-for-__recapture-20260716",
+            "pt_add_to_cart__figatia-astronomy-telescope-phone-adapte__recapture-20260716",
+            "pt_compare_add__car-mount-phone-holder-sturdy-cup-holder",
+            "pt_compare_add__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716",
+            "pt_compare_add__cell-phone-stand-doboli-phone-stand-for-__recapture-20260716",
+            "pt_compare_add__figatia-astronomy-telescope-phone-adapte__recapture-20260716",
+            "pt_reddit_subscribe__AskReddit",
+            "pt_reddit_subscribe__technology",
+            "pt_reddit_vote__103102",
+            "pt_reddit_vote__59421",
+            "pt_reddit_vote__59447",
+            "pt_wishlist_add__car-mount-phone-holder-sturdy-cup-holder",
+            "pt_wishlist_add__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716",
+            "pt_wishlist_add__cell-phone-stand-doboli-phone-stand-for-__recapture-20260716",
+            "pt_wishlist_add__figatia-astronomy-telescope-phone-adapte__recapture-20260716"
+          ]
+        },
+        "ordinary": {
+          "n_records": 16,
+          "n_unique_action_types": 5,
+          "n_unique_evaluation_cases": 16,
+          "n_unique_sites": 2,
+          "n_unique_states": 16,
+          "unique_action_types": [
+            "add_to_cart",
+            "compare_add",
+            "reddit_subscribe",
+            "reddit_vote",
+            "wishlist_add"
+          ],
+          "unique_evaluation_cases": [
+            "case-00f4256d3891b641af50",
+            "case-04d9c9ceabb88621cfa9",
+            "case-09344816964f608dd6c4",
+            "case-29cf5e6b6b2d03ef0ea6",
+            "case-3d994729b97d2dad9cda",
+            "case-4223695074d0dcb888f4",
+            "case-68c84bbc81f003c1b188",
+            "case-6bdcea095fa80997133a",
+            "case-769f851ae1c2354c2947",
+            "case-8c4d7b0e014509e871b1",
+            "case-9816a3943d1f8d716005",
+            "case-9cf196bf021b9c3d02bf",
+            "case-b05d4c231fbb34c12951",
+            "case-e9268e8577aac578d18b",
+            "case-f3e33591d10396f43fad",
+            "case-fc47771b7d739d921e22"
+          ],
+          "unique_sites": [
+            "reddit",
+            "shopping"
+          ],
+          "unique_states": [
+            "pt_add_to_cart__car-mount-phone-holder-sturdy-cup-holder",
+            "pt_add_to_cart__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716",
+            "pt_add_to_cart__figatia-astronomy-telescope-phone-adapte__recapture-20260716",
+            "pt_compare_add__car-mount-phone-holder-sturdy-cup-holder",
+            "pt_compare_add__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716",
+            "pt_compare_add__cell-phone-stand-doboli-phone-stand-for-__recapture-20260716",
+            "pt_compare_add__figatia-astronomy-telescope-phone-adapte__recapture-20260716",
+            "pt_reddit_subscribe__AskReddit",
+            "pt_reddit_subscribe__technology",
+            "pt_reddit_vote__103102",
+            "pt_reddit_vote__59421",
+            "pt_reddit_vote__59447",
+            "pt_wishlist_add__car-mount-phone-holder-sturdy-cup-holder",
+            "pt_wishlist_add__car-mount-phone-holder-sturdy-cup-holder__recapture-20260716",
+            "pt_wishlist_add__cell-phone-stand-doboli-phone-stand-for-__recapture-20260716",
+            "pt_wishlist_add__figatia-astronomy-telescope-phone-adapte__recapture-20260716"
+          ]
+        }
+      },
+      "failures": {},
+      "integrity": true,
+      "manifest_exists": true,
+      "manifest_path": "data/raw/candidates/CANDIDATE_ROLE_MANIFEST.v7.jsonl",
+      "n_records": 297,
+      "on_policy_trace_sources": 22,
+      "proposed_role": {
+        "constraint_trigger": 14,
+        "expert": 38,
+        "ordinary": 176
+      },
+      "rejected_on_policy_trace_sources": {
+        "data/eval/on_policy/openrouter-onpolicy-exact-20260714-v1.on_policy_steps.v1.jsonl": "data/eval/on_policy/openrouter-onpolicy-exact-20260714-v1.on_policy_steps.v1.jsonl:1: trace-56f0b03e4fa9f35606c44efe: extracted_action disagrees with raw_completion",
+        "data/eval/on_policy/openrouter-transition-v2-live-fixed-20260715.on_policy_steps.v1.jsonl": "data/eval/on_policy/openrouter-transition-v2-live-fixed-20260715.on_policy_steps.v1.jsonl:1: trace-68f3534364c4d00cee17324a: extracted_action disagrees with raw_completion"
+      }
+    },
+    "candidate_role_missing_evidence": [
+      "policy_generated_error",
+      "safe_alternative",
+      "uncertain_verify"
+    ],
+    "environment_coverage": {
+      "ambiguous_instances": [],
+      "family_instance_pairs": [
+        "magento::http://user2-dind:7770",
+        "postmill::http://user2-dind:9999"
+      ],
+      "family_instances": {
+        "magento": [
+          "http://user2-dind:7770"
+        ],
+        "postmill": [
+          "http://user2-dind:9999"
+        ]
+      },
+      "missing_identity_point_ids": [],
+      "n_family_instance_pairs": 2,
+      "n_independent_families": 2,
+      "note": "shopping and shopping_admin are one Magento family",
+      "passed": false,
+      "technology_families": [
+        "magento",
+        "postmill"
+      ]
+    },
+    "environment_instances": [
+      "http://user2-dind:7770",
+      "http://user2-dind:9999"
+    ],
+    "formal_negative_points": 0,
+    "gates": {
+      "api_or_db_signal_evidence": false,
+      "candidate_taxonomy_coverage": false,
+      "formal_negative_solver_union_evidence": false,
+      "history_buckets_nonempty": false,
+      "independent_environment_families_ge_3": false,
+      "live_mutation_census_ge_200": false,
+      "paired_opinion_labels": false,
+      "state_changing_intermediate_supervision": false
+    },
+    "history_length": {
+      "buckets": {
+        "1_3": 0,
+        "4_6": 0,
+        "ge_7": 0
+      },
+      "evidence_source": "stateless_episode_trace_exact_sft_join",
+      "formal_input_diagnostic": {
+        "buckets": {
+          "1_3": 62,
+          "4_6": 0,
+          "ge_7": 0
+        },
+        "counts_as_episode_evidence": false,
+        "max": 1,
+        "min": 1,
+        "n": 62
+      },
+      "max": null,
+      "min": null,
+      "n": 0,
+      "state_changing_turns": 0
+    },
+    "intermediate_state_changing": {
+      "passed": false,
+      "rejected_turns": {},
+      "verified_count": 0,
+      "verified_turn_ids": []
+    },
+    "mutation_evidence": {
+      "body_exists": false,
+      "body_path": "data/audit/mutation-miner-live-report.v3.json",
+      "duplicate_alias_audit": {
+        "duplicate_physical_snapshot_n": 0,
+        "duplicate_state_alias_n": 0,
+        "duplicate_state_aliases": [],
+        "passed": false,
+        "performed": false,
+        "physical_snapshot_identity": [
+          "environment_instance",
+          "snapshot_hash"
+        ]
+      },
+      "error": "release-scoped mutation report/manifest are absent",
+      "integrity": false,
+      "manifest_exists": false,
+      "manifest_path": "data/audit/MUTATION_MINER_LIVE_REPORT.v3.manifest.json",
+      "minimum_controls": 200,
+      "n_samples": 0,
+      "passed": false,
+      "release_id": "",
+      "sample_ids": [],
+      "snapshot_coverage": false,
+      "unique_physical_snapshot_n": 0
+    },
+    "mutation_live_census_passed": false,
+    "mutation_live_report": "data/audit/mutation-miner-live-report.v3.json",
+    "note": "research-evidence gates are non-vacuous corpus/live checks; unit tests and fixture reports cannot satisfy them",
+    "opinion_evidence": {
+      "body_exists": true,
+      "body_path": "data/opinions/opinion_labels.v2.jsonl",
+      "coverage": 0.09375,
+      "covered_cases": 6,
+      "error": "",
+      "human_rater_counts_by_case": {
+        "case-00f4256d3891b641af50": 0,
+        "case-01013afe309b533110fa": 0,
+        "case-033204353fe1d5ec3bd0": 0,
+        "case-0343054fa49c7ab51358": 0,
+        "case-04d9c9ceabb88621cfa9": 0,
+        "case-09344816964f608dd6c4": 0,
+        "case-0b00b74c1795c998ee05": 0,
+        "case-0da5b62fe1ce8536a96e": 0,
+        "case-0f4d9219be07c570b45d": 0,
+        "case-11b32aeca026a30907b4": 0,
+        "case-194dc604e8794ff10399": 0,
+        "case-1c4d7fd29a8268ed7b68": 0,
+        "case-1f092198029bbcdf9cf0": 0,
+        "case-1f9019ae0f728fb9566f": 0,
+        "case-29cf5e6b6b2d03ef0ea6": 0,
+        "case-2c3f253e41eb7056b5dd": 0,
+        "case-2f0eba9a52e08a1b7ac4": 0,
+        "case-35e4665b25e778f43019": 0,
+        "case-3682f9882d6f6554f097": 0,
+        "case-3d994729b97d2dad9cda": 0,
+        "case-3fafac7ba699e75c5dbe": 0,
+        "case-4223695074d0dcb888f4": 0,
+        "case-44b84244c9c6c7621cad": 0,
+        "case-44fb432e92921c617eaf": 0,
+        "case-49cff0e0908070226d0b": 0,
+        "case-4d5fadbaf5b23dab0e15": 0,
+        "case-59aed23fce993cec257a": 0,
+        "case-5c4a85b64913bb73367b": 0,
+        "case-5dff93d48baf1dfad920": 0,
+        "case-68c84bbc81f003c1b188": 0,
+        "case-6a121d11bb8a484c37a5": 0,
+        "case-6bdcea095fa80997133a": 0,
+        "case-6c922ae6c56ec7385150": 0,
+        "case-769f851ae1c2354c2947": 0,
+        "case-76f7e2aa0cfbf337c6e9": 0,
+        "case-7bc5b190d46c3c03b7ea": 0,
+        "case-817d4a027ca796bc631e": 0,
+        "case-896863772cffe52122fc": 0,
+        "case-8a8b26383111b7332556": 0,
+        "case-8c4d7b0e014509e871b1": 0,
+        "case-8e687ba3b49a5b0994fc": 0,
+        "case-9816a3943d1f8d716005": 0,
+        "case-9cf196bf021b9c3d02bf": 0,
+        "case-aa8641357f1a1b92b855": 0,
+        "case-aade4b28de22b0e79818": 0,
+        "case-aea4edb0a39215718f9d": 0,
+        "case-b05d4c231fbb34c12951": 0,
+        "case-b2c0fec43db7a210b16e": 0,
+        "case-bb3091bc87e6ab74e07c": 0,
+        "case-bd6094c53ff6ff89ff79": 0,
+        "case-bf3356f7271f282c1d0f": 0,
+        "case-c0248ea15979b6c93147": 0,
+        "case-c55b3cef0434d88c9fb4": 0,
+        "case-ca13c436061d4b89ae8f": 0,
+        "case-d03e60c4c474c35774a1": 0,
+        "case-e3084a64731aa87085f5": 0,
+        "case-e40729c78a420ae795bc": 0,
+        "case-e8c39cc379ee3170785e": 0,
+        "case-e9268e8577aac578d18b": 0,
+        "case-ee8e3330817ea44f284b": 0,
+        "case-f1d28f21e3821f8248ab": 0,
+        "case-f2d49beb006c381b1b87": 0,
+        "case-f3e33591d10396f43fad": 0,
+        "case-fc47771b7d739d921e22": 0
+      },
+      "integrity": true,
+      "llm_rater_counts_by_case": {
+        "case-00f4256d3891b641af50": 1,
+        "case-01013afe309b533110fa": 0,
+        "case-033204353fe1d5ec3bd0": 0,
+        "case-0343054fa49c7ab51358": 0,
+        "case-04d9c9ceabb88621cfa9": 0,
+        "case-09344816964f608dd6c4": 0,
+        "case-0b00b74c1795c998ee05": 0,
+        "case-0da5b62fe1ce8536a96e": 1,
+        "case-0f4d9219be07c570b45d": 0,
+        "case-11b32aeca026a30907b4": 0,
+        "case-194dc604e8794ff10399": 1,
+        "case-1c4d7fd29a8268ed7b68": 0,
+        "case-1f092198029bbcdf9cf0": 0,
+        "case-1f9019ae0f728fb9566f": 0,
+        "case-29cf5e6b6b2d03ef0ea6": 0,
+        "case-2c3f253e41eb7056b5dd": 0,
+        "case-2f0eba9a52e08a1b7ac4": 0,
+        "case-35e4665b25e778f43019": 0,
+        "case-3682f9882d6f6554f097": 0,
+        "case-3d994729b97d2dad9cda": 1,
+        "case-3fafac7ba699e75c5dbe": 0,
+        "case-4223695074d0dcb888f4": 0,
+        "case-44b84244c9c6c7621cad": 0,
+        "case-44fb432e92921c617eaf": 0,
+        "case-49cff0e0908070226d0b": 0,
+        "case-4d5fadbaf5b23dab0e15": 1,
+        "case-59aed23fce993cec257a": 0,
+        "case-5c4a85b64913bb73367b": 0,
+        "case-5dff93d48baf1dfad920": 0,
+        "case-68c84bbc81f003c1b188": 0,
+        "case-6a121d11bb8a484c37a5": 0,
+        "case-6bdcea095fa80997133a": 0,
+        "case-6c922ae6c56ec7385150": 0,
+        "case-769f851ae1c2354c2947": 0,
+        "case-76f7e2aa0cfbf337c6e9": 0,
+        "case-7bc5b190d46c3c03b7ea": 0,
+        "case-817d4a027ca796bc631e": 0,
+        "case-896863772cffe52122fc": 0,
+        "case-8a8b26383111b7332556": 0,
+        "case-8c4d7b0e014509e871b1": 0,
+        "case-8e687ba3b49a5b0994fc": 0,
+        "case-9816a3943d1f8d716005": 0,
+        "case-9cf196bf021b9c3d02bf": 0,
+        "case-aa8641357f1a1b92b855": 0,
+        "case-aade4b28de22b0e79818": 0,
+        "case-aea4edb0a39215718f9d": 0,
+        "case-b05d4c231fbb34c12951": 0,
+        "case-b2c0fec43db7a210b16e": 0,
+        "case-bb3091bc87e6ab74e07c": 0,
+        "case-bd6094c53ff6ff89ff79": 0,
+        "case-bf3356f7271f282c1d0f": 0,
+        "case-c0248ea15979b6c93147": 0,
+        "case-c55b3cef0434d88c9fb4": 0,
+        "case-ca13c436061d4b89ae8f": 0,
+        "case-d03e60c4c474c35774a1": 0,
+        "case-e3084a64731aa87085f5": 0,
+        "case-e40729c78a420ae795bc": 0,
+        "case-e8c39cc379ee3170785e": 0,
+        "case-e9268e8577aac578d18b": 0,
+        "case-ee8e3330817ea44f284b": 0,
+        "case-f1d28f21e3821f8248ab": 0,
+        "case-f2d49beb006c381b1b87": 0,
+        "case-f3e33591d10396f43fad": 0,
+        "case-fc47771b7d739d921e22": 1
+      },
+      "manifest_exists": true,
+      "manifest_path": "data/opinions/opinion_labels.v2.manifest.jsonl",
+      "min_distinct_raters_per_case": 2,
+      "missing_evaluation_case_ids": [
+        "case-01013afe309b533110fa",
+        "case-033204353fe1d5ec3bd0",
+        "case-0343054fa49c7ab51358",
+        "case-04d9c9ceabb88621cfa9",
+        "case-09344816964f608dd6c4",
+        "case-0b00b74c1795c998ee05",
+        "case-0f4d9219be07c570b45d",
+        "case-11b32aeca026a30907b4",
+        "case-1c4d7fd29a8268ed7b68",
+        "case-1f092198029bbcdf9cf0",
+        "case-1f9019ae0f728fb9566f",
+        "case-29cf5e6b6b2d03ef0ea6",
+        "case-2c3f253e41eb7056b5dd",
+        "case-2f0eba9a52e08a1b7ac4",
+        "case-35e4665b25e778f43019",
+        "case-3682f9882d6f6554f097",
+        "case-3fafac7ba699e75c5dbe",
+        "case-4223695074d0dcb888f4",
+        "case-44b84244c9c6c7621cad",
+        "case-44fb432e92921c617eaf",
+        "case-49cff0e0908070226d0b",
+        "case-59aed23fce993cec257a",
+        "case-5c4a85b64913bb73367b",
+        "case-5dff93d48baf1dfad920",
+        "case-68c84bbc81f003c1b188",
+        "case-6a121d11bb8a484c37a5",
+        "case-6bdcea095fa80997133a",
+        "case-6c922ae6c56ec7385150",
+        "case-769f851ae1c2354c2947",
+        "case-76f7e2aa0cfbf337c6e9",
+        "case-7bc5b190d46c3c03b7ea",
+        "case-817d4a027ca796bc631e",
+        "case-896863772cffe52122fc",
+        "case-8a8b26383111b7332556",
+        "case-8c4d7b0e014509e871b1",
+        "case-8e687ba3b49a5b0994fc",
+        "case-9816a3943d1f8d716005",
+        "case-9cf196bf021b9c3d02bf",
+        "case-aa8641357f1a1b92b855",
+        "case-aade4b28de22b0e79818",
+        "case-aea4edb0a39215718f9d",
+        "case-b05d4c231fbb34c12951",
+        "case-b2c0fec43db7a210b16e",
+        "case-bb3091bc87e6ab74e07c",
+        "case-bd6094c53ff6ff89ff79",
+        "case-bf3356f7271f282c1d0f",
+        "case-c0248ea15979b6c93147",
+        "case-c55b3cef0434d88c9fb4",
+        "case-ca13c436061d4b89ae8f",
+        "case-d03e60c4c474c35774a1",
+        "case-e3084a64731aa87085f5",
+        "case-e40729c78a420ae795bc",
+        "case-e8c39cc379ee3170785e",
+        "case-e9268e8577aac578d18b",
+        "case-ee8e3330817ea44f284b",
+        "case-f1d28f21e3821f8248ab",
+        "case-f2d49beb006c381b1b87",
+        "case-f3e33591d10396f43fad"
+      ],
+      "missing_human_evaluation_case_ids": [
+        "case-00f4256d3891b641af50",
+        "case-01013afe309b533110fa",
+        "case-033204353fe1d5ec3bd0",
+        "case-0343054fa49c7ab51358",
+        "case-04d9c9ceabb88621cfa9",
+        "case-09344816964f608dd6c4",
+        "case-0b00b74c1795c998ee05",
+        "case-0da5b62fe1ce8536a96e",
+        "case-0f4d9219be07c570b45d",
+        "case-11b32aeca026a30907b4",
+        "case-194dc604e8794ff10399",
+        "case-1c4d7fd29a8268ed7b68",
+        "case-1f092198029bbcdf9cf0",
+        "case-1f9019ae0f728fb9566f",
+        "case-29cf5e6b6b2d03ef0ea6",
+        "case-2c3f253e41eb7056b5dd",
+        "case-2f0eba9a52e08a1b7ac4",
+        "case-35e4665b25e778f43019",
+        "case-3682f9882d6f6554f097",
+        "case-3d994729b97d2dad9cda",
+        "case-3fafac7ba699e75c5dbe",
+        "case-4223695074d0dcb888f4",
+        "case-44b84244c9c6c7621cad",
+        "case-44fb432e92921c617eaf",
+        "case-49cff0e0908070226d0b",
+        "case-4d5fadbaf5b23dab0e15",
+        "case-59aed23fce993cec257a",
+        "case-5c4a85b64913bb73367b",
+        "case-5dff93d48baf1dfad920",
+        "case-68c84bbc81f003c1b188",
+        "case-6a121d11bb8a484c37a5",
+        "case-6bdcea095fa80997133a",
+        "case-6c922ae6c56ec7385150",
+        "case-769f851ae1c2354c2947",
+        "case-76f7e2aa0cfbf337c6e9",
+        "case-7bc5b190d46c3c03b7ea",
+        "case-817d4a027ca796bc631e",
+        "case-896863772cffe52122fc",
+        "case-8a8b26383111b7332556",
+        "case-8c4d7b0e014509e871b1",
+        "case-8e687ba3b49a5b0994fc",
+        "case-9816a3943d1f8d716005",
+        "case-9cf196bf021b9c3d02bf",
+        "case-aa8641357f1a1b92b855",
+        "case-aade4b28de22b0e79818",
+        "case-aea4edb0a39215718f9d",
+        "case-b05d4c231fbb34c12951",
+        "case-b2c0fec43db7a210b16e",
+        "case-bb3091bc87e6ab74e07c",
+        "case-bd6094c53ff6ff89ff79",
+        "case-bf3356f7271f282c1d0f",
+        "case-c0248ea15979b6c93147",
+        "case-c55b3cef0434d88c9fb4",
+        "case-ca13c436061d4b89ae8f",
+        "case-d03e60c4c474c35774a1",
+        "case-e3084a64731aa87085f5",
+        "case-e40729c78a420ae795bc",
+        "case-e8c39cc379ee3170785e",
+        "case-e9268e8577aac578d18b",
+        "case-ee8e3330817ea44f284b",
+        "case-f1d28f21e3821f8248ab",
+        "case-f2d49beb006c381b1b87",
+        "case-f3e33591d10396f43fad",
+        "case-fc47771b7d739d921e22"
+      ],
+      "missing_llm_evaluation_case_ids": [
+        "case-01013afe309b533110fa",
+        "case-033204353fe1d5ec3bd0",
+        "case-0343054fa49c7ab51358",
+        "case-04d9c9ceabb88621cfa9",
+        "case-09344816964f608dd6c4",
+        "case-0b00b74c1795c998ee05",
+        "case-0f4d9219be07c570b45d",
+        "case-11b32aeca026a30907b4",
+        "case-1c4d7fd29a8268ed7b68",
+        "case-1f092198029bbcdf9cf0",
+        "case-1f9019ae0f728fb9566f",
+        "case-29cf5e6b6b2d03ef0ea6",
+        "case-2c3f253e41eb7056b5dd",
+        "case-2f0eba9a52e08a1b7ac4",
+        "case-35e4665b25e778f43019",
+        "case-3682f9882d6f6554f097",
+        "case-3fafac7ba699e75c5dbe",
+        "case-4223695074d0dcb888f4",
+        "case-44b84244c9c6c7621cad",
+        "case-44fb432e92921c617eaf",
+        "case-49cff0e0908070226d0b",
+        "case-59aed23fce993cec257a",
+        "case-5c4a85b64913bb73367b",
+        "case-5dff93d48baf1dfad920",
+        "case-68c84bbc81f003c1b188",
+        "case-6a121d11bb8a484c37a5",
+        "case-6bdcea095fa80997133a",
+        "case-6c922ae6c56ec7385150",
+        "case-769f851ae1c2354c2947",
+        "case-76f7e2aa0cfbf337c6e9",
+        "case-7bc5b190d46c3c03b7ea",
+        "case-817d4a027ca796bc631e",
+        "case-896863772cffe52122fc",
+        "case-8a8b26383111b7332556",
+        "case-8c4d7b0e014509e871b1",
+        "case-8e687ba3b49a5b0994fc",
+        "case-9816a3943d1f8d716005",
+        "case-9cf196bf021b9c3d02bf",
+        "case-aa8641357f1a1b92b855",
+        "case-aade4b28de22b0e79818",
+        "case-aea4edb0a39215718f9d",
+        "case-b05d4c231fbb34c12951",
+        "case-b2c0fec43db7a210b16e",
+        "case-bb3091bc87e6ab74e07c",
+        "case-bd6094c53ff6ff89ff79",
+        "case-bf3356f7271f282c1d0f",
+        "case-c0248ea15979b6c93147",
+        "case-c55b3cef0434d88c9fb4",
+        "case-ca13c436061d4b89ae8f",
+        "case-d03e60c4c474c35774a1",
+        "case-e3084a64731aa87085f5",
+        "case-e40729c78a420ae795bc",
+        "case-e8c39cc379ee3170785e",
+        "case-e9268e8577aac578d18b",
+        "case-ee8e3330817ea44f284b",
+        "case-f1d28f21e3821f8248ab",
+        "case-f2d49beb006c381b1b87",
+        "case-f3e33591d10396f43fad"
+      ],
+      "n_points": 32,
+      "n_records": 6,
+      "n_truth_cases": 64,
+      "passed": false,
+      "rater_counts_by_case": {
+        "case-00f4256d3891b641af50": 1,
+        "case-01013afe309b533110fa": 0,
+        "case-033204353fe1d5ec3bd0": 0,
+        "case-0343054fa49c7ab51358": 0,
+        "case-04d9c9ceabb88621cfa9": 0,
+        "case-09344816964f608dd6c4": 0,
+        "case-0b00b74c1795c998ee05": 0,
+        "case-0da5b62fe1ce8536a96e": 1,
+        "case-0f4d9219be07c570b45d": 0,
+        "case-11b32aeca026a30907b4": 0,
+        "case-194dc604e8794ff10399": 1,
+        "case-1c4d7fd29a8268ed7b68": 0,
+        "case-1f092198029bbcdf9cf0": 0,
+        "case-1f9019ae0f728fb9566f": 0,
+        "case-29cf5e6b6b2d03ef0ea6": 0,
+        "case-2c3f253e41eb7056b5dd": 0,
+        "case-2f0eba9a52e08a1b7ac4": 0,
+        "case-35e4665b25e778f43019": 0,
+        "case-3682f9882d6f6554f097": 0,
+        "case-3d994729b97d2dad9cda": 1,
+        "case-3fafac7ba699e75c5dbe": 0,
+        "case-4223695074d0dcb888f4": 0,
+        "case-44b84244c9c6c7621cad": 0,
+        "case-44fb432e92921c617eaf": 0,
+        "case-49cff0e0908070226d0b": 0,
+        "case-4d5fadbaf5b23dab0e15": 1,
+        "case-59aed23fce993cec257a": 0,
+        "case-5c4a85b64913bb73367b": 0,
+        "case-5dff93d48baf1dfad920": 0,
+        "case-68c84bbc81f003c1b188": 0,
+        "case-6a121d11bb8a484c37a5": 0,
+        "case-6bdcea095fa80997133a": 0,
+        "case-6c922ae6c56ec7385150": 0,
+        "case-769f851ae1c2354c2947": 0,
+        "case-76f7e2aa0cfbf337c6e9": 0,
+        "case-7bc5b190d46c3c03b7ea": 0,
+        "case-817d4a027ca796bc631e": 0,
+        "case-896863772cffe52122fc": 0,
+        "case-8a8b26383111b7332556": 0,
+        "case-8c4d7b0e014509e871b1": 0,
+        "case-8e687ba3b49a5b0994fc": 0,
+        "case-9816a3943d1f8d716005": 0,
+        "case-9cf196bf021b9c3d02bf": 0,
+        "case-aa8641357f1a1b92b855": 0,
+        "case-aade4b28de22b0e79818": 0,
+        "case-aea4edb0a39215718f9d": 0,
+        "case-b05d4c231fbb34c12951": 0,
+        "case-b2c0fec43db7a210b16e": 0,
+        "case-bb3091bc87e6ab74e07c": 0,
+        "case-bd6094c53ff6ff89ff79": 0,
+        "case-bf3356f7271f282c1d0f": 0,
+        "case-c0248ea15979b6c93147": 0,
+        "case-c55b3cef0434d88c9fb4": 0,
+        "case-ca13c436061d4b89ae8f": 0,
+        "case-d03e60c4c474c35774a1": 0,
+        "case-e3084a64731aa87085f5": 0,
+        "case-e40729c78a420ae795bc": 0,
+        "case-e8c39cc379ee3170785e": 0,
+        "case-e9268e8577aac578d18b": 0,
+        "case-ee8e3330817ea44f284b": 0,
+        "case-f1d28f21e3821f8248ab": 0,
+        "case-f2d49beb006c381b1b87": 0,
+        "case-f3e33591d10396f43fad": 0,
+        "case-fc47771b7d739d921e22": 1
+      },
+      "under_rated_evaluation_case_ids": [
+        "case-00f4256d3891b641af50",
+        "case-01013afe309b533110fa",
+        "case-033204353fe1d5ec3bd0",
+        "case-0343054fa49c7ab51358",
+        "case-04d9c9ceabb88621cfa9",
+        "case-09344816964f608dd6c4",
+        "case-0b00b74c1795c998ee05",
+        "case-0da5b62fe1ce8536a96e",
+        "case-0f4d9219be07c570b45d",
+        "case-11b32aeca026a30907b4",
+        "case-194dc604e8794ff10399",
+        "case-1c4d7fd29a8268ed7b68",
+        "case-1f092198029bbcdf9cf0",
+        "case-1f9019ae0f728fb9566f",
+        "case-29cf5e6b6b2d03ef0ea6",
+        "case-2c3f253e41eb7056b5dd",
+        "case-2f0eba9a52e08a1b7ac4",
+        "case-35e4665b25e778f43019",
+        "case-3682f9882d6f6554f097",
+        "case-3d994729b97d2dad9cda",
+        "case-3fafac7ba699e75c5dbe",
+        "case-4223695074d0dcb888f4",
+        "case-44b84244c9c6c7621cad",
+        "case-44fb432e92921c617eaf",
+        "case-49cff0e0908070226d0b",
+        "case-4d5fadbaf5b23dab0e15",
+        "case-59aed23fce993cec257a",
+        "case-5c4a85b64913bb73367b",
+        "case-5dff93d48baf1dfad920",
+        "case-68c84bbc81f003c1b188",
+        "case-6a121d11bb8a484c37a5",
+        "case-6bdcea095fa80997133a",
+        "case-6c922ae6c56ec7385150",
+        "case-769f851ae1c2354c2947",
+        "case-76f7e2aa0cfbf337c6e9",
+        "case-7bc5b190d46c3c03b7ea",
+        "case-817d4a027ca796bc631e",
+        "case-896863772cffe52122fc",
+        "case-8a8b26383111b7332556",
+        "case-8c4d7b0e014509e871b1",
+        "case-8e687ba3b49a5b0994fc",
+        "case-9816a3943d1f8d716005",
+        "case-9cf196bf021b9c3d02bf",
+        "case-aa8641357f1a1b92b855",
+        "case-aade4b28de22b0e79818",
+        "case-aea4edb0a39215718f9d",
+        "case-b05d4c231fbb34c12951",
+        "case-b2c0fec43db7a210b16e",
+        "case-bb3091bc87e6ab74e07c",
+        "case-bd6094c53ff6ff89ff79",
+        "case-bf3356f7271f282c1d0f",
+        "case-c0248ea15979b6c93147",
+        "case-c55b3cef0434d88c9fb4",
+        "case-ca13c436061d4b89ae8f",
+        "case-d03e60c4c474c35774a1",
+        "case-e3084a64731aa87085f5",
+        "case-e40729c78a420ae795bc",
+        "case-e8c39cc379ee3170785e",
+        "case-e9268e8577aac578d18b",
+        "case-ee8e3330817ea44f284b",
+        "case-f1d28f21e3821f8248ab",
+        "case-f2d49beb006c381b1b87",
+        "case-f3e33591d10396f43fad",
+        "case-fc47771b7d739d921e22"
+      ]
+    },
+    "opinion_paths": [
+      "data/opinions/opinion_labels.v2.jsonl",
+      "data/opinions/opinion_labels.v2.manifest.jsonl"
+    ],
+    "opinion_rows": 6,
+    "signal_channels": {
+      "ui_structural": 32
+    },
+    "signal_evidence": {
+      "declared_point_ids": [],
+      "errors": {},
+      "passed": false,
+      "verified_assets": [],
+      "verified_channel_counts": {}
+    },
+    "sites": [
+      "reddit",
+      "shopping"
+    ],
+    "stateless_episode_traces": {
+      "body_exists": false,
+      "body_path": "data/raw/episodes/stateless_episode_traces.v1.jsonl",
+      "configuration_mismatches": [],
+      "configuration_supports_ge_7": true,
+      "configured_axtree_budget": 12000,
+      "configured_history_budget": 9,
+      "error": "canonical stateless episode trace artifact is absent",
+      "final_decision_truth_join": {
+        "passed": false,
+        "rejected_turns": {},
+        "verified_count": 0,
+        "verified_turn_ids": []
+      },
+      "history_buckets": {
+        "1_3": 0,
+        "4_6": 0,
+        "ge_7": 0
+      },
+      "history_lengths": [],
+      "integrity": false,
+      "intermediate_state_changing": {
+        "passed": false,
+        "rejected_turns": {},
+        "verified_count": 0,
+        "verified_turn_ids": []
+      },
+      "manifest_exists": false,
+      "manifest_path": "data/raw/episodes/STATELESS_EPISODE_TRACE_MANIFEST.v1.jsonl",
+      "n_episodes": 0,
+      "n_steps": 0,
+      "n_supervised_verified_steps": 0,
+      "n_truth_records": 0,
+      "supervision_rejections": {},
+      "truth_body_path": "data/eval/truth.jsonl",
+      "truth_integrity": false,
+      "truth_manifest_path": "data/eval/TRUTH_MANIFEST.jsonl"
+    }
+  },
+  "schema_version": "iris.formal_readiness_audit.v5",
   "teacher": {
-    "coverage": null,
+    "artifact_coverage": 1.0,
+    "coverage": 1.0,
     "coverage_target": 0.95,
+    "cross_family_source_overlap": [],
     "duplicate_sample_ids": [],
-    "n_matched_source_rows": 0,
+    "families": {
+      "multiturn": {
+        "active": true,
+        "artifact_coverage": 1.0,
+        "coverage": 1.0,
+        "duplicate_sample_ids": [],
+        "n_matched_source_rows": 24,
+        "n_qualified_teacher_rows": 24,
+        "n_rows": 24,
+        "n_source_rows": 24,
+        "n_unique_source_rows": 24,
+        "orphan_sample_ids": [],
+        "passed": true,
+        "path": "data/train/formal/iris_sft_multiturn_distilled_transition_v5.jsonl",
+        "release_or_prompt_failures": {},
+        "source_duplicate_sample_ids": [],
+        "teacher_source_failures": {}
+      },
+      "single": {
+        "active": true,
+        "artifact_coverage": 1.0,
+        "coverage": 1.0,
+        "duplicate_sample_ids": [],
+        "n_matched_source_rows": 38,
+        "n_qualified_teacher_rows": 38,
+        "n_rows": 38,
+        "n_source_rows": 38,
+        "n_unique_source_rows": 38,
+        "orphan_sample_ids": [],
+        "passed": true,
+        "path": "data/train/formal/iris_sft_distilled_transition_v5.jsonl",
+        "release_or_prompt_failures": {},
+        "source_duplicate_sample_ids": [],
+        "teacher_source_failures": {}
+      }
+    },
+    "n_matched_source_rows": 62,
+    "n_qualified_teacher_rows": 62,
     "n_release_or_prompt_failures": 0,
-    "n_rows": 0,
-    "n_unique_source_rows": 0,
+    "n_rows": 62,
+    "n_teacher_source_failures": 0,
+    "n_unique_source_rows": 62,
     "orphan_sample_ids": [],
-    "passed": false,
-    "path": "data/train/formal/iris_sft_distilled_point_v1.jsonl",
-    "release_or_prompt_failures": {}
+    "passed": true,
+    "path": "data/train/formal/iris_sft_distilled_transition_v5.jsonl",
+    "paths": {
+      "multiturn": "data/train/formal/iris_sft_multiturn_distilled_transition_v5.jsonl",
+      "single": "data/train/formal/iris_sft_distilled_transition_v5.jsonl"
+    },
+    "release_or_prompt_failures": {},
+    "teacher_source_failures": {}
   }
 }
